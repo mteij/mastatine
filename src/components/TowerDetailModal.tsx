@@ -107,12 +107,36 @@ export default function TowerDetailModal({ tower, initialVoteDirection, onClose,
         </button>
 
         <div style={{ overflowY: "auto", flex: 1 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img 
-            src={tower.image_url} 
-            alt={tower.title} 
-            style={{ width: "100%", maxHeight: "55vh", objectFit: "contain", backgroundColor: "#111", display: "block" }} 
-          />
+          <div style={{ position: "relative" }}>
+            {tower.height && tower.height > 0 && (
+              <span style={{ 
+                position: "absolute", 
+                top: "1.5rem", 
+                left: "1.5rem", 
+                zIndex: 10,
+                display: "flex", 
+                alignItems: "center", 
+                gap: "0.5em", 
+                fontSize: "1.4rem", 
+                fontWeight: 800, 
+                color: "var(--navy)", 
+                background: "rgba(255, 255, 255, 0.9)", 
+                backdropFilter: "blur(5px)", 
+                padding: "0.4em 1em", 
+                borderRadius: "24px", 
+                boxShadow: "0 6px 16px rgba(0,0,0,0.2)"
+              }}>
+                <img src="/klok.png" alt="KLOK" style={{ height: "1.8em", width: "auto" }} />
+                {Math.floor(tower.height / 0.168).toLocaleString()} KLOK high
+              </span>
+            )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img 
+              src={tower.image_url} 
+              alt={tower.title} 
+              style={{ width: "100%", maxHeight: "55vh", objectFit: "contain", backgroundColor: "#111", display: "block" }} 
+            />
+          </div>
           
           <div style={{ padding: "2.5rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1.5rem" }}>

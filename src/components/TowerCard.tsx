@@ -44,7 +44,29 @@ export default function TowerCard({ tower, voteDirection: initialVoteDirection, 
 
   return (
     <article className="post hentry" itemScope itemType="http://schema.org/Photograph">
-      <div onClick={() => onSelect(tower)} className="post-thumbnail-container" style={{ cursor: "pointer" }}>
+      <div onClick={() => onSelect(tower)} className="post-thumbnail-container" style={{ cursor: "pointer", position: "relative" }}>
+        {tower.height && tower.height > 0 && (
+          <span style={{ 
+            position: "absolute", 
+            top: "0.8rem", 
+            left: "0.8rem", 
+            zIndex: 10,
+            display: "flex", 
+            alignItems: "center", 
+            gap: "0.4em", 
+            fontSize: "1rem", 
+            fontWeight: 800, 
+            color: "var(--navy)", 
+            background: "rgba(255, 255, 255, 0.9)", 
+            backdropFilter: "blur(4px)", 
+            padding: "0.3em 0.8em", 
+            borderRadius: "16px", 
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+          }}>
+            <img src="/klok.png" alt="KLOK" style={{ height: "1.6em", width: "auto" }} />
+            {Math.floor(tower.height / 0.168).toLocaleString()} KLOK high
+          </span>
+        )}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={tower.image_url} alt={tower.title} loading="lazy" />
       </div>
@@ -55,7 +77,7 @@ export default function TowerCard({ tower, voteDirection: initialVoteDirection, 
           <h2 className="entry-title" itemProp="name" style={{ fontSize: "1.1rem", marginBottom: "0.2rem", cursor: "pointer", color: "var(--text)" }} onClick={() => onSelect(tower)}>
             {tower.title}
           </h2>
-          <div className="entry-meta" style={{ marginTop: "0.3em" }}>
+          <div className="entry-meta" style={{ marginTop: "0.3em", display: "flex", flexWrap: "wrap", gap: "0.8em", alignItems: "center" }}>
             <span style={{ fontSize: "0.85em", color: "#666", fontStyle: "italic" }}>
               Submitted by <span itemProp="author" style={{ fontWeight: 600, color: "#333", fontStyle: "normal" }}>{tower.submitter_name}</span>
             </span>

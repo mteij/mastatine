@@ -11,7 +11,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { title, description, submitter_name, image_url } = body;
+  const { title, description, submitter_name, image_url, height } = body;
 
   if (!title?.trim() || !submitter_name?.trim() || !image_url?.trim()) {
     return NextResponse.json(
@@ -26,10 +26,11 @@ export async function POST(req: NextRequest) {
   const cleanTitle = filter.clean(title.trim());
   const cleanDescription = description ? filter.clean(description.trim()) : null;
   const cleanSubmitter = filter.clean(submitter_name.trim());
+  const cleanHeight = typeof height === "number" && !isNaN(height) ? height : null;
 
   const [tower] = await sql`
-    INSERT INTO towers (title, description, submitter_name, image_url)
-    VALUES (${cleanTitle}, ${cleanDescription}, ${cleanSubmitter}, ${image_url})
+    INSERT INTO towers (title, description, submitter_name, image_url, height)
+    VALUES (${cleanTitle}, ${cleanDescription}, ${cleanSubmitter}, ${image_url}, ${cleanHeight})
     RETURNING *
   `;
 

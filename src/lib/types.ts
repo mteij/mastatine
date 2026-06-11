@@ -4,6 +4,7 @@ export interface Tower {
   description: string | null;
   submitter_name: string;
   image_url: string;
+  height: number | null;
   vote_count: number;
   created_at: string;
 }

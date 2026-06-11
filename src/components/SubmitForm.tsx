@@ -68,6 +68,7 @@ export default function SubmitForm({ onSuccess }: SubmitFormProps = {}) {
   const [name, setName] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [height, setHeight] = useState("");
   
   // Ref for the bad-words filter
   const filterRef = useRef<any>(null);
@@ -147,7 +148,13 @@ export default function SubmitForm({ onSuccess }: SubmitFormProps = {}) {
       const submitRes = await fetch("/api/towers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: submitTitle, description: submitDesc, submitter_name: submitName, image_url: url }),
+        body: JSON.stringify({ 
+          title: submitTitle, 
+          description: submitDesc, 
+          submitter_name: submitName, 
+          image_url: url,
+          height: height ? parseFloat(height) : null
+        }),
       });
 
       if (!submitRes.ok) {
@@ -210,6 +217,22 @@ export default function SubmitForm({ onSuccess }: SubmitFormProps = {}) {
           onChange={(e) => setTitle(e.target.value)}
           required
           placeholder="e.g. The Gerbrandy Tower, IJsselstein"
+          className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f57f20] focus:border-transparent"
+        />
+      </div>
+
+      {/* Height */}
+      <div>
+        <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+          Approximated Height (meters){" "}
+          <span className="text-slate-400 font-normal">(optional)</span>
+        </label>
+        <input
+          type="number"
+          value={height}
+          onChange={(e) => setHeight(e.target.value)}
+          placeholder="e.g. 366.8"
+          step="0.1"
           className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f57f20] focus:border-transparent"
         />
       </div>
