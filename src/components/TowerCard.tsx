@@ -61,16 +61,16 @@ export default function TowerCard({ tower, voteDirection: initialVoteDirection, 
             </span>
           </div>
           {tower.description && (
-            <div style={{ marginTop: "0.5em", fontSize: "0.85em", color: "var(--text-mid)", lineHeight: 1.4, wordBreak: "break-word" }}>
-              {(tower.description.length > 65 || tower.description.includes('\n')) ? (
+            <div style={{ marginTop: "0.6em", fontSize: "0.85rem", color: "var(--text-mid)", lineHeight: 1.5, wordBreak: "break-word" }}>
+              {tower.description.length > 160 ? (
                 <>
-                  {tower.description.split('\n')[0].slice(0, 65).trim()}...{" "}
+                  {tower.description.replace(/\n/g, ' ').slice(0, 160).trim()}...{" "}
                   <span onClick={(e) => { e.stopPropagation(); onSelect(tower); }} style={{ color: "var(--orange)", cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}>
                     Read more
                   </span>
                 </>
               ) : (
-                <>{tower.description}</>
+                <>{tower.description.replace(/\n/g, ' ')}</>
               )}
             </div>
           )}

@@ -144,7 +144,19 @@ export default async function HomePage(
                     </span>
                   </div>
                 </header>
-                <div className="entry-content" itemProp="articleBody">
+                <div 
+                  className="entry-content" 
+                  itemProp="articleBody"
+                  style={{
+                    display: "-webkit-box",
+                    WebkitLineClamp: 7,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    flex: 1,
+                    marginBottom: "0.5rem"
+                  }}
+                >
                   {post.content}
                 </div>
                 <SubmitModal />
