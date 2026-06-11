@@ -274,16 +274,6 @@ export default function Sidebar({ activities }: SidebarProps) {
             {/* ── spacer ── */}
             <div style={{ flex: 1 }} />
 
-            {/* ── PARTNER WIDGET ── */}
-            <div className="widget-container" style={{ borderTop: "1px solid #eee", paddingTop: "1em", marginTop: "1em" }}>
-              <h3 className="widget-title"><span>Partner</span></h3>
-              <a href="/tennet">
-                <div style={{ background: "#f5f5f5", padding: "0.75em", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                  <TennetLogo />
-                </div>
-              </a>
-            </div>
-
             {/* ── ACTIVITIES WIDGET ── */}
             <div className="widget-container" style={{ borderTop: "1px solid #eee", paddingTop: "1em", marginTop: "1em" }}>
               <h3 className="widget-title"><span>Activities this week</span></h3>
@@ -462,38 +452,3 @@ export default function Sidebar({ activities }: SidebarProps) {
   );
 }
 
-function TennetLogo() {
-  return (
-    <svg
-      viewBox="0 0 200 48"
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ width: "100%", maxWidth: 160 }}
-      aria-label="TenneT"
-    >
-      <text
-        x="100"
-        y="36"
-        textAnchor="middle"
-        fontFamily="Arial Black, Arial, sans-serif"
-        fontWeight="900"
-        fontSize="36"
-        fill="#f57f20"
-        letterSpacing="-1"
-      >
-        TenneT
-      </text>
-      <text
-        x="100"
-        y="47"
-        textAnchor="middle"
-        fontFamily="Arial, sans-serif"
-        fontWeight="400"
-        fontSize="8"
-        fill="#666"
-        letterSpacing="2"
-      >
-        PARTNER OF MASTATINE
-      </text>
-    </svg>
-  );
-}
