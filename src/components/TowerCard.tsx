@@ -51,18 +51,32 @@ export default function TowerCard({ tower, voteDirection: initialVoteDirection, 
       <div className="featured-bar" />
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flex: 1 }}>
-        <header className="entry-header" style={{ marginBottom: 0 }}>
+        <header className="entry-header" style={{ marginBottom: 0, flex: 1, paddingRight: "1em", minWidth: 0 }}>
           <h2 className="entry-title" itemProp="name" style={{ fontSize: "1.1rem", marginBottom: "0.2rem", cursor: "pointer", color: "var(--text)" }} onClick={() => onSelect(tower)}>
             {tower.title}
           </h2>
-          <div className="entry-meta">
-            <span>
-              <span itemProp="author">{tower.submitter_name}</span>
+          <div className="entry-meta" style={{ marginTop: "0.3em" }}>
+            <span style={{ fontSize: "0.85em", color: "#666", fontStyle: "italic" }}>
+              Submitted by <span itemProp="author" style={{ fontWeight: 600, color: "#333", fontStyle: "normal" }}>{tower.submitter_name}</span>
             </span>
           </div>
+          {tower.description && (
+            <div style={{ marginTop: "0.5em", fontSize: "0.85em", color: "var(--text-mid)", lineHeight: 1.4, wordBreak: "break-word" }}>
+              {(tower.description.length > 65 || tower.description.includes('\n')) ? (
+                <>
+                  {tower.description.split('\n')[0].slice(0, 65).trim()}...{" "}
+                  <span onClick={(e) => { e.stopPropagation(); onSelect(tower); }} style={{ color: "var(--orange)", cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}>
+                    Read more
+                  </span>
+                </>
+              ) : (
+                <>{tower.description}</>
+              )}
+            </div>
+          )}
         </header>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.4rem", flexShrink: 0, paddingLeft: "0.5rem" }}>
           <button
             type="button"
             onClick={() => handleVote("up")}
@@ -71,18 +85,18 @@ export default function TowerCard({ tower, voteDirection: initialVoteDirection, 
               background: voteDirection === "up" ? "var(--orange)" : "transparent",
               color: voteDirection === "up" ? "#fff" : "var(--text-mid)",
               border: `1px solid ${voteDirection === "up" ? "var(--orange)" : "var(--border)"}`,
-              borderRadius: "3px",
-              padding: "0.2rem 0.5rem",
+              borderRadius: "4px",
+              padding: "0.35rem 0.85rem",
               cursor: voted ? "default" : "pointer",
               fontWeight: 700,
-              fontSize: "0.9rem",
+              fontSize: "1.1rem",
               lineHeight: 1,
               transition: "all 0.15s",
             }}
           >
             ▲
           </button>
-          <span style={{ fontWeight: 700, minWidth: "2ch", textAlign: "center", color: "var(--text)", fontSize: "0.9rem" }}>
+          <span style={{ fontWeight: 700, minWidth: "2ch", textAlign: "center", color: "var(--text)", fontSize: "1.1rem", lineHeight: 1 }}>
             {votes}
           </span>
           <button
@@ -93,11 +107,11 @@ export default function TowerCard({ tower, voteDirection: initialVoteDirection, 
               background: voteDirection === "down" ? "var(--navy)" : "transparent",
               color: voteDirection === "down" ? "#fff" : "var(--text-mid)",
               border: `1px solid ${voteDirection === "down" ? "var(--navy)" : "var(--border)"}`,
-              borderRadius: "3px",
-              padding: "0.2rem 0.5rem",
+              borderRadius: "4px",
+              padding: "0.35rem 0.85rem",
               cursor: voted ? "default" : "pointer",
               fontWeight: 700,
-              fontSize: "0.9rem",
+              fontSize: "1.1rem",
               lineHeight: 1,
               transition: "all 0.15s",
             }}

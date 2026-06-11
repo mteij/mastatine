@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import sql from "@/lib/db";
+import { Filter } from "bad-words";
 
 export async function GET() {
   const towers = await sql`
@@ -19,9 +20,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const filter = new Filter();
+
+  // Clean inputs from profanity/bad words
+  const cleanTitle = filter.clean(title.trim());
+  const cleanDescription = description ? filter.clean(description.trim()) : null;
+  const cleanSubmitter = filter.clean(submitter_name.trim());
+
   const [tower] = await sql`
     INSERT INTO towers (title, description, submitter_name, image_url)
-    VALUES (${title.trim()}, ${description?.trim() || null}, ${submitter_name.trim()}, ${image_url})
+    VALUES (${cleanTitle}, ${cleanDescription}, ${cleanSubmitter}, ${image_url})
     RETURNING *
   `;
 

@@ -131,7 +131,7 @@ export default async function HomePage(
                 itemProp="blogPost"
               >
                 <header className="entry-header">
-                  <h2 className="entry-title" itemProp="headline" style={{ fontSize: "1.05rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  <h2 className="entry-title" itemProp="headline" style={{ fontSize: "1.15rem", fontWeight: "bold", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                     <a href={`/${post.slug}`} itemProp="mainEntityOfPage" rel="bookmark" style={{ color: "var(--navy)" }}>
                       {post.title}
                     </a>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 type FormState = "idle" | "compressing" | "uploading" | "submitting" | "success" | "error";
@@ -65,6 +65,25 @@ export default function SubmitForm({ onSuccess }: SubmitFormProps = {}) {
   const [errorMsg, setErrorMsg] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
 
+  const [name, setName] = useState("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  
+  // Ref for the bad-words filter
+  const filterRef = useRef<any>(null);
+
+  useEffect(() => {
+    import("bad-words").then(({ Filter }) => {
+      filterRef.current = new Filter();
+    });
+  }, []);
+
+  const isProfane = filterRef.current
+    ? filterRef.current.isProfane(name) ||
+      filterRef.current.isProfane(title) ||
+      filterRef.current.isProfane(description)
+    : false;
+
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -88,14 +107,17 @@ export default function SubmitForm({ onSuccess }: SubmitFormProps = {}) {
     e.preventDefault();
     setErrorMsg("");
 
-    const form = e.currentTarget;
-    const data = new FormData(form);
-    const title = (data.get("title") as string).trim();
-    const description = (data.get("description") as string).trim();
-    const submitter_name = (data.get("submitter_name") as string).trim();
+    if (isProfane) {
+      setErrorMsg("Please remove inappropriate language before submitting.");
+      return;
+    }
+
+    const submitName = name.trim();
+    const submitTitle = title.trim();
+    const submitDesc = description.trim();
     const file = fileRef.current?.files?.[0];
 
-    if (!title || !submitter_name || !file) {
+    if (!submitTitle || !submitName || !file) {
       setErrorMsg("Please fill in all required fields and select a photo.");
       return;
     }
@@ -125,7 +147,7 @@ export default function SubmitForm({ onSuccess }: SubmitFormProps = {}) {
       const submitRes = await fetch("/api/towers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, submitter_name, image_url: url }),
+        body: JSON.stringify({ title: submitTitle, description: submitDesc, submitter_name: submitName, image_url: url }),
       });
 
       if (!submitRes.ok) {
@@ -169,7 +191,8 @@ export default function SubmitForm({ onSuccess }: SubmitFormProps = {}) {
         </label>
         <input
           type="text"
-          name="submitter_name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           required
           placeholder="e.g. Jan de Vries"
           className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f57f20] focus:border-transparent"
@@ -183,7 +206,8 @@ export default function SubmitForm({ onSuccess }: SubmitFormProps = {}) {
         </label>
         <input
           type="text"
-          name="title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
           required
           placeholder="e.g. The Gerbrandy Tower, IJsselstein"
           className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f57f20] focus:border-transparent"
@@ -197,7 +221,8 @@ export default function SubmitForm({ onSuccess }: SubmitFormProps = {}) {
           <span className="text-slate-400 font-normal">(optional)</span>
         </label>
         <textarea
-          name="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           rows={3}
           placeholder="Tell us something interesting about this mast — height, purpose, location, why it's spectacular…"
           className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f57f20] focus:border-transparent resize-none"
@@ -240,7 +265,13 @@ export default function SubmitForm({ onSuccess }: SubmitFormProps = {}) {
         />
       </div>
 
-      {errorMsg && (
+      {isProfane && (
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg px-4 py-3 font-medium flex items-center gap-2">
+          <span>⚠️</span> Please keep the language clean! Inappropriate words detected.
+        </div>
+      )}
+
+      {errorMsg && !isProfane && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
           {errorMsg}
         </div>
@@ -248,8 +279,8 @@ export default function SubmitForm({ onSuccess }: SubmitFormProps = {}) {
 
       <button
         type="submit"
-        disabled={isLoading}
-        className="w-full btn-orange py-3 disabled:opacity-60 disabled:cursor-not-allowed"
+        disabled={isLoading || isProfane}
+        className="w-full btn-orange py-3 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
       >
         {state === "compressing"
           ? "Optimising image…"

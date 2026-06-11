@@ -409,7 +409,7 @@ button.continue-reading-link:disabled {
 .verbosa-magazine-two #content-masonry article.hentry,
 .verbosa-magazine-two .content-masonry article.hentry {
   width: 100%;
-  height: 280px;
+  height: 340px;
   padding: 1em;
   margin-bottom: 0;
   display: flex;
@@ -447,7 +447,7 @@ article.hentry .post-thumbnail-container {
   /* bleed past the article padding: top=1em, sides=1em */
   margin: -1em -1em 0.5em;
   width: calc(100% + 2em);
-  height: 66.666%;
+  height: 55%;
   flex-shrink: 0;
   border-radius: 6px 6px 0 0;
 }
