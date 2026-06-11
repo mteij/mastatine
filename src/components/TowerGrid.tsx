@@ -43,7 +43,7 @@ export default function TowerGrid({ initialTowers, votedTowerIds: initialVotedId
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as SortOption)}
-            className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#f57f20]"
           >
             <option value="votes">Most voted</option>
             <option value="newest">Newest</option>

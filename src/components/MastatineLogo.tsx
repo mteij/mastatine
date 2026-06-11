@@ -44,7 +44,7 @@ export default function MastatineLogo({ size = 64, className = "" }: MastaLogoPr
         const rad = (deg * Math.PI) / 180;
         const x = 100 + 44 * Math.sin(rad);
         const y = 92 - 44 * Math.cos(rad);
-        return <circle key={i} cx={x} cy={y} r={5.5} fill="#e8b800" />;
+        return <circle key={i} cx={x} cy={y} r={5.5} fill="#f57f20" />;
       })}
 
       {/* Transmission tower — replaces "At" from the Astatine logo */}

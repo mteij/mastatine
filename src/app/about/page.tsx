@@ -2,7 +2,7 @@ export default function AboutPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-black text-[#1a2332] mb-6">
-        About S.A. <span className="text-yellow-400">Mastatine</span>
+        About S.A. <span className="text-[#f57f20]">Mastatine</span>
       </h1>
 
       <div className="prose prose-slate max-w-none space-y-6">
@@ -50,15 +50,15 @@ export default function AboutPage() {
               href="https://astatine.utwente.nl"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-yellow-600 font-semibold hover:underline"
+              className="text-[#f57f20] font-semibold hover:underline"
             >
               astatine.utwente.nl ↗
             </a>
           </p>
         </div>
 
-        <div className="bg-yellow-50 rounded-xl p-6 border border-yellow-200">
-          <p className="text-yellow-800 text-sm">
+        <div className="bg-[#FFF3E8] rounded-xl p-6 border border-[#f57f20]/30">
+          <p className="text-[#c05e00] text-sm">
             <strong>Disclaimer:</strong> This website is a joke. S.A. Mastatine
             is not a real study association and is not affiliated with the
             University of Twente or S.A. Astatine. No academic credit is awarded

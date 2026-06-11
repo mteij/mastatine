@@ -1,18 +1,19 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Lato } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-const geist = Geist({
+const lato = Lato({
   subsets: ["latin"],
-  variable: "--font-geist",
+  weight: ["300", "400", "700", "900"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "S.A. Mastatine — Study Association for Transmission Towers",
+  title: "S.A. Mastatine — The study association for transmission tower enthusiasts",
   description:
-    "The premier study association for the appreciation of transmission towers, masts, and all things electromagnetic. Submit and vote on the best masts.",
+    "S.A. Mastatine is the study association for Advanced Tower Technology. Submit and vote on the finest transmission towers, masts and electromagnetic structures.",
   openGraph: {
     title: "S.A. Mastatine",
     description: "Submit and vote on the best transmission towers.",
@@ -26,8 +27,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="nl" className={`${geist.variable} h-full`}>
-      <body className="min-h-screen flex flex-col bg-slate-50 antialiased font-[var(--font-geist)]">
+    <html lang="nl" className={`${lato.className} h-full`}>
+      <body className="min-h-screen flex flex-col bg-white antialiased">
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />

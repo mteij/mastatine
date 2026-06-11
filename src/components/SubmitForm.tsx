@@ -111,7 +111,7 @@ export default function SubmitForm() {
           name="submitter_name"
           required
           placeholder="e.g. Jan de Vries"
-          className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+          className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f57f20] focus:border-transparent"
         />
       </div>
 
@@ -125,7 +125,7 @@ export default function SubmitForm() {
           name="title"
           required
           placeholder="e.g. The Gerbrandy Tower, IJsselstein"
-          className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+          className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f57f20] focus:border-transparent"
         />
       </div>
 
@@ -139,7 +139,7 @@ export default function SubmitForm() {
           name="description"
           rows={3}
           placeholder="Tell us something interesting about this mast — height, purpose, location, why it's spectacular…"
-          className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent resize-none"
+          className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f57f20] focus:border-transparent resize-none"
         />
       </div>
 
@@ -149,7 +149,7 @@ export default function SubmitForm() {
           Photo <span className="text-red-500">*</span>
         </label>
         <div
-          className="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center cursor-pointer hover:border-yellow-400 transition-colors"
+          className="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center cursor-pointer hover:border-[#f57f20] transition-colors"
           onClick={() => fileRef.current?.click()}
         >
           {preview ? (
@@ -192,7 +192,7 @@ export default function SubmitForm() {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full bg-[#1a2332] text-white font-bold py-3 rounded-lg hover:bg-yellow-400 hover:text-[#1a2332] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        className="w-full btn-orange py-3 disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {state === "uploading"
           ? "Uploading photo…"

@@ -1,8 +1,9 @@
 import sql from "@/lib/db";
 import { Tower } from "@/lib/types";
-import MastatineLogo from "@/components/MastatineLogo";
+import HeroCarousel from "@/components/HeroCarousel";
 import TowerGrid from "@/components/TowerGrid";
 import SubmitForm from "@/components/SubmitForm";
+import MastatineLogo from "@/components/MastatineLogo";
 
 async function getTowers(): Promise<Tower[]> {
   try {
@@ -28,214 +29,208 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* ═══════════════════════════════════════════════════
-          HERO
-      ═══════════════════════════════════════════════════ */}
-      <section
-        id="home"
-        className="bg-[#1b2539] text-white relative overflow-hidden"
-      >
-        {/* Decorative background tower silhouettes */}
-        <div className="absolute inset-0 opacity-[0.04] pointer-events-none" aria-hidden>
-          <svg
-            viewBox="0 0 800 500"
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-full h-full"
-            preserveAspectRatio="xMidYMid slice"
-          >
-            {[80, 240, 400, 560, 720].map((cx, i) => (
-              <TowerSilhouette key={i} cx={cx} />
-            ))}
-          </svg>
-        </div>
+      {/* ── HERO CAROUSEL ── */}
+      <section id="home">
+        <HeroCarousel />
+      </section>
 
-        <div className="relative max-w-5xl mx-auto px-4 py-20 flex flex-col items-center text-center">
-          <MastatineLogo size={140} />
-          <h1 className="text-4xl sm:text-5xl font-black tracking-tight mt-6 mb-3">
-            S.A. <span className="text-[#e8b800]">Mastatine</span>
-          </h1>
-          <p className="text-slate-300 text-lg italic mb-2">
-            Studievereniging voor Gevorderde Masttechnologie
-          </p>
-          <p className="text-slate-400 max-w-lg text-sm mb-10">
-            The world&apos;s premier academic association for the documentation,
-            appreciation, and ranking of transmission towers, communication
-            masts, and all electromagnetic structures.
-          </p>
-
-          <div className="flex flex-wrap justify-center gap-4">
-            <a
-              href="#towers"
-              className="bg-[#e8b800] text-[#1b2539] font-bold px-8 py-3 rounded-lg hover:bg-yellow-300 transition-colors"
-            >
-              Browse Masts
-            </a>
-            <a
-              href="#submit"
-              className="border-2 border-white/25 text-white font-bold px-8 py-3 rounded-lg hover:bg-white/10 transition-colors"
-            >
-              Submit a Mast
-            </a>
-          </div>
-
-          {towerCount > 0 && (
-            <p className="mt-8 text-slate-500 text-xs">
-              {towerCount} mast{towerCount !== 1 ? "s" : ""} catalogued so far
-            </p>
-          )}
+      {/* ── INTRO STRIP ── */}
+      <section className="bg-[#f57f20] text-white py-3">
+        <div className="max-w-6xl mx-auto px-4 flex flex-wrap items-center justify-between gap-2 text-sm font-semibold">
+          <span>
+            {towerCount > 0
+              ? `${towerCount} mast${towerCount !== 1 ? "en" : ""} ingediend — en er komen er meer bij!`
+              : "De première studenten-mastvereniging van Nederland!"}
+          </span>
+          <a href="#submit" className="underline hover:no-underline">
+            Dien een mast in &rarr;
+          </a>
         </div>
       </section>
 
-      {/* Warning tape stripe */}
-      <div
-        className="h-3 shrink-0"
-        style={{
-          background:
-            "repeating-linear-gradient(45deg,#e8b800 0,#e8b800 10px,#1b2539 10px,#1b2539 20px)",
-        }}
-      />
+      {/* ── WELCOME SECTION ── */}
+      <section className="bg-white py-14">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-10 items-center">
+            <div>
+              <h2 className="section-heading">Welkom bij S.A. Mastatine</h2>
+              <p className="text-[#555] mb-4 leading-relaxed">
+                S.A. Mastatine is de studievereniging voor studenten
+                Gevorderde Masttechnologie aan de Universiteit van Twente.
+                Wij staan voor de documentatie, appreciatie en ranking van
+                hoogspanningsmasten, communicatiemasten en alle
+                elektromagnetische constructies.
+              </p>
+              <p className="text-[#555] mb-6 leading-relaxed">
+                Heb jij een spectaculaire mast gevonden? Dien hem in en laat
+                de community stemmen!
+              </p>
+              <div className="flex gap-3 flex-wrap">
+                <a href="#towers" className="btn-orange">Mastengalerij</a>
+                <a href="#about" className="inline-block border-2 border-[#f57f20] text-[#f57f20] font-bold px-6 py-2 rounded hover:bg-[#f57f20] hover:text-white transition-colors">
+                  Over ons
+                </a>
+              </div>
+            </div>
+            <div className="flex justify-center">
+              <div className="relative">
+                <MastatineLogo size={220} />
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-xs text-[#888] whitespace-nowrap">
+                  Element 85 — Mastatine
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      {/* ═══════════════════════════════════════════════════
-          TOWER GALLERY
-      ═══════════════════════════════════════════════════ */}
+      {/* ── FEATURE TILES ── */}
+      <section className="bg-[#f7f7f7] border-t border-[#e0e0e0] py-14">
+        <div className="max-w-6xl mx-auto px-4">
+          <h2 className="section-heading mb-8">Wat is S.A. Mastatine?</h2>
+          <div className="grid sm:grid-cols-3 gap-6">
+            {[
+              {
+                icon: "📡",
+                title: "Ontdek masten",
+                body: "Blader door de groeiende collectie van ingediende masten uit heel Nederland en daarbuiten.",
+              },
+              {
+                icon: "⬆️",
+                title: "Stem op de beste",
+                body: "Geef je stem aan de mooiste, raarste of indrukwekkendste toren in de galerij.",
+              },
+              {
+                icon: "📸",
+                title: "Dien een mast in",
+                body: "Upload een foto van jouw favoriete mast en voeg hem toe aan het officiële register.",
+              },
+            ].map(({ icon, title, body }) => (
+              <div
+                key={title}
+                className="bg-white rounded border border-[#e0e0e0] p-6 hover:border-[#f57f20] transition-colors group"
+              >
+                <div className="text-3xl mb-3">{icon}</div>
+                <h3 className="font-bold text-[#2d2d2d] mb-2 group-hover:text-[#f57f20] transition-colors">
+                  {title}
+                </h3>
+                <p className="text-[#555] text-sm leading-relaxed">{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── TOWER GALLERY ── */}
       <section id="towers" className="bg-white py-14 scroll-mt-16">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="flex items-end justify-between mb-8 gap-4">
+          <div className="flex items-end justify-between mb-8 gap-4 flex-wrap">
             <div>
-              <h2 className="text-3xl font-black text-[#1b2539]">
-                Mast Gallery
-              </h2>
-              <p className="text-slate-500 mt-1 text-sm">
-                Browse, vote, and celebrate the finest transmission towers
-                submitted by our community.
+              <h2 className="section-heading">Mastengalerij</h2>
+              <p className="text-[#555] text-sm mt-1">
+                Browse, stem en vier de mooiste masten ingediend door onze gemeenschap.
               </p>
             </div>
-            <a
-              href="#submit"
-              className="shrink-0 bg-[#1b2539] text-white font-bold px-5 py-2.5 rounded-lg hover:bg-[#e8b800] hover:text-[#1b2539] transition-colors text-sm"
-            >
-              + Submit a Mast
+            <a href="#submit" className="btn-orange text-sm shrink-0">
+              + Mast indienen
             </a>
           </div>
-
           <TowerGrid initialTowers={towers} votedTowerIds={[]} />
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════
-          SUBMIT
-      ═══════════════════════════════════════════════════ */}
+      {/* ── SUBMIT ── */}
       <section
         id="submit"
-        className="bg-[#f5f6fa] border-t border-slate-200 py-14 scroll-mt-16"
+        className="bg-[#f7f7f7] border-t border-[#e0e0e0] py-14 scroll-mt-16"
       >
         <div className="max-w-2xl mx-auto px-4">
-          <div className="mb-8">
-            <h2 className="text-3xl font-black text-[#1b2539] mb-2">
-              Submit a Mast
-            </h2>
-            <p className="text-slate-500 text-sm">
-              Found an impressive transmission tower, antenna mast, or other
-              electromagnetic structure? Add it to the Mastatine registry.
-            </p>
-          </div>
+          <h2 className="section-heading mb-2">Mast indienen</h2>
+          <p className="text-[#555] text-sm mb-6">
+            Een indrukwekkende mast gevonden? Voeg hem toe aan het Mastatine-register.
+          </p>
 
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-5">
+          <div className="bg-white rounded border border-[#e0e0e0] p-6 mb-5 shadow-sm">
             <SubmitForm />
           </div>
 
-          <div className="bg-[#fffbe6] border border-[#e8b800]/40 rounded-xl p-4">
-            <h3 className="font-bold text-[#92701a] text-sm mb-1">
-              📋 Submission Guidelines
+          <div className="bg-[#FFF3E8] border border-[#f57f20]/40 rounded p-4">
+            <h3 className="font-bold text-[#c05e00] text-sm mb-1">
+              Inzendingsrichtlijnen
             </h3>
-            <ul className="text-[#92701a] text-sm space-y-1">
-              <li>• Must be a real transmission tower, mast, or antenna</li>
-              <li>• Photo must clearly show the mast</li>
-              <li>• Add a descriptive or entertaining title</li>
-              <li>• No duplicates — check the gallery first</li>
+            <ul className="text-[#c05e00] text-sm space-y-1">
+              <li>• Moet een echte mast, antenne of elektromagnetische constructie zijn</li>
+              <li>• Foto moet de mast duidelijk tonen</li>
+              <li>• Voeg een beschrijvende of grappige titel toe</li>
+              <li>• Geen duplicaten — controleer de galerij eerst</li>
             </ul>
           </div>
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════
-          ABOUT
-      ═══════════════════════════════════════════════════ */}
+      {/* ── ABOUT ── */}
       <section
         id="about"
-        className="bg-[#1b2539] text-white py-16 border-t border-white/5 scroll-mt-16"
+        className="bg-[#1a2332] text-white py-16 scroll-mt-16"
       >
-        <div className="max-w-3xl mx-auto px-4 text-center">
-          <MastatineLogo size={80} className="mx-auto mb-6 opacity-90" />
-          <h2 className="text-3xl font-black mb-6">
-            About S.A. <span className="text-[#e8b800]">Mastatine</span>
-          </h2>
-
-          <div className="space-y-4 text-slate-300 text-sm leading-relaxed max-w-xl mx-auto">
-            <p>
-              <strong className="text-white">What&apos;s Mastatine?</strong> It&apos;s
-              a portmanteau of <em>Mast</em> (Dutch for a transmission tower)
-              and <em>Astatine</em>, the Advanced Technology study association
-              at the University of Twente.
-            </p>
-            <p>
-              The{" "}
-              <a
-                href="https://astatine.utwente.nl"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#e8b800] hover:underline font-semibold"
-              >
-                real S.A. Astatine
-              </a>{" "}
-              logo has the element symbol &ldquo;At&rdquo; at its centre,
-              surrounded by 7 valence electrons. We&apos;ve kept the 7
-              electrons but replaced &ldquo;At&rdquo; with a transmission tower
-              — because <em>Mast</em> + <em>atine</em> = <em>Mastatine</em>.
-            </p>
-            <p>
-              Element 85, same atomic number, just with better antenna
-              coverage.
-            </p>
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-10 items-start">
+            <div>
+              <h2 className="text-2xl font-black mb-4" style={{ color: "#f57f20" }}>
+                Over S.A. Mastatine
+              </h2>
+              <div className="space-y-4 text-slate-300 text-sm leading-relaxed">
+                <p>
+                  <strong className="text-white">Wat is Mastatine?</strong>{" "}
+                  Het is een samentrekking van <em>Mast</em> (een
+                  zendmast/hoogspanningsmast) en <em>Astatine</em>, de
+                  studievereniging voor Advanced Technology aan de
+                  Universiteit Twente.
+                </p>
+                <p>
+                  Het logo van de{" "}
+                  <a
+                    href="https://astatine.utwente.nl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#f57f20] hover:underline font-semibold"
+                  >
+                    echte S.A. Astatine
+                  </a>{" "}
+                  heeft het elementsymbool &ldquo;At&rdquo; in het midden,
+                  omgeven door 7 valentie-elektronen. Wij hebben de 7
+                  elektronen behouden maar &ldquo;At&rdquo; vervangen door
+                  een zendmast — want <em>Mast</em> + <em>atine</em> ={" "}
+                  <em>Mastatine</em>.
+                </p>
+                <p>Element 85, hetzelfde atoomnummer, alleen met betere antennedekking.</p>
+              </div>
+            </div>
+            <div className="bg-white/5 rounded border border-white/10 p-6">
+              <h3 className="font-bold text-white mb-4 text-sm uppercase tracking-wider">
+                Snelle feiten
+              </h3>
+              <dl className="space-y-3 text-sm">
+                {[
+                  ["Atoomnummer", "85"],
+                  ["Symbool", "Mt (Mastatine)"],
+                  ["Categorie", "Elektromagnetische halogeen"],
+                  ["Ontdekt", "2025, Enschede"],
+                  ["Bijzonderheid", "Uitstekende antennedekking"],
+                ].map(([term, def]) => (
+                  <div key={term} className="flex justify-between gap-4">
+                    <dt className="text-slate-400">{term}</dt>
+                    <dd className="text-white font-semibold text-right">{def}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
           </div>
-
-          <div className="mt-8 pt-8 border-t border-white/10 text-xs text-slate-500">
-            Not affiliated with S.A. Astatine or the University of Twente. No masts were harmed. 📡
+          <div className="mt-10 pt-6 border-t border-white/10 text-xs text-slate-500 text-center">
+            Niet gelieerd aan S.A. Astatine of de Universiteit Twente. Geen masten zijn beschadigd. 📡
           </div>
         </div>
       </section>
     </>
-  );
-}
-
-// Inline helper — decorative tower silhouette for the hero background
-function TowerSilhouette({ cx }: { cx: number }) {
-  return (
-    <g
-      transform={`translate(${cx}, 250)`}
-      stroke="white"
-      fill="none"
-      strokeWidth="3"
-      strokeLinecap="round"
-    >
-      <line x1="0" y1="-230" x2="-20" y2="-190" />
-      <line x1="0" y1="-230" x2="20" y2="-190" />
-      <line x1="-55" y1="-195" x2="55" y2="-195" />
-      <line x1="-20" y1="-190" x2="-16" y2="-130" />
-      <line x1="20" y1="-190" x2="16" y2="-130" />
-      <line x1="-20" y1="-180" x2="20" y2="-140" strokeWidth="1.5" />
-      <line x1="20" y1="-180" x2="-20" y2="-140" strokeWidth="1.5" />
-      <line x1="-50" y1="-130" x2="50" y2="-130" />
-      <line x1="-16" y1="-130" x2="-24" y2="-40" />
-      <line x1="16" y1="-130" x2="24" y2="-40" />
-      <line x1="-16" y1="-115" x2="22" y2="-60" strokeWidth="1.5" />
-      <line x1="16" y1="-115" x2="-22" y2="-60" strokeWidth="1.5" />
-      <line x1="-16" y1="-75" x2="22" y2="-42" strokeWidth="1.5" />
-      <line x1="16" y1="-75" x2="-22" y2="-42" strokeWidth="1.5" />
-      <line x1="-40" y1="-40" x2="40" y2="-40" />
-      <line x1="-24" y1="-40" x2="-30" y2="0" />
-      <line x1="24" y1="-40" x2="30" y2="0" />
-      <line x1="-35" y1="0" x2="35" y2="0" />
-    </g>
   );
 }

@@ -48,7 +48,7 @@ export default function TowerCard({ tower, hasVoted: initialHasVoted }: TowerCar
           unoptimized
         />
         <div className="absolute top-2 right-2">
-          <span className="bg-yellow-400 text-[#1a2332] text-xs font-bold px-2 py-1 rounded-full shadow">
+          <span className="bg-[#f57f20] text-white text-xs font-bold px-2 py-1 rounded-full shadow">
             📡 Mast
           </span>
         </div>
@@ -73,8 +73,8 @@ export default function TowerCard({ tower, hasVoted: initialHasVoted }: TowerCar
             disabled={hasVoted || voting}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold transition-all ${
               hasVoted
-                ? "bg-yellow-100 text-yellow-700 cursor-default"
-                : "bg-[#1a2332] text-white hover:bg-yellow-400 hover:text-[#1a2332] active:scale-95"
+                ? "bg-orange-100 text-orange-700 cursor-default"
+                : "bg-[#1a2332] text-white hover:bg-[#f57f20] hover:text-white active:scale-95"
             } disabled:opacity-70`}
           >
             <span>{hasVoted ? "⚡" : "▲"}</span>
