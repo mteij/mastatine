@@ -26,40 +26,40 @@ export const revalidate = 30;
 const NEWS = [
   {
     id: 1,
-    slug: "mastatine-viert-eerste-lustrum",
-    title: "Mastatine viert haar eerste lustrum",
-    date: "20 januari 2026",
+    slug: "mastatine-celebrates-first-lustrum",
+    title: "Mastatine celebrates its first lustrum",
+    date: "January 20, 2026",
     content: (
       <>
-        <p>Beste leden,</p>
+        <p>Dear members,</p>
         <p>
-          Het academisch jaar 2025–2026 viert S.A. Mastatine haar eerste lustrum met het thema:{" "}
-          <strong>Elektromagnetisch</strong>. Elk jaar voegt Mastatine een nieuw couplet toe aan
-          ons favoriete lied. We hopen jullie allemaal te zien bij de fantastische activiteiten die
-          de lustrumcommissie heeft georganiseerd.
+          In the academic year 2025–2026, S.A. Mastatine celebrates its first lustrum with the
+          theme: <strong>Electromagnetic</strong>. Each year Mastatine adds a new verse to our
+          favourite song. We hope to see you all at the fantastic activities the lustrum committee
+          has organised.
         </p>
-        <p>Op de hoogste,</p>
-        <p>De lustrumcommissie</p>
+        <p>To the highest,</p>
+        <p>The lustrum committee</p>
       </>
     ),
   },
   {
     id: 2,
-    slug: "onze-nieuwe-vcp",
-    title: "Onze nieuwe VCP",
-    date: "14 oktober 2025",
+    slug: "our-new-vcp",
+    title: "Our new VCP",
+    date: "October 14, 2025",
     content: (
       <>
         <p>
-          We zijn er trots op te mogen aankondigen dat Mastatine nu een tweede{" "}
-          Vertrouwenscontactpersoon (VCP) heeft, Henk de Mastbouwer! Hij is getraind in
-          collegiale luistervaardigheden en deelt niets wat je hem in vertrouwen vertelt.
+          We are proud to announce that Mastatine now has a second Confidential Counsellor (VCP),
+          Henk de Mastbouwer! He is trained in collegial listening skills and will not share
+          anything you tell him in confidence.
         </p>
         <blockquote className="border-l-4 border-[#f57f20] pl-4 my-3 text-[#555] italic text-sm">
           <p>
-            Hoi iedereen! Mijn naam is Henk. Ik ben 23 jaar oud en zit momenteel in mijn derde
-            jaar Gevorderde Masttechnologie. In mijn vrije tijd beklim ik graag masten en lees ik
-            alles over elektromagnetische velden. Aarzel niet om contact met mij op te nemen via{" "}
+            Hi everyone! My name is Henk. I am 23 years old and currently in my third year of
+            Advanced Mast Technology. In my spare time I love climbing masts and reading everything
+            about electromagnetic fields. Do not hesitate to reach out via{" "}
             <a href="mailto:h.demastbouwer@student.utwente.nl">
               h.demastbouwer@student.utwente.nl
             </a>
@@ -70,39 +70,39 @@ const NEWS = [
   },
   {
     id: 3,
-    slug: "het-1e-bestuur",
-    title: "Het 1e Bestuur van S.A. Mastatine!",
-    date: "14 oktober 2025",
+    slug: "the-1st-board",
+    title: "The 1st Board of S.A. Mastatine!",
+    date: "October 14, 2025",
     content: (
       <>
         <p>
-          Het 1e bestuur van S.A. Mastatine werd formeel geïnstalleerd op 9 september 2025.
-          Het bestuur bestaat uit:
+          The 1st board of S.A. Mastatine was formally installed on 9 September 2025.
+          The board consists of:
         </p>
         <ul className="list-disc pl-5 space-y-1 text-sm">
-          <li><strong>Fien Hoogtespanning</strong> — Voorzitter</li>
-          <li><strong>Lars Kabelgoot</strong> — Secretaris</li>
-          <li><strong>Bo Stroomafnemer</strong> — Penningmeester</li>
-          <li><strong>Mila Isolator</strong> — Commissaris Onderwijs & Extern</li>
-          <li><strong>Roel Transformator</strong> — Commissaris Intern</li>
+          <li><strong>Fien Hoogtespanning</strong> — Chair</li>
+          <li><strong>Lars Kabelgoot</strong> — Secretary</li>
+          <li><strong>Bo Stroomafnemer</strong> — Treasurer</li>
+          <li><strong>Mila Isolator</strong> — Commissioner Education &amp; External</li>
+          <li><strong>Roel Transformator</strong> — Commissioner Internal</li>
         </ul>
       </>
     ),
   },
   {
     id: 4,
-    slug: "eerste-vcp",
-    title: "Onze eerste VCP",
-    date: "8 april 2025",
+    slug: "first-vcp",
+    title: "Our first VCP",
+    date: "April 8, 2025",
     content: (
       <>
         <p>
-          We zijn blij onze allereerste Vertrouwenscontactpersoon voor te stellen: Wouter van
-          Leijden! Wouter staat voor je klaar voor allerlei kwesties, groot of klein — van
-          studiestress tot conflicten met medestudenten.
+          We are happy to introduce our very first Confidential Counsellor: Wouter van Leijden!
+          Wouter is available for any issue, big or small — from study stress to conflicts with
+          fellow students.
         </p>
         <p>
-          Je kunt hem bereiken via:{" "}
+          You can reach him at:{" "}
           <a href="mailto:w.vanleijden@student.utwente.nl">
             w.vanleijden@student.utwente.nl
           </a>
@@ -124,17 +124,15 @@ export default async function HomePage() {
           <div className="lp-text-content">
             <h5 className="wp-block-heading has-text-align-center">
               <strong>
-                S.A. Mastatine is de studievereniging voor studenten Gevorderde Masttechnologie
-                en Nanotechnologie, en co-vereniging van Robotica aan de Universiteit Twente.
-                Wij zijn een internationale, non-profit vereniging die studenten (en staf) van
-                Gevorderde Masttechnologie, Nanotechnologie en Robotica ondersteunt bij het
-                opbouwen van een community, het creëren van persoonlijke
-                ontwikkelingsmogelijkheden, en het evalueren van het curriculum. Dit doen wij
-                door middel van een combinatie van zowel educatieve als extracurriculaire
-                activiteiten.
+                S.A. Mastatine is the study association for students of Advanced Mast Technology
+                and Nanotechnology, and co-association of Robotics at the University of Twente.
+                We are an international, non-profit association that supports students (and staff)
+                of Advanced Mast Technology, Nanotechnology and Robotics in building a community,
+                creating personal development opportunities, and evaluating the curriculum. We do
+                this through a combination of both educational and extracurricular activities.
               </strong>
             </h5>
-            <p className="has-text-align-center text-center">Kijk gerust rond!</p>
+            <p className="has-text-align-center text-center">Feel free to look around!</p>
           </div>
         </div>
       </section>
@@ -177,7 +175,7 @@ export default async function HomePage() {
                   {post.content}
                 </div>
                 <a href={`/${post.slug}`} className="continue-reading-link">
-                  Lees verder &rarr;
+                  Read more &rarr;
                 </a>
               </article>
             ))}
@@ -194,15 +192,15 @@ export default async function HomePage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex items-end justify-between mb-6 flex-wrap gap-3">
             <div>
-              <h2 className="section-heading">Mastengalerij</h2>
+              <h2 className="section-heading">Mast Gallery</h2>
               {towerCount > 0 && (
                 <p className="text-[#555] text-sm mt-1">
-                  {towerCount} mast{towerCount !== 1 ? "en" : ""} ingediend
+                  {towerCount} mast{towerCount !== 1 ? "s" : ""} submitted
                 </p>
               )}
             </div>
             <a href="#submit" className="btn-orange text-sm shrink-0">
-              + Mast indienen
+              + Submit a Mast
             </a>
           </div>
           <TowerGrid initialTowers={towers} votedTowerIds={[]} />
@@ -216,20 +214,20 @@ export default async function HomePage() {
         style={{ marginTop: 2 }}
       >
         <div className="max-w-2xl mx-auto px-6">
-          <h2 className="section-heading mb-2">Mast indienen</h2>
+          <h2 className="section-heading mb-2">Submit a Mast</h2>
           <p className="text-[#555] text-sm mb-6">
-            Een indrukwekkende mast gevonden? Voeg hem toe aan het Mastatine-register.
+            Found an impressive mast? Add it to the Mastatine registry.
           </p>
           <div className="bg-white border border-[#eee] p-6 mb-4 shadow-sm">
             <SubmitForm />
           </div>
           <div className="bg-[#FFF3E8] border border-[#f57f20]/40 rounded p-4">
-            <h3 className="font-bold text-[#c05e00] text-sm mb-1">Inzendingsrichtlijnen</h3>
+            <h3 className="font-bold text-[#c05e00] text-sm mb-1">Submission Guidelines</h3>
             <ul className="text-[#c05e00] text-sm space-y-1">
-              <li>• Moet een echte mast, antenne of elektromagnetische constructie zijn</li>
-              <li>• Foto moet de mast duidelijk tonen</li>
-              <li>• Voeg een beschrijvende of grappige titel toe</li>
-              <li>• Geen duplicaten — controleer de galerij eerst</li>
+              <li>• Must be a real mast, antenna, or electromagnetic structure</li>
+              <li>• Photo must clearly show the mast</li>
+              <li>• Add a descriptive or funny title</li>
+              <li>• No duplicates — check the gallery first</li>
             </ul>
           </div>
         </div>
@@ -242,27 +240,27 @@ export default async function HomePage() {
         style={{ marginTop: 2 }}
       >
         <div className="max-w-3xl mx-auto px-6">
-          <h2 className="section-heading mb-4">Over S.A. Mastatine</h2>
+          <h2 className="section-heading mb-4">About S.A. Mastatine</h2>
           <div className="prose text-[#0a0a0a] text-sm leading-relaxed space-y-3">
             <p>
-              <strong>Wat is Mastatine?</strong> Het is een samentrekking van{" "}
-              <em>Mast</em> (een zendmast/hoogspanningsmast) en <em>Astatine</em>, de
-              studievereniging voor Advanced Technology aan de Universiteit Twente.
+              <strong>What is Mastatine?</strong> It is a portmanteau of{" "}
+              <em>Mast</em> (a transmission tower / high-voltage pylon) and <em>Astatine</em>,
+              the study association for Advanced Technology at the University of Twente.
             </p>
             <p>
-              Het logo van de{" "}
+              The logo of the{" "}
               <a href="https://astatine.utwente.nl" target="_blank" rel="noopener noreferrer">
-                echte S.A. Astatine
+                real S.A. Astatine
               </a>{" "}
-              heeft het elementsymbool &ldquo;At&rdquo; in het midden, omgeven door 7
-              valentie-elektronen. Wij hebben de 7 elektronen behouden maar &ldquo;At&rdquo;
-              vervangen door een zendmast — want{" "}
+              features the element symbol &ldquo;At&rdquo; in the centre, surrounded by 7
+              valence electrons. We kept the 7 electrons but replaced &ldquo;At&rdquo; with a
+              transmission tower — because{" "}
               <em>Mast</em> + <em>atine</em> = <em>Mastatine</em>.
             </p>
-            <p>Element 85, hetzelfde atoomnummer, alleen met betere antennedekking.</p>
+            <p>Element 85, same atomic number, just with better antenna coverage.</p>
             <p className="text-xs text-[#888] pt-2">
-              Niet gelieerd aan S.A. Astatine of de Universiteit Twente. Geen masten zijn
-              beschadigd. 📡
+              Not affiliated with S.A. Astatine or the University of Twente. No masts were
+              harmed. 📡
             </p>
           </div>
         </div>

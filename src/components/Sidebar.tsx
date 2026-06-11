@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import MastatineLogo from "./MastatineLogo";
+import type { CalDay } from "@/lib/calendar";
 
 interface NavItem {
   label: string;
@@ -13,62 +14,62 @@ interface NavItem {
 const NAV: NavItem[] = [
   { label: "Home", href: "/" },
   {
-    label: "Nieuws",
+    label: "News",
     href: "#",
     children: [
-      { label: "Agenda", href: "/agenda" },
-      { label: "MAttentie", href: "/mattentie" },
+      { label: "Calendar", href: "/agenda" },
+      { label: "MAttention", href: "/mattentie" },
     ],
   },
   {
-    label: "Vereniging",
+    label: "Association",
     href: "#",
     children: [
       {
-        label: "Het Bestuur",
+        label: "The Board",
         href: "/bestuur",
-        children: [{ label: "Vorige Besturen", href: "/vorige-besturen" }],
+        children: [{ label: "Previous Boards", href: "/vorige-besturen" }],
       },
-      { label: "Commissies", href: "/commissies" },
+      { label: "Committees", href: "/commissies" },
       {
-        label: "Grote Evenementen",
+        label: "Major Events",
         href: "#",
         children: [
           { label: "EuroTrip", href: "/eurotrip" },
-          { label: "Mastexcursie", href: "/mastexcursie" },
+          { label: "Mast Excursion", href: "/mastexcursie" },
           { label: "Kick-In", href: "/kick-in" },
-          { label: "Alumnidag", href: "/alumnidag" },
+          { label: "Alumni Day", href: "/alumnidag" },
         ],
       },
-      { label: "Mastatinelied", href: "/lied" },
-      { label: "Geschiedenis", href: "/geschiedenis" },
+      { label: "Mastatine Song", href: "/lied" },
+      { label: "History", href: "/geschiedenis" },
       {
-        label: "Lidmaatschap",
+        label: "Membership",
         href: "/lidmaatschap",
-        children: [{ label: "Ereleden & Leden van Verdienste", href: "/ereleden" }],
+        children: [{ label: "Honorary & Merit Members", href: "/ereleden" }],
       },
       {
-        label: "Geestelijke Gezondheid",
+        label: "Mental Health",
         href: "#",
         children: [
-          { label: "Studieadviseurs", href: "/studieadviseurs" },
-          { label: "Vertrouwenspersoon (VCP)", href: "/vcp" },
-          { label: "Trainingen en workshops", href: "/trainingen" },
-          { label: "Welzijn", href: "/welzijn" },
+          { label: "Study Advisors", href: "/studieadviseurs" },
+          { label: "Confidential Counsellor (VCP)", href: "/vcp" },
+          { label: "Trainings & Workshops", href: "/trainingen" },
+          { label: "Well-being", href: "/welzijn" },
         ],
       },
-      { label: "Internationale Vereniging", href: "/internationaal" },
+      { label: "International Association", href: "/internationaal" },
     ],
   },
   {
-    label: "Onderwijs",
+    label: "Education",
     href: "#",
     children: [
-      { label: "Gevorderde Masttechnologie", href: "/gmt" },
-      { label: "Nanotechnologie", href: "/nano" },
-      { label: "Robotica", href: "/robotica" },
-      { label: "Onderwijsprijs", href: "/onderwijsprijs" },
-      { label: "Boeken", href: "https://wo4you.nl/", external: true },
+      { label: "Advanced Mast Technology", href: "/gmt" },
+      { label: "Nanotechnology", href: "/nano" },
+      { label: "Robotics", href: "/robotica" },
+      { label: "Education Prize", href: "/onderwijsprijs" },
+      { label: "Books", href: "https://wo4you.nl/", external: true },
     ],
   },
   {
@@ -76,7 +77,7 @@ const NAV: NavItem[] = [
     href: "#",
     children: [
       {
-        label: "Bedrijven",
+        label: "Companies",
         href: "#",
         children: [
           { label: "TenneT", href: "/tennet" },
@@ -84,30 +85,17 @@ const NAV: NavItem[] = [
         ],
       },
       {
-        label: "Vacaturebank",
+        label: "Job Board",
         href: "/vacaturebank",
         children: [
-          { label: "Bacheloropdrachten", href: "/bacheloropdrachten" },
-          { label: "Bijbanen & Stages", href: "/bijbanen" },
+          { label: "Bachelor Projects", href: "/bacheloropdrachten" },
+          { label: "Part-time Jobs & Internships", href: "/bijbanen" },
         ],
       },
     ],
   },
   { label: "MastApps", href: "#" },
   { label: "Contact", href: "/contact" },
-];
-
-const ACTIVITIES = [
-  { date: "12 juni 2026", events: [{ title: "VrijMidBOSS", location: "De Mast" }] },
-  { date: "15 juni 2026", events: [{ title: "Studeermiddag" }] },
-  { date: "16 juni 2026", events: [{ title: "Mastklimworkshop", location: "O&O Plein" }] },
-  {
-    date: "17 juni 2026",
-    events: [
-      { title: "StAf finale vs Hoogspanning 1" },
-      { title: "Area 85 PotLuck" },
-    ],
-  },
 ];
 
 function NavNode({ item, depth = 0 }: { item: NavItem; depth?: number }) {
@@ -184,7 +172,7 @@ function NavNode({ item, depth = 0 }: { item: NavItem; depth?: number }) {
               transition: ".6s all ease-in-out",
               transform: open ? "rotateX(-180deg)" : "rotateX(0)",
             }}
-            aria-label={open ? "Sluit submenu" : "Open submenu"}
+            aria-label={open ? "Close submenu" : "Open submenu"}
           >
             ▾
           </button>
@@ -201,7 +189,11 @@ function NavNode({ item, depth = 0 }: { item: NavItem; depth?: number }) {
   );
 }
 
-export default function Sidebar() {
+interface SidebarProps {
+  activities: CalDay[];
+}
+
+export default function Sidebar({ activities }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -238,7 +230,7 @@ export default function Sidebar() {
           className="lg:hidden absolute top-3 right-3 text-2xl leading-none"
           style={{ color: "#555", background: "none", border: "none", cursor: "pointer" }}
           onClick={() => setMobileOpen(false)}
-          aria-label="Sluit menu"
+          aria-label="Close menu"
           id="nav-cancel"
         >
           ×
@@ -255,18 +247,18 @@ export default function Sidebar() {
             </div>
             <h1 id="site-title" itemProp="headline">
               <span>
-                <a href="/" title="De studievereniging voor open-minded ingenieurs" rel="home">
+                <a href="/" title="The study association for open-minded engineers" rel="home">
                   S.A. Mastatine
                 </a>
               </span>
             </h1>
             <span id="site-description" itemProp="description">
-              De studievereniging voor open-minded ingenieurs
+              The study association for open-minded engineers
             </span>
             <div className="branding-spacer" />
 
             {/* ── PRIMARY NAV ── */}
-            <nav id="access" role="navigation" aria-label="Primair menu">
+            <nav id="access" role="navigation" aria-label="Primary menu">
               <h3 className="widget-title menu-title">
                 <span>Menu</span>
               </h3>
@@ -294,40 +286,46 @@ export default function Sidebar() {
 
             {/* ── ACTIVITIES WIDGET ── */}
             <div className="widget-container" style={{ borderTop: "1px solid #eee", paddingTop: "1em", marginTop: "1em" }}>
-              <h3 className="widget-title"><span>Activiteiten deze week</span></h3>
-              <dl>
-                {ACTIVITIES.map(({ date, events }) => (
-                  <div key={date} style={{ marginBottom: "0.5em" }}>
-                    <dt style={{ borderBottom: "1px solid #001e7a" }}>
-                      <span
-                        style={{
-                          display: "inline-block",
-                          backgroundColor: "#001e7a",
-                          color: "#fff",
-                          padding: "0.1em 0.4em",
-                          fontSize: "0.75em",
-                        }}
-                      >
-                        {date}
-                      </span>
-                    </dt>
-                    <dd>
-                      <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                        {events.map((ev, i) => (
-                          <li key={i} style={{ fontSize: "0.85em", color: "#0a0a0a", paddingTop: "0.2em" }}>
-                            <strong>{ev.title}</strong>
-                            {"location" in ev && ev.location && (
-                              <em style={{ marginLeft: "0.4em", color: "#555", fontStyle: "normal" }}>
-                                {ev.location}
-                              </em>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </dd>
-                  </div>
-                ))}
-              </dl>
+              <h3 className="widget-title"><span>Activities this week</span></h3>
+              {activities.length === 0 ? (
+                <p style={{ fontSize: "0.85em", color: "#888", textAlign: "center" }}>
+                  No activities scheduled this week.
+                </p>
+              ) : (
+                <dl>
+                  {activities.map(({ date, events }) => (
+                    <div key={date} style={{ marginBottom: "0.5em" }}>
+                      <dt style={{ borderBottom: "1px solid #001e7a" }}>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            backgroundColor: "#001e7a",
+                            color: "#fff",
+                            padding: "0.1em 0.4em",
+                            fontSize: "0.75em",
+                          }}
+                        >
+                          {date}
+                        </span>
+                      </dt>
+                      <dd>
+                        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                          {events.map((ev, i) => (
+                            <li key={i} style={{ fontSize: "0.85em", color: "#0a0a0a", paddingTop: "0.2em" }}>
+                              <strong>{ev.title}</strong>
+                              {ev.location && (
+                                <em style={{ marginLeft: "0.4em", color: "#555", fontStyle: "normal" }}>
+                                  {ev.location}
+                                </em>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
             </div>
 
             {/* ── SEARCH WIDGET ── */}
@@ -342,7 +340,7 @@ export default function Sidebar() {
                 <input
                   type="search"
                   name="s"
-                  placeholder="Zoeken"
+                  placeholder="Search"
                   style={{
                     flex: 1,
                     padding: ".5em .7em",
@@ -494,7 +492,7 @@ function TennetLogo() {
         fill="#666"
         letterSpacing="2"
       >
-        PARTNER VAN MASTATINE
+        PARTNER OF MASTATINE
       </text>
     </svg>
   );
