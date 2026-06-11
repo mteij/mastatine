@@ -10,5 +10,5 @@ function getSupabaseUrl(): string {
 }
 
 export function createStorageClient() {
-  return createClient(getSupabaseUrl(), process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  return createClient(getSupabaseUrl(), process.env.SUPABASE_ANON_KEY!);
 }
