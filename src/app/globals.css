@@ -14,60 +14,212 @@
   --border:      #eeeeee;
 }
 
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; }
+
 html {
   font-family: Lato, Arial, sans-serif;
   font-size: 17px;
   font-weight: 400;
-  line-height: 1.4;
+  line-height: 1.8;
   scroll-behavior: smooth;
 }
 
 body {
+  font-size: 1em;
   color: var(--text);
-  /* Orange body background — shows between sidebar and main sections */
   background-color: var(--orange);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-/* ── Links — match Verbosa defaults ── */
-a { color: var(--orange); text-decoration: none; }
+/* ── Links — exact Verbosa defaults ── */
+a:link, a:visited { text-decoration: none; }
+a { color: var(--orange); }
 a:hover { color: var(--blue); }
 
 /* ── Headings ── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: Lato, Arial, sans-serif;
+  font-weight: 500;
+  clear: both;
+}
 h1 { font-size: 2.3em; }
 h2 { font-size: 2em; }
 h3 { font-size: 1.7em; }
 h4 { font-size: 1.4em; }
 h5 { font-size: 1.1em; }
 h6 { font-size: 0.8em; }
-h1, h2, h3, h4, h5, h6 { font-family: Lato, Arial, sans-serif; font-weight: 500; }
 
-/* ── Site title in sidebar ── */
-#site-title a { color: var(--orange); }
-#site-description { color: var(--text); font-weight: 800; }
+/* ── Layout ── */
+#content { margin: 0 auto; }
+#container { float: left; margin: 0 auto; width: 100%; position: relative; }
+.main { margin-bottom: 0; min-height: 400px; overflow: hidden; }
 
-/* ── Sidebar nav ── */
-#access ul li a {
+/* ── Sidebar ── */
+#sidebar {
+  display: block;
+  position: relative;
+  padding: 2em 3em 0;
+  background-color: #fff;
+  width: 380px;
+  min-width: 380px;
+  flex-shrink: 0;
+}
+
+/* ── Branding / header in sidebar ── */
+#branding {
+  display: block;
+  clear: both;
+  width: 100%;
+  margin-bottom: 3em;
+}
+
+.identity {
+  display: block;
+  float: none;
+  margin: 0 auto;
+  overflow: hidden;
+  text-align: center;
+}
+
+a#logo {
+  display: table;
+  float: none;
+  margin: 0 auto;
+  text-align: center;
+}
+
+#site-title {
+  display: table;
+  float: none;
+  margin: 0 auto;
+  text-align: center;
+  line-height: 1.3;
+  text-transform: uppercase;
   font-family: Lato, Arial, sans-serif;
-  font-size: 1.1em;
+  font-size: 250%;
+  font-weight: 700;
+}
+
+#site-title a {
+  display: block;
+  text-decoration: none;
+  border-top: 1px solid;
+  border-bottom: 1px solid;
+  text-transform: uppercase;
+  color: var(--orange);
+  border-color: var(--orange);
+  padding: 0.15em 0;
+  transition: all .5s ease-in-out;
+}
+#site-title a:hover { border-color: transparent; color: var(--orange); }
+
+#site-description {
+  display: block;
+  float: none;
+  margin: 0.5em auto;
+  text-align: center;
+  line-height: 1.3;
+  font-family: Lato, Arial, sans-serif;
+  font-size: 120%;
+  font-weight: 800;
+  color: var(--text);
+}
+
+/* ── Nav (#access) ── */
+#access {
+  display: block;
+  float: none;
+  margin: 3em auto 2em;
+}
+
+#access a {
+  display: inline-block;
+  text-decoration: none;
+  line-height: 3;
+  font-family: Lato, Arial, sans-serif;
+  font-size: 110%;
   font-weight: 700;
   color: #000;
 }
-#access ul li a:hover { color: var(--orange); }
+#access a:hover { color: var(--orange); }
+
+#access a span {
+  display: block;
+  position: relative;
+  line-height: 1.5;
+  padding: .75em 0;
+  word-break: break-word;
+  transition: all .5s ease-in-out;
+}
+#access a:hover span { padding-left: .3em; }
+
+#access ul li {
+  position: relative;
+  display: block;
+  float: none;
+  clear: both;
+  word-break: break-all;
+}
+
+/* ── Widget titles ── */
+.widget-title {
+  font-family: Lato, Arial, sans-serif;
+  font-size: 100%;
+  font-weight: 400;
+  text-transform: uppercase;
+  text-align: center;
+  position: relative;
+  margin-bottom: 1em;
+  padding-bottom: 0.5em;
+}
+.widget-title::after {
+  content: "";
+  display: block;
+  height: 1px;
+  background-color: var(--border);
+  position: absolute;
+  bottom: 0;
+  left: -3em;
+  right: -3em;
+}
+.widget-title span {
+  display: inline-block;
+  height: 100%;
+  position: relative;
+  z-index: 99;
+  background-color: #fff;
+  padding: 0 0.5em;
+}
+.widget-container {
+  font-family: Lato, Arial, sans-serif;
+  font-size: 110%;
+  font-weight: 500;
+}
 
 /* ── Entry (article) ── */
 article.hentry {
   background-color: #fff;
-  padding: 2em 2.38% 2em 2.38%;
-  margin-bottom: 0;
-  position: relative;
+  overflow: hidden;
 }
 
+/* Standard (single column) articles */
+.main > article.hentry {
+  padding-left: 5%;
+  padding-right: 5%;
+  padding-top: 2em;
+  padding-bottom: 2em;
+  margin-bottom: 0;
+}
+
+/* ── Entry title ── */
 .entry-title,
 #reply-title {
   font-family: Lato, Arial, sans-serif;
   color: var(--navy);
-  font-size: 1.7em;
+  font-size: 170%;
   font-weight: 500;
 }
 
@@ -84,33 +236,60 @@ article.hentry {
   background-size: 100% 2px;
 }
 
+/* ── Entry header ── */
+.verbosa-magazine-two .entry-header {
+  margin-bottom: 1em;
+}
+
+/* ── Entry meta ── */
 .entry-meta span,
 .entry-meta time,
 .entry-meta a {
   color: var(--text);
   font-family: Lato, Arial, sans-serif;
-  font-size: 1em;
+  font-size: 100%;
   font-weight: 400;
 }
-.entry-meta a { background-image: linear-gradient(to bottom, var(--blue) 0%, var(--blue) 100%); }
+.entry-meta a {
+  background-image: linear-gradient(to bottom, var(--blue) 0%, var(--blue) 100%);
+}
 
-/* ── Featured bar — thin orange top accent on hover ── */
+/* ── Entry content ── */
+.verbosa-magazine-two .entry-content,
+.verbosa-magazine-two .entry-summary {
+  padding-top: 1.3em;
+}
+
+/* Paragraph margins inside main */
+.main p, .main ul, .main ol, .main dd, .main pre, .main hr {
+  margin-bottom: 0.6em;
+}
+.main p { text-indent: 0em; }
+
+/* ── Featured bar — hidden unless there's a thumbnail ── */
 .featured-bar {
-  height: 4px;
+  position: relative;
+  display: none;
+  float: none;
+  margin: -2em -50% 0;
+  width: 200%;
+  height: 0;
   background-color: var(--blue);
-  transition: height 0.2s;
+}
+.post-thumbnail-container + .featured-bar {
+  display: block;
 }
 .featured-bar::before {
-  content: '';
-  display: block;
-  height: 4px;
+  content: "";
+  position: absolute;
+  left: 0; top: 0;
+  height: 100%; width: 100%;
   background-color: var(--orange);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.3s ease;
+  opacity: 0;
+  transition: 1s opacity ease;
 }
-article.hentry:hover .featured-bar::before {
-  transform: scaleX(1);
+.post-thumbnail-container:hover + .featured-bar::before {
+  opacity: 1;
 }
 
 /* ── Continue reading link ── */
@@ -119,11 +298,12 @@ a.continue-reading-link {
   background-color: var(--blue);
   color: #fff;
   font-family: Lato, Arial, sans-serif;
-  font-size: 1em;
+  font-size: 100%;
   font-weight: 400;
   padding: 0.4em 1em;
   text-decoration: none;
   transition: background-color 0.2s;
+  margin-top: 0.5em;
 }
 a.continue-reading-link:hover {
   background-color: var(--orange);
@@ -132,14 +312,27 @@ a.continue-reading-link:hover {
 
 /* ── lp-text intro section ── */
 .lp-text {
+  position: relative;
+  display: block;
   background-color: #fff;
   margin-top: 0;
 }
 .lp-text-inside {
+  position: relative;
+  z-index: 3;
   padding: 2em 5% 1.5em;
+  max-width: 1460px;
+  margin: 0 auto;
+  overflow: hidden;
 }
-.lp-text-title {
-  display: none; /* hide "Home" section title */
+.main .lp-text-title {
+  font-weight: bold;
+  margin-top: 0;
+  display: none;
+}
+.lp-text-content {
+  margin-top: 2em;
+  font-size: 1em;
 }
 .lp-text-content h5 {
   font-size: 1.1em;
@@ -151,64 +344,100 @@ a.continue-reading-link:hover {
 
 /* ── lp-slider ── */
 .lp-slider-overlay {
+  position: relative;
+  overflow: hidden;
   margin: 0;
 }
 
 /* ── lp-posts masonry ── */
 #lp-posts {
-  background-color: var(--orange); /* orange shows in gaps between articles */
-  margin-top: 2px;
+  display: block;
+  background-color: var(--orange);
+  margin-top: 0;
 }
 .lp-posts-inside {
-  /* nothing — articles float in 2 columns */
+  max-width: 1460px;
+  margin: 0 auto;
+  overflow: hidden;
 }
 #content-masonry {
-  display: flex;
-  flex-wrap: wrap;
+  margin-left: -1%;
+  margin-right: -1%;
 }
-#content-masonry article.hentry {
-  width: 50%;
-  box-sizing: border-box;
-  margin-bottom: 2px;
+/* Magazine-two: 2-column float layout — matches Verbosa exactly */
+.verbosa-magazine-two #content-masonry article.hentry {
+  width: 48%;
+  float: left;
+  margin-left: 1%;
+  margin-right: 1%;
+  padding: 1.5em;
+  padding-left: 2.38%;
+  padding-right: 2.38%;
+  margin-bottom: 1.5em;
 }
-@media (max-width: 700px) {
-  #content-masonry article.hentry {
-    width: 100%;
+@media (max-width: 800px) {
+  .verbosa-magazine-two #content-masonry article.hentry {
+    width: 98%;
+    float: none;
   }
 }
 
-/* ── Sidebar background ── */
-#sidebar-back {
-  display: none;
-}
-
-/* ── Widget titles ── */
-.widget-title {
-  font-family: Lato, Arial, sans-serif;
-  font-size: 1em;
-  font-weight: 400;
-  text-transform: uppercase;
-  text-align: center;
-}
-.widget-container {
-  font-family: Lato, Arial, sans-serif;
-  font-size: 1.1em;
-  font-weight: 500;
-}
-
-/* ── Social icons in footer ── */
+/* ── Social icons in sidebar footer ── */
 .socials a {
   border-color: var(--orange);
 }
 .socials a::before { color: var(--orange); }
-.socials a::after { background-color: var(--blue); }
+.socials a::after { background-color: var(--blue); color: #fff; }
 
-/* ── Footer ── */
+/* ── Footer (inside sidebar) ── */
 #footer {
   border-top: 1px solid var(--border);
+  clear: both;
+  width: 100%;
 }
 #footer a { color: var(--orange); }
 #footer a:hover { color: var(--blue); }
+#site-copyright, #footer { border-color: var(--border); }
+
+/* ── Colophon (full-width page footer below content) ── */
+#colophon {
+  display: block;
+  float: none;
+  background-color: #fff;
+  clear: both;
+}
+#colophon-inside {
+  max-width: 1460px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ── Searchform ── */
+.searchform {
+  display: flex;
+  border: 1px solid var(--border);
+  background: #fff;
+}
+.searchform input[type="search"] {
+  flex: 1;
+  padding: .7em 1em;
+  border: none;
+  font-family: inherit;
+  font-size: inherit;
+  background: transparent;
+  outline: none;
+  border-radius: 0;
+}
+.searchform::before {
+  content: "🔍";
+  display: flex;
+  align-items: center;
+  padding: 0 0.8em;
+  background-color: var(--blue);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9em;
+}
 
 /* ── Orange CTA button ── */
 .btn-orange {
@@ -234,18 +463,50 @@ a.continue-reading-link:hover {
   display: inline-block;
 }
 
-/* ── Submit / input styles ── */
+/* ── Form inputs ── */
 input[type="submit"],
 input[type="reset"],
 button[type="submit"] {
   background-color: var(--orange);
   color: #ffffff;
+  padding: .7em 1.5em;
+  border: 0;
+  font-family: inherit;
+  font-size: .9em;
+  border-radius: 100px;
+  transition: background-color .3s ease-in-out;
+  cursor: pointer;
 }
 input[type="submit"]:hover,
-input[type="reset"]:hover {
+input[type="reset"]:hover,
+button[type="submit"]:hover {
   background-color: var(--blue);
 }
-select, input[type], textarea {
+
+textarea,
+select,
+input[type="text"],
+input[type="email"],
+input[type="search"] {
+  max-width: 100%;
+  padding: .7em 1em;
+  border: 1px solid #e9e9e9;
+  font-family: inherit;
+  font-size: inherit;
   color: var(--text);
-  border-color: #e9e9e9;
+  background: transparent;
+  transition: border-color .3s;
 }
+input[type]:focus,
+textarea:focus {
+  border-color: #cdcdcd;
+  outline: none;
+}
+
+/* ── Blockquote ── */
+q, blockquote {
+  font-family: Georgia, "Bitstream Charter", serif;
+  font-size: 1.1em;
+}
+blockquote { quotes: none; }
+blockquote::before, blockquote::after { content: ""; content: none; }

@@ -45,9 +45,7 @@ const NAV: NavItem[] = [
       {
         label: "Lidmaatschap",
         href: "/lidmaatschap",
-        children: [
-          { label: "Ereleden & Leden van Verdienste", href: "/ereleden" },
-        ],
+        children: [{ label: "Ereleden & Leden van Verdienste", href: "/ereleden" }],
       },
       {
         label: "Geestelijke Gezondheid",
@@ -95,17 +93,14 @@ const NAV: NavItem[] = [
       },
     ],
   },
-  { label: "MastApps", href: "#", external: true },
+  { label: "MastApps", href: "#" },
   { label: "Contact", href: "/contact" },
 ];
 
 const ACTIVITIES = [
   { date: "12 juni 2026", events: [{ title: "VrijMidBOSS", location: "De Mast" }] },
   { date: "15 juni 2026", events: [{ title: "Studeermiddag" }] },
-  {
-    date: "16 juni 2026",
-    events: [{ title: "Mastklimworkshop", location: "O&O Plein" }],
-  },
+  { date: "16 juni 2026", events: [{ title: "Mastklimworkshop", location: "O&O Plein" }] },
   {
     date: "17 juni 2026",
     events: [
@@ -120,35 +115,83 @@ function NavNode({ item, depth = 0 }: { item: NavItem; depth?: number }) {
   const has = !!item.children?.length;
 
   return (
-    <li>
-      <div className="flex items-center group">
+    <li style={{ position: "relative", display: "block", float: "none", clear: "both" }}>
+      <div style={{ display: "flex", alignItems: "center" }}>
         <a
           href={has ? undefined : item.href}
           target={item.external ? "_blank" : undefined}
           rel={item.external ? "noopener noreferrer" : undefined}
-          onClick={has ? (e) => { e.preventDefault(); setOpen((o) => !o); } : undefined}
-          className="flex-1 py-1 text-[#000] hover:text-[#f57f20] transition-colors font-bold text-[1.05em] leading-[2.6] cursor-pointer select-none"
-          style={{ paddingLeft: `${0.4 + depth * 1.1}rem` }}
+          onClick={
+            has
+              ? (e) => {
+                  e.preventDefault();
+                  setOpen((o) => !o);
+                }
+              : undefined
+          }
+          style={{
+            display: "inline-block",
+            lineHeight: 3,
+            fontFamily: "Lato, Arial, sans-serif",
+            fontSize: "110%",
+            fontWeight: 700,
+            color: "#000",
+            cursor: "pointer",
+            userSelect: "none",
+            flex: 1,
+            paddingLeft: `${0.3 + depth * 1.1}em`,
+            textDecoration: "none",
+            transition: "color .3s",
+            maxWidth: has ? "calc(100% - 3em)" : "100%",
+          }}
+          onMouseEnter={(e) =>
+            ((e.currentTarget as HTMLAnchorElement).style.color = "#f57f20")
+          }
+          onMouseLeave={(e) =>
+            ((e.currentTarget as HTMLAnchorElement).style.color = "#000")
+          }
         >
-          {item.label}
+          <span
+            style={{
+              display: "block",
+              position: "relative",
+              lineHeight: 1.5,
+              padding: ".75em 0",
+              wordBreak: "break-word",
+              transition: "all .5s ease-in-out",
+            }}
+          >
+            {item.label}
+          </span>
         </a>
         {has && (
           <button
             onClick={() => setOpen((o) => !o)}
-            className="px-2 text-[#aaa] hover:text-[#f57f20] text-lg leading-none"
+            style={{
+              display: "inline-block",
+              float: "right",
+              border: 0,
+              padding: 0,
+              cursor: "pointer",
+              background: "transparent",
+              opacity: 0.75,
+              fontSize: "1em",
+              color: "inherit",
+              width: "3em",
+              height: "3em",
+              lineHeight: "3em",
+              textAlign: "center",
+              transition: ".6s all ease-in-out",
+              transform: open ? "rotateX(-180deg)" : "rotateX(0)",
+            }}
             aria-label={open ? "Sluit submenu" : "Open submenu"}
           >
-            <span
-              className="inline-block transition-transform duration-150"
-              style={{ transform: open ? "rotate(90deg)" : "none" }}
-            >
-              ›
-            </span>
+            ▾
           </button>
         )}
       </div>
       {has && open && (
-        <ul className="border-l-2 border-[#eee] ml-3">
+        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           {item.children!.map((child) => (
             <NavNode key={child.label} item={child} depth={depth + 1} />
           ))}
@@ -163,16 +206,18 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile hamburger — shown only below lg breakpoint */}
+      {/* Mobile hamburger */}
       <button
         className="lg:hidden fixed top-3 left-3 z-50 bg-white shadow rounded p-2 text-xl leading-none"
         onClick={() => setMobileOpen(true)}
         aria-label="Open menu"
+        id="nav-toggle"
+        style={{ color: "#0a0a0a" }}
       >
         ☰
       </button>
 
-      {/* Overlay */}
+      {/* Mobile overlay */}
       {mobileOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black/40 z-40"
@@ -180,147 +225,240 @@ export default function Sidebar() {
         />
       )}
 
+      {/* ── SIDEBAR ── */}
       <aside
         id="sidebar"
         className={[
-          "bg-white flex flex-col",
-          /* desktop: sticky left column */
-          "lg:w-[380px] lg:min-w-[380px] lg:shrink-0 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto",
-          /* mobile: slide-in drawer */
-          mobileOpen
-            ? "fixed inset-y-0 left-0 w-80 z-50 overflow-y-auto"
-            : "hidden lg:flex",
+          "lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto flex flex-col",
+          mobileOpen ? "fixed inset-y-0 left-0 z-50 overflow-y-auto flex" : "hidden lg:flex",
         ].join(" ")}
       >
         {/* Mobile close */}
         <button
-          className="lg:hidden absolute top-3 right-3 text-2xl text-[#555] hover:text-[#f57f20]"
+          className="lg:hidden absolute top-3 right-3 text-2xl leading-none"
+          style={{ color: "#555", background: "none", border: "none", cursor: "pointer" }}
           onClick={() => setMobileOpen(false)}
+          aria-label="Sluit menu"
+          id="nav-cancel"
         >
           ×
         </button>
 
-        {/* ── BRANDING ── */}
-        <div id="branding" className="px-5 pt-6 pb-3">
-          <a href="/" className="flex items-start gap-3 no-underline">
-            <MastatineLogo size={72} className="shrink-0" />
-            <div className="pt-1">
-              <h1 className="font-bold leading-tight text-[#f57f20]" style={{ fontSize: "1.6em" }}>
-                S.A. Mastatine
-              </h1>
-              <p className="text-[#0a0a0a] font-extrabold leading-snug" style={{ fontSize: "0.78em" }}>
-                De studievereniging voor<br />open-minded ingenieurs
-              </p>
-            </div>
-          </a>
-        </div>
-
-        {/* ── NAV ── */}
-        <nav id="access" aria-label="Primair menu" className="border-t border-[#eee]">
-          <h3 className="sr-only">Menu</h3>
-          <ul className="px-3 divide-y divide-[#f0f0f0]">
-            {NAV.map((item) => (
-              <NavNode key={item.label} item={item} />
-            ))}
-          </ul>
-        </nav>
-
-        {/* ── spacer pushes widgets + footer to bottom ── */}
-        <div className="flex-1" />
-
-        {/* ── PARTNER WIDGET ── */}
-        <div className="px-5 py-3 border-t border-[#eee]">
-          <a href="/tennet">
-            <div className="bg-[#f5f5f5] rounded p-3 flex items-center justify-center">
-              <TennetLogo />
-            </div>
-          </a>
-        </div>
-
-        {/* ── ACTIVITIES WIDGET ── */}
-        <div className="px-5 py-3 border-t border-[#eee]">
-          <h3
-            className="text-center uppercase text-[#0a0a0a] mb-3 pb-2 border-b border-[#eee]"
-            style={{ fontSize: "1em", fontWeight: 400 }}
-          >
-            Activiteiten deze week
-          </h3>
-          <dl className="space-y-2">
-            {ACTIVITIES.map(({ date, events }) => (
-              <div key={date}>
-                <dt className="border-b border-[#001e7a] mb-1">
-                  <span className="inline-block bg-[#001e7a] text-white px-2 py-0.5 text-xs">
-                    {date}
-                  </span>
-                </dt>
-                <dd>
-                  <ul className="space-y-0.5">
-                    {events.map((ev, i) => (
-                      <li key={i} className="text-sm text-[#0a0a0a]">
-                        <strong>{ev.title}</strong>
-                        {"location" in ev && ev.location && (
-                          <em className="ml-1 text-[#555] not-italic"> {ev.location}</em>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-
-        {/* ── SEARCH WIDGET ── */}
-        <div className="px-5 py-3 border-t border-[#eee]">
-          <form role="search" method="get" action="/#towers" className="flex border border-[#eee] bg-white">
-            <input
-              type="search"
-              name="s"
-              placeholder="Zoeken"
-              className="flex-1 px-3 py-2 text-sm text-[#0a0a0a] outline-none"
-            />
-            <button
-              type="submit"
-              className="px-3 text-white text-sm"
-              style={{ backgroundColor: "#1c1399" }}
-            >
-              🔍
-            </button>
-          </form>
-        </div>
-
-        {/* ── FOOTER (in sidebar) ── */}
-        <footer id="footer" className="border-t border-[#eee] px-5 py-4">
-          {/* Social icons */}
-          <nav id="sfooter" className="flex gap-2 mb-3">
-            {[
-              { label: "Facebook", href: "https://www.facebook.com/" },
-              { label: "LinkedIn", href: "https://www.linkedin.com/" },
-              { label: "Instagram", href: "https://www.instagram.com/" },
-            ].map(({ label, href }) => (
-              <a
-                key={label}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full border-2 border-[#f57f20] text-[#f57f20] flex items-center justify-center text-xs font-bold hover:bg-[#1c1399] hover:border-[#1c1399] hover:text-white transition-colors"
-                title={label}
-              >
-                {label[0]}
+        {/* ── HEADER (branding + nav + widgets + footer) ── */}
+        <header id="header">
+          {/* ── BRANDING ── */}
+          <div id="branding" role="banner">
+            <div className="identity">
+              <a id="logo" href="/" title="S.A. Mastatine" rel="home">
+                <MastatineLogo size={80} />
               </a>
-            ))}
-          </nav>
-          <p className="text-[0.85em] text-[#0a0a0a]">
-            Powered by{" "}
-            <a href="https://nextjs.org" target="_blank" rel="noopener noreferrer" className="text-[#f57f20] hover:text-[#1c1399]">
-              Next.js
-            </a>{" "}
-            &amp;{" "}
-            <a href="https://supabase.com" target="_blank" rel="noopener noreferrer" className="text-[#f57f20] hover:text-[#1c1399]">
-              Supabase
-            </a>
-          </p>
-        </footer>
+            </div>
+            <h1 id="site-title" itemProp="headline">
+              <span>
+                <a href="/" title="De studievereniging voor open-minded ingenieurs" rel="home">
+                  S.A. Mastatine
+                </a>
+              </span>
+            </h1>
+            <span id="site-description" itemProp="description">
+              De studievereniging voor open-minded ingenieurs
+            </span>
+            <div className="branding-spacer" />
+
+            {/* ── PRIMARY NAV ── */}
+            <nav id="access" role="navigation" aria-label="Primair menu">
+              <h3 className="widget-title menu-title">
+                <span>Menu</span>
+              </h3>
+              <div>
+                <ul id="prime_nav" style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                  {NAV.map((item) => (
+                    <NavNode key={item.label} item={item} />
+                  ))}
+                </ul>
+              </div>
+            </nav>
+
+            {/* ── spacer ── */}
+            <div style={{ flex: 1 }} />
+
+            {/* ── PARTNER WIDGET ── */}
+            <div className="widget-container" style={{ borderTop: "1px solid #eee", paddingTop: "1em", marginTop: "1em" }}>
+              <h3 className="widget-title"><span>Partner</span></h3>
+              <a href="/tennet">
+                <div style={{ background: "#f5f5f5", padding: "0.75em", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                  <TennetLogo />
+                </div>
+              </a>
+            </div>
+
+            {/* ── ACTIVITIES WIDGET ── */}
+            <div className="widget-container" style={{ borderTop: "1px solid #eee", paddingTop: "1em", marginTop: "1em" }}>
+              <h3 className="widget-title"><span>Activiteiten deze week</span></h3>
+              <dl>
+                {ACTIVITIES.map(({ date, events }) => (
+                  <div key={date} style={{ marginBottom: "0.5em" }}>
+                    <dt style={{ borderBottom: "1px solid #001e7a" }}>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          backgroundColor: "#001e7a",
+                          color: "#fff",
+                          padding: "0.1em 0.4em",
+                          fontSize: "0.75em",
+                        }}
+                      >
+                        {date}
+                      </span>
+                    </dt>
+                    <dd>
+                      <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                        {events.map((ev, i) => (
+                          <li key={i} style={{ fontSize: "0.85em", color: "#0a0a0a", paddingTop: "0.2em" }}>
+                            <strong>{ev.title}</strong>
+                            {"location" in ev && ev.location && (
+                              <em style={{ marginLeft: "0.4em", color: "#555", fontStyle: "normal" }}>
+                                {ev.location}
+                              </em>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+
+            {/* ── SEARCH WIDGET ── */}
+            <div style={{ borderTop: "1px solid #eee", paddingTop: "1em", marginTop: "1em" }}>
+              <form
+                role="search"
+                method="get"
+                action="/#towers"
+                className="searchform"
+                style={{ display: "flex", border: "1px solid #eee" }}
+              >
+                <input
+                  type="search"
+                  name="s"
+                  placeholder="Zoeken"
+                  style={{
+                    flex: 1,
+                    padding: ".5em .7em",
+                    fontSize: "0.9em",
+                    color: "#0a0a0a",
+                    outline: "none",
+                    border: "none",
+                    background: "transparent",
+                  }}
+                />
+                <button
+                  type="submit"
+                  style={{
+                    padding: "0 0.8em",
+                    background: "#1c1399",
+                    color: "#fff",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "0.85em",
+                  }}
+                >
+                  🔍
+                </button>
+              </form>
+            </div>
+
+            {/* ── FOOTER (inside sidebar, matching Verbosa #footer) ── */}
+            <footer
+              id="footer"
+              style={{ borderTop: "1px solid #eee", paddingTop: "1em", paddingBottom: "1.5em", marginTop: "1.5em" }}
+            >
+              {/* Social links */}
+              <nav
+                id="sfooter"
+                className="socials"
+                style={{ display: "flex", gap: "0.5em", marginBottom: "0.75em" }}
+              >
+                {[
+                  { label: "Facebook", href: "https://www.facebook.com/" },
+                  { label: "LinkedIn", href: "https://www.linkedin.com/" },
+                  { label: "Instagram", href: "https://www.instagram.com/" },
+                ].map(({ label, href }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={label}
+                    style={{
+                      width: "2.25em",
+                      height: "2.25em",
+                      borderRadius: "100%",
+                      border: "2px solid #f57f20",
+                      color: "#f57f20",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "0.75em",
+                      fontWeight: "bold",
+                      textDecoration: "none",
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      const el = e.currentTarget as HTMLAnchorElement;
+                      el.style.background = "#1c1399";
+                      el.style.borderColor = "#1c1399";
+                      el.style.color = "#fff";
+                    }}
+                    onMouseLeave={(e) => {
+                      const el = e.currentTarget as HTMLAnchorElement;
+                      el.style.background = "transparent";
+                      el.style.borderColor = "#f57f20";
+                      el.style.color = "#f57f20";
+                    }}
+                  >
+                    {label[0]}
+                  </a>
+                ))}
+              </nav>
+              <p style={{ fontSize: "0.85em", color: "#0a0a0a" }}>
+                <span id="site-copyright">
+                  Powered by{" "}
+                  <a
+                    href="https://nextjs.org"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "#f57f20" }}
+                    onMouseEnter={(e) =>
+                      ((e.currentTarget as HTMLAnchorElement).style.color = "#1c1399")
+                    }
+                    onMouseLeave={(e) =>
+                      ((e.currentTarget as HTMLAnchorElement).style.color = "#f57f20")
+                    }
+                  >
+                    Next.js
+                  </a>{" "}
+                  &amp;{" "}
+                  <a
+                    href="https://supabase.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "#f57f20" }}
+                    onMouseEnter={(e) =>
+                      ((e.currentTarget as HTMLAnchorElement).style.color = "#1c1399")
+                    }
+                    onMouseLeave={(e) =>
+                      ((e.currentTarget as HTMLAnchorElement).style.color = "#f57f20")
+                    }
+                  >
+                    Supabase
+                  </a>
+                </span>
+              </p>
+            </footer>
+          </div>
+        </header>
       </aside>
     </>
   );
@@ -329,30 +467,30 @@ export default function Sidebar() {
 function TennetLogo() {
   return (
     <svg
-      viewBox="0 0 220 52"
+      viewBox="0 0 200 48"
       xmlns="http://www.w3.org/2000/svg"
-      className="w-full max-w-[180px]"
+      style={{ width: "100%", maxWidth: 160 }}
       aria-label="TenneT"
     >
       <text
-        x="110"
-        y="40"
+        x="100"
+        y="36"
         textAnchor="middle"
         fontFamily="Arial Black, Arial, sans-serif"
         fontWeight="900"
-        fontSize="40"
+        fontSize="36"
         fill="#f57f20"
         letterSpacing="-1"
       >
         TenneT
       </text>
       <text
-        x="110"
-        y="52"
+        x="100"
+        y="47"
         textAnchor="middle"
         fontFamily="Arial, sans-serif"
         fontWeight="400"
-        fontSize="9"
+        fontSize="8"
         fill="#666"
         letterSpacing="2"
       >

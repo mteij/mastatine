@@ -158,7 +158,6 @@ export default async function HomePage() {
                 itemType="http://schema.org/BlogPosting"
                 itemProp="blogPost"
               >
-                <div className="featured-bar" />
                 <header className="entry-header">
                   <h2 className="entry-title" itemProp="headline">
                     <a href={`/${post.slug}`} itemProp="mainEntityOfPage" rel="bookmark">
@@ -167,6 +166,7 @@ export default async function HomePage() {
                   </h2>
                   <div className="entry-meta">
                     <span className="onDate date">
+                      <i className="icon-calendar icon-metas" title="Date" style={{ marginRight: "0.3em", fontSize: "0.85em", color: "#0a0a0a", opacity: 0.6 }}>📅</i>
                       <time className="published" itemProp="datePublished">
                         {post.date}
                       </time>
