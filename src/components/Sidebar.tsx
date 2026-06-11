@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import MastatineLogo from "./MastatineLogo";
 import type { CalDay } from "@/lib/calendar";
 
@@ -195,6 +195,28 @@ interface SidebarProps {
 
 export default function Sidebar({ activities }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const slider = document.querySelector<HTMLElement>(".lp-slider-overlay");
+    const aside = sidebarRef.current;
+    if (!slider || !aside) return;
+
+    function update() {
+      const sliderBottom = slider!.getBoundingClientRect().bottom;
+      if (sliderBottom <= 0) {
+        aside!.style.position = "sticky";
+        aside!.style.top = "0";
+      } else {
+        aside!.style.position = "relative";
+        aside!.style.top = "";
+      }
+    }
+
+    window.addEventListener("scroll", update, { passive: true });
+    update();
+    return () => window.removeEventListener("scroll", update);
+  }, []);
 
   return (
     <>
@@ -219,6 +241,7 @@ export default function Sidebar({ activities }: SidebarProps) {
 
       {/* ── SIDEBAR ── */}
       <aside
+        ref={sidebarRef}
         id="sidebar"
         className={[
           "flex flex-col",

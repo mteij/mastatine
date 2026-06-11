@@ -63,8 +63,7 @@ h6 { font-size: 0.8em; }
 }
 #container.two-columns-left #sidebar {
   flex-shrink: 0;
-  position: sticky;
-  top: 0;
+  position: relative;
 }
 #container.two-columns-left .main {
   flex: 1;
