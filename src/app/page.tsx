@@ -4,6 +4,15 @@ import HeroCarousel from "@/components/HeroCarousel";
 import TowerGrid from "@/components/TowerGrid";
 import SubmitForm from "@/components/SubmitForm";
 
+export interface MastSlide {
+  id: string;
+  title: string;
+  image_url: string;
+  submitter_name: string;
+  vote_count: number;
+  monthly_votes: number;
+}
+
 async function getTowers(): Promise<Tower[]> {
   try {
     return await sql<Tower[]>`SELECT * FROM towers ORDER BY vote_count DESC`;
@@ -18,6 +27,25 @@ async function getTowerCount(): Promise<number> {
     return row?.count ?? 0;
   } catch {
     return 0;
+  }
+}
+
+async function getMastsOfMonth(): Promise<MastSlide[]> {
+  try {
+    return await sql<MastSlide[]>`
+      SELECT
+        t.id, t.title, t.image_url, t.submitter_name, t.vote_count,
+        COUNT(v.id)::int AS monthly_votes
+      FROM towers t
+      LEFT JOIN votes v
+        ON v.tower_id = t.id
+        AND DATE_TRUNC('month', v.created_at) = DATE_TRUNC('month', NOW())
+      GROUP BY t.id
+      ORDER BY monthly_votes DESC, t.vote_count DESC
+      LIMIT 3
+    `;
+  } catch {
+    return [];
   }
 }
 
@@ -113,7 +141,11 @@ const NEWS = [
 ];
 
 export default async function HomePage() {
-  const [towers, towerCount] = await Promise.all([getTowers(), getTowerCount()]);
+  const [towers, towerCount, mastsOfMonth] = await Promise.all([
+    getTowers(),
+    getTowerCount(),
+    getMastsOfMonth(),
+  ]);
 
   return (
     <>
@@ -140,7 +172,7 @@ export default async function HomePage() {
       {/* ── lp-slider: image carousel ── */}
       <section className="lp-slider-overlay" id="home">
         <div className="lp-dynamic-slider">
-          <HeroCarousel />
+          <HeroCarousel masts={mastsOfMonth} />
         </div>
       </section>
 
