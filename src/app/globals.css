@@ -53,7 +53,7 @@ h5 { font-size: 1.1em; }
 h6 { font-size: 0.8em; }
 
 /* ── Layout ── */
-#content { margin: 0 auto; max-width: 1460px; }
+#content { margin: 0 auto; max-width: 1460px; padding-bottom: 2em; }
 #container { margin: 0 auto; width: 100%; position: relative; }
 .main { margin-bottom: 0; min-height: 400px; overflow: hidden; }
 #container.two-columns-left {
@@ -76,7 +76,7 @@ h6 { font-size: 0.8em; }
 #sidebar {
   display: block;
   position: relative;
-  padding: 2em 3em 0;
+  padding: 2em 3em 3em;
   background-color: #fff;
   width: 380px;
   min-width: 380px;
@@ -217,7 +217,6 @@ a#logo {
 /* ── Entry (article) ── */
 article.hentry {
   background-color: #fff;
-  overflow: hidden;
 }
 
 /* Standard (single column) articles */
@@ -273,6 +272,7 @@ article.hentry {
 .verbosa-magazine-two .entry-content,
 .verbosa-magazine-two .entry-summary {
   padding-top: 1.3em;
+  flex: 1;
 }
 
 /* Paragraph margins inside main */
@@ -286,10 +286,11 @@ article.hentry {
   position: relative;
   display: none;
   float: none;
-  margin: -2em -50% 0;
-  width: 200%;
-  height: 0;
+  margin: 0 -1em 1em;
+  width: calc(100% + 2em);
+  height: 5px;
   background-color: var(--blue);
+  transition: background-color 0.3s ease;
 }
 .post-thumbnail-container + .featured-bar {
   display: block;
@@ -301,14 +302,15 @@ article.hentry {
   height: 100%; width: 100%;
   background-color: var(--orange);
   opacity: 0;
-  transition: 1s opacity ease;
+  transition: 0.3s opacity ease;
 }
-.post-thumbnail-container:hover + .featured-bar::before {
+article.hentry:hover .featured-bar::before {
   opacity: 1;
 }
 
-/* ── Continue reading link ── */
-a.continue-reading-link {
+/* ── Continue reading link / vote button ── */
+a.continue-reading-link,
+button.continue-reading-link {
   display: inline-block;
   background-color: var(--blue);
   color: #fff;
@@ -320,9 +322,17 @@ a.continue-reading-link {
   transition: background-color 0.2s;
   margin-top: 0.5em;
 }
-a.continue-reading-link:hover {
+a.continue-reading-link:hover,
+button.continue-reading-link:hover:not(:disabled) {
   background-color: var(--orange);
   color: #fff;
+}
+button.continue-reading-link {
+  border: none;
+  cursor: pointer;
+}
+button.continue-reading-link:disabled {
+  cursor: default;
 }
 
 /* ── lp-text intro section ── */
@@ -375,6 +385,10 @@ a.continue-reading-link:hover {
   float: none;
   clear: both;
   background-color: var(--orange);
+  margin-bottom: 0; /* flows directly into #towers */
+}
+#towers {
+  background-color: var(--orange);
   margin-bottom: 2em;
 }
 .lp-posts-inside {
@@ -382,56 +396,168 @@ a.continue-reading-link:hover {
   margin: 0 auto;
   overflow: hidden;
 }
-#content-masonry {
-  margin-left: -1%;
-  margin-right: -1%;
+#content-masonry,
+.content-masonry {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5em;
+  margin-left: 0;
+  margin-right: 0;
+  clear: both;
 }
-/* Magazine-two: 2-column float layout — matches Verbosa exactly */
-.verbosa-magazine-two #content-masonry article.hentry {
-  width: 48%;
-  float: left;
-  margin-left: 1%;
-  margin-right: 1%;
-  padding: 1.5em;
-  padding-left: 2.38%;
-  padding-right: 2.38%;
-  margin-bottom: 1.5em;
+/* Compact, clean card design */
+.verbosa-magazine-two #content-masonry article.hentry,
+.verbosa-magazine-two .content-masonry article.hentry {
+  width: 100%;
+  height: 280px;
+  padding: 1em;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0,0,0,0.03);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
-@media (max-width: 800px) {
-  .verbosa-magazine-two #content-masonry article.hentry {
-    width: 98%;
-    float: none;
+.verbosa-magazine-two #content-masonry article.hentry:hover,
+.verbosa-magazine-two .content-masonry article.hentry:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Make the first post (News) span 2 rows vertically for prominence */
+@media (min-width: 651px) {
+  .verbosa-magazine-two .content-masonry article.hentry:first-child {
+    grid-column: auto !important;
+    grid-row: span 2 !important;
+    height: 100% !important;
+  }
+}
+@media (max-width: 650px) {
+  #content-masonry,
+  .content-masonry {
+    grid-template-columns: 1fr;
   }
 }
 
-/* ── Social icons in sidebar footer ── */
-.socials a {
-  border-color: var(--orange);
+/* ── Post thumbnail (tower photo posts) ── */
+article.hentry .post-thumbnail-container {
+  display: block;
+  overflow: hidden;
+  /* bleed past the article padding: top=1em, sides=1em */
+  margin: -1em -1em 0.5em;
+  width: calc(100% + 2em);
+  height: 66.666%;
+  flex-shrink: 0;
+  border-radius: 6px 6px 0 0;
 }
-.socials a::before { color: var(--orange); }
-.socials a::after { background-color: var(--blue); color: #fff; }
-
-/* ── Footer (inside sidebar) ── */
-#footer {
-  border-top: 1px solid var(--border);
-  clear: both;
+article.hentry .post-thumbnail-container img {
+  display: block;
   width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+article.hentry:hover .post-thumbnail-container img {
+  transform: scale(1.03);
+}
+
+/* ── Footer (inside sidebar — #footer) ── */
+#footer {
+  display: block;
+  overflow: visible;
+  width: 100%;
+  border-top: 1px solid var(--border);
+  margin-top: 1.5em;
+}
+#footer-inside {
+  display: block;
+  float: none;
+  padding: 1.5em 0;
+  overflow: hidden;
+  position: relative;
 }
 #footer a { color: var(--orange); }
 #footer a:hover { color: var(--blue); }
-#site-copyright, #footer { border-color: var(--border); }
-
-/* ── Colophon (full-width page footer below content) ── */
-#colophon {
+#site-copyright {
   display: block;
   float: none;
-  background-color: #fff;
-  clear: both;
+  font-style: italic;
+  font-size: .85em;
+  line-height: 1.5;
+  border-bottom: 1px solid transparent;
+  padding-bottom: 1em;
+  margin-bottom: 0.5em;
 }
+#site-copyright:empty { display: none; }
+
+/* ── Socials (circular icon links in sidebar footer) ── */
+#sidebar .socials {
+  display: flex;
+  justify-content: center;
+  gap: 0.8em;
+  margin: 0 auto 1em;
+}
+.socials a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border: 2px solid var(--orange);
+  border-radius: 100px;
+  transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+  width: 2.5em;
+  height: 2.5em;
+  color: var(--orange);
+  text-decoration: none;
+}
+.socials a span { display: none; }
+.socials a svg {
+  width: 1.25em;
+  height: 1.25em;
+  fill: currentColor;
+}
+.socials a svg.stroke-icon {
+  fill: none;
+  stroke: currentColor;
+}
+.socials a:hover {
+  background-color: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+
+/* ── Colophon (full-width 3-column footer below #content) ── */
+#colophon {
+  display: block;
+  background-color: #fff;
+  overflow: hidden;
+  border-top: 1px solid var(--border);
+}
+#colophon:empty { display: none; }
 #colophon-inside {
   max-width: 1460px;
   width: 100%;
   margin: 0 auto;
+  padding: 0 1em;
+  overflow: hidden;
+}
+#colophon .widget-container {
+  float: left;
+  padding: 2em 2em 2em;
+  box-sizing: border-box;
+}
+.footer-three .widget-container { width: 33.333%; }
+.footer-three .widget-container:nth-child(3n+1) { clear: both; }
+#colophon a { color: var(--orange); }
+#colophon a:hover { color: var(--blue); }
+#colophon .widget-title span { background-color: #fff; }
+#colophon .widget-title::after { background-color: var(--border); }
+@media (max-width: 800px) {
+  .footer-three .widget-container {
+    width: 100%;
+    float: none;
+  }
 }
 
 /* ── Searchform ── */
@@ -450,15 +576,11 @@ a.continue-reading-link:hover {
   outline: none;
   border-radius: 0;
 }
-.searchform::before {
-  content: "🔍";
-  display: flex;
-  align-items: center;
-  padding: 0 0.8em;
-  background-color: var(--blue);
-  color: #fff;
-  cursor: pointer;
-  font-size: 0.9em;
+.searchform input[type="search"]::-webkit-search-decoration,
+.searchform input[type="search"]::-webkit-search-cancel-button,
+.searchform input[type="search"]::-webkit-search-results-button,
+.searchform input[type="search"]::-webkit-search-results-decoration {
+  -webkit-appearance: none;
 }
 
 /* ── Orange CTA button ── */

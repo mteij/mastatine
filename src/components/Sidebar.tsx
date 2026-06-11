@@ -189,6 +189,26 @@ function NavNode({ item, depth = 0 }: { item: NavItem; depth?: number }) {
   );
 }
 
+const SOCIAL_ICONS: Record<string, React.ReactNode> = {
+  Facebook: (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/>
+    </svg>
+  ),
+  LinkedIn: (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+    </svg>
+  ),
+  Instagram: (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="stroke-icon">
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+    </svg>
+  ),
+};
+
 interface SidebarProps {
   activities: CalDay[];
 }
@@ -268,13 +288,13 @@ export default function Sidebar({ activities }: SidebarProps) {
             </div>
             <h1 id="site-title" itemProp="headline">
               <span>
-                <a href="/" title="The study association for open-minded engineers" rel="home">
+                <a href="/" title="The study association for mastende engineers" rel="home">
                   S.A. Mastatine
                 </a>
               </span>
             </h1>
             <span id="site-description" itemProp="description">
-              The study association for open-minded engineers
+              The study association for mastende engineers
             </span>
             <div className="branding-spacer" />
 
@@ -309,11 +329,11 @@ export default function Sidebar({ activities }: SidebarProps) {
                       <dt style={{ borderBottom: "1px solid #001e7a" }}>
                         <span
                           style={{
-                            display: "inline-block",
-                            backgroundColor: "#001e7a",
-                            color: "#fff",
-                            padding: "0.1em 0.4em",
-                            fontSize: "0.75em",
+                             display: "inline-block",
+                             backgroundColor: "#001e7a",
+                             color: "#fff",
+                             padding: "0.1em 0.4em",
+                             fontSize: "0.75em",
                           }}
                         >
                           {date}
@@ -325,7 +345,7 @@ export default function Sidebar({ activities }: SidebarProps) {
                             <li key={i} style={{ fontSize: "0.85em", color: "#0a0a0a", paddingTop: "0.2em" }}>
                               <strong>{ev.title}</strong>
                               {ev.location && (
-                                <em style={{ marginLeft: "0.4em", color: "#555", fontStyle: "normal" }}>
+                                <em style={{ display: "block", marginTop: "0.2em", whiteSpace: "pre-wrap", color: "#666", fontStyle: "normal" }}>
                                   {ev.location}
                                 </em>
                               )}
@@ -346,7 +366,14 @@ export default function Sidebar({ activities }: SidebarProps) {
                 method="get"
                 action="/#towers"
                 className="searchform"
-                style={{ display: "flex", border: "1px solid #eee" }}
+                style={{ 
+                  display: "flex", 
+                  border: "1px solid #ddd", 
+                  borderRadius: "25px", 
+                  overflow: "hidden",
+                  background: "#fff",
+                  boxShadow: "inset 0 1px 3px rgba(0,0,0,0.05)"
+                }}
               >
                 <input
                   type="search"
@@ -354,9 +381,9 @@ export default function Sidebar({ activities }: SidebarProps) {
                   placeholder="Search"
                   style={{
                     flex: 1,
-                    padding: ".5em .7em",
-                    fontSize: "0.9em",
-                    color: "#0a0a0a",
+                    padding: "0.6em 1.2em",
+                    fontSize: "0.95em",
+                    color: "#333",
                     outline: "none",
                     border: "none",
                     background: "transparent",
@@ -364,107 +391,62 @@ export default function Sidebar({ activities }: SidebarProps) {
                 />
                 <button
                   type="submit"
+                  aria-label="Search"
                   style={{
-                    padding: "0 0.8em",
-                    background: "#1c1399",
-                    color: "#fff",
+                    padding: "0 1.2em",
+                    background: "transparent",
+                    color: "var(--navy)",
                     border: "none",
                     cursor: "pointer",
-                    fontSize: "0.85em",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition: "color 0.2s"
                   }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = "var(--orange)"}
+                  onMouseLeave={(e) => e.currentTarget.style.color = "var(--navy)"}
                 >
-                  🔍
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
                 </button>
               </form>
             </div>
 
-            {/* ── FOOTER (inside sidebar, matching Verbosa #footer) ── */}
-            <footer
-              id="footer"
-              style={{ borderTop: "1px solid #eee", paddingTop: "1em", paddingBottom: "1.5em", marginTop: "1.5em" }}
-            >
-              {/* Social links */}
-              <nav
-                id="sfooter"
-                className="socials"
-                style={{ display: "flex", gap: "0.5em", marginBottom: "0.75em" }}
-              >
-                {[
-                  { label: "Facebook", href: "https://www.facebook.com/" },
-                  { label: "LinkedIn", href: "https://www.linkedin.com/" },
-                  { label: "Instagram", href: "https://www.instagram.com/" },
-                ].map(({ label, href }) => (
-                  <a
-                    key={label}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={label}
-                    style={{
-                      width: "2.25em",
-                      height: "2.25em",
-                      borderRadius: "100%",
-                      border: "2px solid #f57f20",
-                      color: "#f57f20",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "0.75em",
-                      fontWeight: "bold",
-                      textDecoration: "none",
-                      transition: "all 0.2s",
-                    }}
-                    onMouseEnter={(e) => {
-                      const el = e.currentTarget as HTMLAnchorElement;
-                      el.style.background = "#1c1399";
-                      el.style.borderColor = "#1c1399";
-                      el.style.color = "#fff";
-                    }}
-                    onMouseLeave={(e) => {
-                      const el = e.currentTarget as HTMLAnchorElement;
-                      el.style.background = "transparent";
-                      el.style.borderColor = "#f57f20";
-                      el.style.color = "#f57f20";
-                    }}
-                  >
-                    {label[0]}
-                  </a>
-                ))}
-              </nav>
-              <p style={{ fontSize: "0.85em", color: "#0a0a0a" }}>
-                <span id="site-copyright">
+            {/* ── FOOTER (inside sidebar — matches Verbosa #footer structure exactly) ── */}
+            <footer id="footer" role="contentinfo">
+              <div id="footer-inside">
+                <nav id="sfooter" className="socials">
+                  {[
+                    { label: "Facebook",  href: "https://www.facebook.com/" },
+                    { label: "LinkedIn",  href: "https://www.linkedin.com/" },
+                    { label: "Instagram", href: "https://www.instagram.com/" },
+                  ].map(({ label, href }) => (
+                    <a
+                      key={label}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={label}
+                      className="menu-item"
+                    >
+                      {SOCIAL_ICONS[label]}
+                      <span>{label}</span>
+                    </a>
+                  ))}
+                </nav>
+
+                {/* empty by default; CSS hides it when empty */}
+                <div id="site-copyright" />
+
+                <div style={{ display: "block", float: "none", clear: "both", fontSize: ".9em", textAlign: "center" }}>
                   Powered by{" "}
-                  <a
-                    href="https://nextjs.org"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: "#f57f20" }}
-                    onMouseEnter={(e) =>
-                      ((e.currentTarget as HTMLAnchorElement).style.color = "#1c1399")
-                    }
-                    onMouseLeave={(e) =>
-                      ((e.currentTarget as HTMLAnchorElement).style.color = "#f57f20")
-                    }
-                  >
-                    Next.js
-                  </a>{" "}
-                  &amp;{" "}
-                  <a
-                    href="https://supabase.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: "#f57f20" }}
-                    onMouseEnter={(e) =>
-                      ((e.currentTarget as HTMLAnchorElement).style.color = "#1c1399")
-                    }
-                    onMouseLeave={(e) =>
-                      ((e.currentTarget as HTMLAnchorElement).style.color = "#f57f20")
-                    }
-                  >
-                    Supabase
-                  </a>
-                </span>
-              </p>
+                  <a href="https://nextjs.org" target="_blank" rel="noopener noreferrer">Next.js</a>
+                  {" "}&amp;{" "}
+                  <a href="https://supabase.com" target="_blank" rel="noopener noreferrer">Supabase</a>.
+                </div>
+              </div>
             </footer>
           </div>
         </header>

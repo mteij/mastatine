@@ -20,9 +20,13 @@ CREATE TABLE IF NOT EXISTS votes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tower_id UUID NOT NULL REFERENCES towers(id) ON DELETE CASCADE,
   voter_id TEXT NOT NULL,
+  direction TEXT NOT NULL DEFAULT 'up' CHECK (direction IN ('up', 'down')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE(tower_id, voter_id)
 );
+
+-- Migration: add direction column to existing installs
+-- ALTER TABLE votes ADD COLUMN IF NOT EXISTS direction TEXT NOT NULL DEFAULT 'up' CHECK (direction IN ('up', 'down'));
 
 -- Index for fast leaderboard queries
 CREATE INDEX IF NOT EXISTS towers_vote_count_idx ON towers(vote_count DESC);

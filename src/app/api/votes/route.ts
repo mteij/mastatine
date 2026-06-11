@@ -5,12 +5,14 @@ export async function GET(req: NextRequest) {
   const voter_id = req.nextUrl.searchParams.get("voter_id");
 
   if (!voter_id) {
-    return NextResponse.json({ tower_ids: [] });
+    return NextResponse.json({ tower_votes: [] });
   }
 
   const votes = await sql`
-    SELECT tower_id FROM votes WHERE voter_id = ${voter_id}
+    SELECT tower_id, direction FROM votes WHERE voter_id = ${voter_id}
   `;
 
-  return NextResponse.json({ tower_ids: votes.map((v) => v.tower_id) });
+  return NextResponse.json({
+    tower_votes: votes.map((v) => ({ tower_id: v.tower_id, direction: v.direction ?? "up" })),
+  });
 }

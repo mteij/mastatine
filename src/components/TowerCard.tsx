@@ -1,84 +1,108 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
+import { useState, useEffect } from "react";
 import { Tower } from "@/lib/types";
 import { getOrCreateVoterId } from "@/lib/voter-id";
 
 interface TowerCardProps {
   tower: Tower;
-  hasVoted: boolean;
+  voteDirection: "up" | "down" | null;
+  onSelect: (tower: Tower) => void;
+  onVoteSuccess: (direction: "up" | "down") => void;
 }
 
-export default function TowerCard({ tower, hasVoted: initialHasVoted }: TowerCardProps) {
+export default function TowerCard({ tower, voteDirection: initialVoteDirection, onSelect, onVoteSuccess }: TowerCardProps) {
   const [votes, setVotes] = useState(tower.vote_count);
-  const [hasVoted, setHasVoted] = useState(initialHasVoted);
+  const [voteDirection, setVoteDirection] = useState(initialVoteDirection);
   const [voting, setVoting] = useState(false);
 
-  async function handleVote() {
-    if (hasVoted || voting) return;
-    setVoting(true);
+  useEffect(() => {
+    setVoteDirection(initialVoteDirection);
+  }, [initialVoteDirection]);
 
+  async function handleVote(direction: "up" | "down") {
+    if (voteDirection !== null || voting) return;
+    setVoting(true);
     const voterId = getOrCreateVoterId();
     try {
       const res = await fetch(`/api/towers/${tower.id}/vote`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ voter_id: voterId }),
+        body: JSON.stringify({ voter_id: voterId, direction }),
       });
-
       if (res.ok) {
-        setVotes((v) => v + 1);
-        setHasVoted(true);
+        setVotes((v) => direction === "up" ? v + 1 : v - 1);
+        setVoteDirection(direction);
+        onVoteSuccess(direction);
       }
     } finally {
       setVoting(false);
     }
   }
 
+  const voted = voteDirection !== null;
+
   return (
-    <article className="bg-white rounded-xl shadow-md overflow-hidden border border-slate-200 flex flex-col group hover:shadow-lg transition-shadow">
-      <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
-        <Image
-          src={tower.image_url}
-          alt={tower.title}
-          fill
-          className="object-cover group-hover:scale-105 transition-transform duration-300"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          unoptimized
-        />
-        <div className="absolute top-2 right-2">
-          <span className="bg-[#f57f20] text-white text-xs font-bold px-2 py-1 rounded-full shadow">
-            📡 Mast
-          </span>
-        </div>
+    <article className="post hentry" itemScope itemType="http://schema.org/Photograph">
+      <div onClick={() => onSelect(tower)} className="post-thumbnail-container" style={{ cursor: "pointer" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={tower.image_url} alt={tower.title} loading="lazy" />
       </div>
+      <div className="featured-bar" />
 
-      <div className="p-4 flex flex-col flex-1">
-        <h2 className="font-bold text-slate-800 text-lg leading-tight mb-1 line-clamp-2">
-          {tower.title}
-        </h2>
-        {tower.description && (
-          <p className="text-slate-500 text-sm mb-3 line-clamp-3 flex-1">
-            {tower.description}
-          </p>
-        )}
-        <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100">
-          <span className="text-xs text-slate-400">
-            by <span className="font-medium text-slate-600">{tower.submitter_name}</span>
-          </span>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flex: 1 }}>
+        <header className="entry-header" style={{ marginBottom: 0 }}>
+          <h2 className="entry-title" itemProp="name" style={{ fontSize: "1.1rem", marginBottom: "0.2rem", cursor: "pointer", color: "var(--text)" }} onClick={() => onSelect(tower)}>
+            {tower.title}
+          </h2>
+          <div className="entry-meta">
+            <span>
+              <span itemProp="author">{tower.submitter_name}</span>
+            </span>
+          </div>
+        </header>
 
+        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
           <button
-            onClick={handleVote}
-            disabled={hasVoted || voting}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold transition-all ${
-              hasVoted
-                ? "bg-orange-100 text-orange-700 cursor-default"
-                : "bg-[#1a2332] text-white hover:bg-[#f57f20] hover:text-white active:scale-95"
-            } disabled:opacity-70`}
+            type="button"
+            onClick={() => handleVote("up")}
+            disabled={voted || voting}
+            style={{
+              background: voteDirection === "up" ? "var(--orange)" : "transparent",
+              color: voteDirection === "up" ? "#fff" : "var(--text-mid)",
+              border: `1px solid ${voteDirection === "up" ? "var(--orange)" : "var(--border)"}`,
+              borderRadius: "3px",
+              padding: "0.2rem 0.5rem",
+              cursor: voted ? "default" : "pointer",
+              fontWeight: 700,
+              fontSize: "0.9rem",
+              lineHeight: 1,
+              transition: "all 0.15s",
+            }}
           >
-            <span>{hasVoted ? "⚡" : "▲"}</span>
-            <span>{votes}</span>
+            ▲
+          </button>
+          <span style={{ fontWeight: 700, minWidth: "2ch", textAlign: "center", color: "var(--text)", fontSize: "0.9rem" }}>
+            {votes}
+          </span>
+          <button
+            type="button"
+            onClick={() => handleVote("down")}
+            disabled={voted || voting}
+            style={{
+              background: voteDirection === "down" ? "var(--navy)" : "transparent",
+              color: voteDirection === "down" ? "#fff" : "var(--text-mid)",
+              border: `1px solid ${voteDirection === "down" ? "var(--navy)" : "var(--border)"}`,
+              borderRadius: "3px",
+              padding: "0.2rem 0.5rem",
+              cursor: voted ? "default" : "pointer",
+              fontWeight: 700,
+              fontSize: "0.9rem",
+              lineHeight: 1,
+              transition: "all 0.15s",
+            }}
+          >
+            ▼
           </button>
         </div>
       </div>

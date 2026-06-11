@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Lato } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
+import Colophon from "@/components/Colophon";
 import { getThisWeekActivities } from "@/lib/calendar";
 
 const lato = Lato({
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
   title: "S.A. Mastatine — The study association for open-minded engineers",
   description:
     "S.A. Mastatine is the study association for Advanced Mast Technology. Submit your favourite mast and vote on the most impressive electromagnetic structures in the Netherlands.",
+  icons: { icon: "/favicon.svg" },
   openGraph: {
     title: "S.A. Mastatine",
     description: "Submit a mast and vote on the finest transmission towers.",
@@ -41,6 +43,7 @@ export default async function RootLayout({
               <div style={{ clear: "both" }} />
             </div>
           </div>
+          <Colophon />
         </div>
       </body>
     </html>

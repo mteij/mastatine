@@ -3,9 +3,62 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
-type FormState = "idle" | "uploading" | "submitting" | "success" | "error";
+type FormState = "idle" | "compressing" | "uploading" | "submitting" | "success" | "error";
 
-export default function SubmitForm() {
+interface SubmitFormProps {
+  onSuccess?: () => void;
+}
+
+const MAX_DIM = 1920;
+const JPEG_QUALITY = 0.82;
+
+function compressImage(file: File): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+
+      let { width, height } = img;
+      if (width > MAX_DIM || height > MAX_DIM) {
+        if (width >= height) {
+          height = Math.round((height * MAX_DIM) / width);
+          width = MAX_DIM;
+        } else {
+          width = Math.round((width * MAX_DIM) / height);
+          height = MAX_DIM;
+        }
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { reject(new Error("Canvas not supported")); return; }
+
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("Image compression failed"));
+        },
+        "image/jpeg",
+        JPEG_QUALITY,
+      );
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Failed to load image"));
+    };
+
+    img.src = objectUrl;
+  });
+}
+
+export default function SubmitForm({ onSuccess }: SubmitFormProps = {}) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<FormState>("idle");
@@ -20,8 +73,8 @@ export default function SubmitForm() {
       setErrorMsg("Please select an image file.");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setErrorMsg("Image must be smaller than 5MB.");
+    if (file.size > 20 * 1024 * 1024) {
+      setErrorMsg("Image must be smaller than 20 MB.");
       return;
     }
 
@@ -48,11 +101,13 @@ export default function SubmitForm() {
     }
 
     try {
-      setState("uploading");
+      setState("compressing");
+      const compressed = await compressImage(file);
+      const compressedFile = new File([compressed], "photo.jpg", { type: "image/jpeg" });
 
-      // Upload image via API route
+      setState("uploading");
       const uploadForm = new FormData();
-      uploadForm.append("file", file);
+      uploadForm.append("file", compressedFile);
 
       const uploadRes = await fetch("/api/upload", {
         method: "POST",
@@ -67,7 +122,6 @@ export default function SubmitForm() {
       const { url } = await uploadRes.json();
 
       setState("submitting");
-
       const submitRes = await fetch("/api/towers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -80,7 +134,11 @@ export default function SubmitForm() {
       }
 
       setState("success");
-      setTimeout(() => router.push("/towers"), 2000);
+      if (onSuccess) {
+        setTimeout(onSuccess, 1400);
+      } else {
+        setTimeout(() => router.push("/towers"), 2000);
+      }
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : "Something went wrong.");
       setState("error");
@@ -92,12 +150,15 @@ export default function SubmitForm() {
       <div className="text-center py-10">
         <div className="text-5xl mb-4">📡</div>
         <h2 className="text-xl font-black text-[#1a2332] mb-2">Mast submitted!</h2>
-        <p className="text-slate-500">Redirecting to the gallery…</p>
+        <p className="text-slate-500">
+          {onSuccess ? "Closing…" : "Redirecting to the gallery…"}
+        </p>
       </div>
     );
   }
 
-  const isLoading = state === "uploading" || state === "submitting";
+  const isLoading =
+    state === "compressing" || state === "uploading" || state === "submitting";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -165,12 +226,8 @@ export default function SubmitForm() {
           ) : (
             <div>
               <div className="text-3xl mb-2">📷</div>
-              <p className="text-slate-600 font-medium text-sm">
-                Click to select a photo
-              </p>
-              <p className="text-slate-400 text-xs mt-1">
-                JPG, PNG, WebP — max 5MB
-              </p>
+              <p className="text-slate-600 font-medium text-sm">Click to select a photo</p>
+              <p className="text-slate-400 text-xs mt-1">JPG, PNG, WebP — up to 20 MB</p>
             </div>
           )}
         </div>
@@ -194,7 +251,9 @@ export default function SubmitForm() {
         disabled={isLoading}
         className="w-full btn-orange py-3 disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        {state === "uploading"
+        {state === "compressing"
+          ? "Optimising image…"
+          : state === "uploading"
           ? "Uploading photo…"
           : state === "submitting"
           ? "Submitting mast…"

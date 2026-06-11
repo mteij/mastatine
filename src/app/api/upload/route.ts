@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createStorageClient } from "@/lib/storage";
 
-const MAX_SIZE = 5 * 1024 * 1024;
+const MAX_SIZE = 20 * 1024 * 1024; // generous ceiling; client compresses before sending
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 export async function POST(req: NextRequest) {
@@ -14,14 +14,15 @@ export async function POST(req: NextRequest) {
   if (!ALLOWED_TYPES.includes(file.type)) {
     return NextResponse.json(
       { error: "Only JPG, PNG, WebP and GIF images are allowed" },
-      { status: 400 }
+      { status: 400 },
     );
   }
   if (file.size > MAX_SIZE) {
-    return NextResponse.json({ error: "File too large — max 5MB" }, { status: 400 });
+    return NextResponse.json({ error: "File too large — max 20 MB" }, { status: 400 });
   }
 
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  // Client always sends image/jpeg after compression; keep extension consistent
+  const ext = file.type === "image/jpeg" ? "jpg" : (file.name.split(".").pop()?.toLowerCase() ?? "jpg");
   const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
   const buffer = new Uint8Array(await file.arrayBuffer());
