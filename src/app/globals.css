@@ -63,7 +63,8 @@ h6 { font-size: 0.8em; }
 }
 #container.two-columns-left #sidebar {
   flex-shrink: 0;
-  position: relative;
+  position: sticky;
+  top: 0; /* JS overrides this to a negative value based on slider height */
 }
 #container.two-columns-left .main {
   flex: 1;

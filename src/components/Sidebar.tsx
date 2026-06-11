@@ -202,20 +202,18 @@ export default function Sidebar({ activities }: SidebarProps) {
     const aside = sidebarRef.current;
     if (!slider || !aside) return;
 
-    function update() {
-      const sliderBottom = slider!.getBoundingClientRect().bottom;
-      if (sliderBottom <= 0) {
-        aside!.style.position = "sticky";
-        aside!.style.top = "0";
-      } else {
-        aside!.style.position = "relative";
-        aside!.style.top = "";
-      }
+    function setTop() {
+      // Absolute distance from the page top to the slider's bottom edge.
+      // Using this as a negative sticky top means the sidebar scrolls freely
+      // until the slider bottom exits the viewport, then locks in place.
+      const sliderAbsoluteBottom =
+        slider!.getBoundingClientRect().bottom + window.scrollY;
+      aside!.style.top = `-${Math.max(0, sliderAbsoluteBottom)}px`;
     }
 
-    window.addEventListener("scroll", update, { passive: true });
-    update();
-    return () => window.removeEventListener("scroll", update);
+    setTop();
+    window.addEventListener("resize", setTop);
+    return () => window.removeEventListener("resize", setTop);
   }, []);
 
   return (
