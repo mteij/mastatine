@@ -221,7 +221,7 @@ export default function Sidebar({ activities }: SidebarProps) {
       <aside
         id="sidebar"
         className={[
-          "lg:sticky lg:top-0 flex flex-col",
+          "flex flex-col",
           mobileOpen ? "fixed inset-y-0 left-0 z-50 overflow-y-auto flex" : "hidden lg:flex",
         ].join(" ")}
       >

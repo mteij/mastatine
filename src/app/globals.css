@@ -54,10 +54,23 @@ h6 { font-size: 0.8em; }
 
 /* ── Layout ── */
 #content { margin: 0 auto; max-width: 1460px; }
-#container { float: left; margin: 0 auto; width: 100%; position: relative; }
-.main { margin-bottom: 0; margin-top: 15px; min-height: 400px; overflow: hidden; }
-#container.two-columns-left #sidebar { float: left; }
-#container.two-columns-left .main { float: right; width: calc(97% - 380px); }
+#container { margin: 0 auto; width: 100%; position: relative; }
+.main { margin-bottom: 0; min-height: 400px; overflow: hidden; }
+#container.two-columns-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 3%;
+}
+#container.two-columns-left #sidebar {
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+}
+#container.two-columns-left .main {
+  flex: 1;
+  min-width: 0;
+  margin-top: 15px;
+}
 
 /* ── Sidebar ── */
 #sidebar {
