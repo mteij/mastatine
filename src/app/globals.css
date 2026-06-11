@@ -53,9 +53,11 @@ h5 { font-size: 1.1em; }
 h6 { font-size: 0.8em; }
 
 /* ── Layout ── */
-#content { margin: 0 auto; }
+#content { margin: 0 auto; max-width: 1460px; }
 #container { float: left; margin: 0 auto; width: 100%; position: relative; }
-.main { margin-bottom: 0; min-height: 400px; overflow: hidden; }
+.main { margin-bottom: 0; margin-top: 15px; min-height: 400px; overflow: hidden; }
+#container.two-columns-left #sidebar { float: left; }
+#container.two-columns-left .main { float: right; width: calc(97% - 380px); }
 
 /* ── Sidebar ── */
 #sidebar {
@@ -65,7 +67,6 @@ h6 { font-size: 0.8em; }
   background-color: #fff;
   width: 380px;
   min-width: 380px;
-  flex-shrink: 0;
 }
 
 /* ── Branding / header in sidebar ── */
@@ -315,13 +316,17 @@ a.continue-reading-link:hover {
 .lp-text {
   position: relative;
   display: block;
+  float: none;
+  clear: both;
+  width: 100%;
   background-color: #fff;
-  margin-top: 0;
+  margin-bottom: 2em;
+  padding: 2em 0;
 }
 .lp-text-inside {
   position: relative;
   z-index: 3;
-  padding: 2em 5% 1.5em;
+  padding: 1em 3em;
   max-width: 1460px;
   margin: 0 auto;
   overflow: hidden;
@@ -347,14 +352,17 @@ a.continue-reading-link:hover {
 .lp-slider-overlay {
   position: relative;
   overflow: hidden;
-  margin: 0;
+  max-height: 100vh;
+  margin-bottom: 2em;
 }
 
 /* ── lp-posts masonry ── */
 #lp-posts {
   display: block;
+  float: none;
+  clear: both;
   background-color: var(--orange);
-  margin-top: 0;
+  margin-bottom: 2em;
 }
 .lp-posts-inside {
   max-width: 1460px;

@@ -32,13 +32,15 @@ export default async function RootLayout({
     <html lang="en" className={lato.className} suppressHydrationWarning>
       <body className="verbosa-landing-page verbosa-magazine-two verbosa-magazine-layout verbosa-no-sidebar-back">
         <div id="site-wrapper">
-          <div id="content" className="cryout" style={{ maxWidth: 1460, margin: "0 auto", display: "flex", alignItems: "flex-start" }}>
-            <Sidebar activities={activities} />
-            <main id="main" className="main" style={{ flex: 1, minWidth: 0, marginTop: 15 }}>
-              {children}
-            </main>
+          <div id="content" className="cryout">
+            <div id="container" className="two-columns-left">
+              <Sidebar activities={activities} />
+              <main id="main" className="main">
+                {children}
+              </main>
+              <div style={{ clear: "both" }} />
+            </div>
           </div>
-          <div style={{ clear: "both" }} />
         </div>
       </body>
     </html>
