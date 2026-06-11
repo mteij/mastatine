@@ -1,18 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase";
+import sql from "@/lib/db";
 
 export async function GET() {
-  const supabase = createServiceClient();
-  const { data, error } = await supabase
-    .from("towers")
-    .select("*")
-    .order("vote_count", { ascending: false });
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json(data);
+  const towers = await sql`
+    SELECT * FROM towers ORDER BY vote_count DESC
+  `;
+  return NextResponse.json(towers);
 }
 
 export async function POST(req: NextRequest) {
@@ -26,16 +19,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const supabase = createServiceClient();
-  const { data, error } = await supabase
-    .from("towers")
-    .insert({ title: title.trim(), description: description?.trim() || null, submitter_name: submitter_name.trim(), image_url })
-    .select()
-    .single();
+  const [tower] = await sql`
+    INSERT INTO towers (title, description, submitter_name, image_url)
+    VALUES (${title.trim()}, ${description?.trim() || null}, ${submitter_name.trim()}, ${image_url})
+    RETURNING *
+  `;
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json(data, { status: 201 });
+  return NextResponse.json(tower, { status: 201 });
 }

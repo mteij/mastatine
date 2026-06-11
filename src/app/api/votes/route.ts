@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase";
+import sql from "@/lib/db";
 
 export async function GET(req: NextRequest) {
   const voter_id = req.nextUrl.searchParams.get("voter_id");
@@ -8,13 +8,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ tower_ids: [] });
   }
 
-  const supabase = createServiceClient();
-  const { data } = await supabase
-    .from("votes")
-    .select("tower_id")
-    .eq("voter_id", voter_id);
+  const votes = await sql`
+    SELECT tower_id FROM votes WHERE voter_id = ${voter_id}
+  `;
 
-  return NextResponse.json({
-    tower_ids: data?.map((v) => v.tower_id) ?? [],
-  });
+  return NextResponse.json({ tower_ids: votes.map((v) => v.tower_id) });
 }

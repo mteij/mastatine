@@ -1,16 +1,12 @@
 import Link from "next/link";
-import { createServiceClient } from "@/lib/supabase";
+import sql from "@/lib/db";
 import { Tower } from "@/lib/types";
 
 async function getTopTowers(): Promise<Tower[]> {
   try {
-    const supabase = createServiceClient();
-    const { data } = await supabase
-      .from("towers")
-      .select("*")
-      .order("vote_count", { ascending: false })
-      .limit(3);
-    return data ?? [];
+    return await sql<Tower[]>`
+      SELECT * FROM towers ORDER BY vote_count DESC LIMIT 3
+    `;
   } catch {
     return [];
   }
@@ -18,11 +14,8 @@ async function getTopTowers(): Promise<Tower[]> {
 
 async function getTowerCount(): Promise<number> {
   try {
-    const supabase = createServiceClient();
-    const { count } = await supabase
-      .from("towers")
-      .select("*", { count: "exact", head: true });
-    return count ?? 0;
+    const [row] = await sql`SELECT COUNT(*)::int AS count FROM towers`;
+    return row.count ?? 0;
   } catch {
     return 0;
   }

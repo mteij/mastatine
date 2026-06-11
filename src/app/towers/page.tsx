@@ -1,16 +1,13 @@
-import { createServiceClient } from "@/lib/supabase";
+import sql from "@/lib/db";
 import { Tower } from "@/lib/types";
 import TowerGrid from "@/components/TowerGrid";
 import Link from "next/link";
 
 async function getAllTowers(): Promise<Tower[]> {
   try {
-    const supabase = createServiceClient();
-    const { data } = await supabase
-      .from("towers")
-      .select("*")
-      .order("vote_count", { ascending: false });
-    return data ?? [];
+    return await sql<Tower[]>`
+      SELECT * FROM towers ORDER BY vote_count DESC
+    `;
   } catch {
     return [];
   }

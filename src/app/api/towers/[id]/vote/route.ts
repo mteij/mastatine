@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase";
+import sql from "@/lib/db";
 
 export async function POST(
   req: NextRequest,
@@ -13,39 +13,21 @@ export async function POST(
     return NextResponse.json({ error: "voter_id is required" }, { status: 400 });
   }
 
-  const supabase = createServiceClient();
-
-  // Insert vote (unique constraint prevents double voting)
-  const { error: voteError } = await supabase
-    .from("votes")
-    .insert({ tower_id: id, voter_id });
-
-  if (voteError) {
-    if (voteError.code === "23505") {
-      // Unique constraint: already voted
+  try {
+    await sql`
+      INSERT INTO votes (tower_id, voter_id) VALUES (${id}, ${voter_id})
+    `;
+  } catch (err: unknown) {
+    // Unique constraint violation — already voted
+    if ((err as { code?: string }).code === "23505") {
       return NextResponse.json({ error: "Already voted" }, { status: 409 });
     }
-    return NextResponse.json({ error: voteError.message }, { status: 500 });
+    throw err;
   }
 
-  // Increment vote_count on the tower
-  const { error: updateError } = await supabase.rpc("increment_vote_count", {
-    tower_id: id,
-  });
-
-  if (updateError) {
-    // Fallback: manual increment
-    const { data: tower } = await supabase
-      .from("towers")
-      .select("vote_count")
-      .eq("id", id)
-      .single();
-
-    await supabase
-      .from("towers")
-      .update({ vote_count: (tower?.vote_count ?? 0) + 1 })
-      .eq("id", id);
-  }
+  await sql`
+    UPDATE towers SET vote_count = vote_count + 1 WHERE id = ${id}
+  `;
 
   return NextResponse.json({ success: true });
 }
