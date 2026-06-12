@@ -38,14 +38,17 @@ async function getMastsOfMonth(): Promise<MastSlide[]> {
     return await sql<MastSlide[]>`
       SELECT
         t.id, t.title, t.image_url, t.submitter_name, t.vote_count,
-        COUNT(v.id)::int AS monthly_votes
+        COALESCE(
+          SUM(CASE WHEN v.direction = 'up' THEN 1 WHEN v.direction = 'down' THEN -1 ELSE 0 END),
+          0
+        )::int AS monthly_votes
       FROM towers t
       LEFT JOIN votes v
         ON v.tower_id = t.id
         AND DATE_TRUNC('month', v.created_at) = DATE_TRUNC('month', NOW())
       GROUP BY t.id
       ORDER BY monthly_votes DESC, t.vote_count DESC
-      LIMIT 3
+      LIMIT 1
     `;
   } catch {
     return [];
@@ -130,8 +133,8 @@ export default async function HomePage(
                 itemType="http://schema.org/BlogPosting"
                 itemProp="blogPost"
               >
-                <header className="entry-header">
-                  <h2 className="entry-title" itemProp="headline" style={{ fontSize: "1.15rem", fontWeight: "bold", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                <header className="entry-header" style={{ marginBottom: "0.4em" }}>
+                  <h2 className="entry-title" itemProp="headline" style={{ fontSize: "1.15rem", fontWeight: "bold", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: "0.2em" }}>
                     <a href={`/${post.slug}`} itemProp="mainEntityOfPage" rel="bookmark" style={{ color: "var(--navy)" }}>
                       {post.title}
                     </a>
@@ -144,16 +147,18 @@ export default async function HomePage(
                     </span>
                   </div>
                 </header>
-                <div 
-                  className="entry-content" 
+                <div
+                  className="entry-content"
                   itemProp="articleBody"
                   style={{
                     display: "-webkit-box",
-                    WebkitLineClamp: 7,
+                    WebkitLineClamp: 6,
                     WebkitBoxOrient: "vertical",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     flex: 1,
+                    fontSize: "0.9rem",
+                    lineHeight: 1.55,
                     marginBottom: "0.5rem"
                   }}
                 >

@@ -361,8 +361,8 @@ export default function Sidebar({ activities }: SidebarProps) {
               )}
             </div>
 
-            {/* ── SEARCH WIDGET ── */}
-            <div style={{ borderTop: "1px solid #eee", paddingTop: "1em", marginTop: "1em" }}>
+            {/* ── SEARCH WIDGET (mobile only — desktop search lives in the sort row) ── */}
+            <div className="lg:hidden" style={{ borderTop: "1px solid #eee", paddingTop: "1em", marginTop: "1em" }}>
               <form
                 role="search"
                 method="get"

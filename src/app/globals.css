@@ -391,7 +391,6 @@ button.continue-reading-link:disabled {
   position: relative;
   overflow: hidden;
   max-height: 100vh;
-  margin-bottom: 2em;
 }
 
 /* ── lp-posts masonry ── */
@@ -404,7 +403,6 @@ button.continue-reading-link:disabled {
 }
 #towers {
   background-color: var(--orange);
-  margin-bottom: 2em;
 }
 .lp-posts-inside {
   max-width: 1460px;
