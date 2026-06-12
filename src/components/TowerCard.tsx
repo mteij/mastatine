@@ -8,7 +8,7 @@ interface TowerCardProps {
   tower: Tower;
   voteDirection: "up" | "down" | null;
   onSelect: (tower: Tower) => void;
-  onVoteSuccess: (direction: "up" | "down") => void;
+  onVoteSuccess: (direction: "up" | "down" | null) => void;
 }
 
 export default function TowerCard({ tower, voteDirection: initialVoteDirection, onSelect, onVoteSuccess }: TowerCardProps) {
@@ -21,7 +21,7 @@ export default function TowerCard({ tower, voteDirection: initialVoteDirection, 
   }, [initialVoteDirection]);
 
   async function handleVote(direction: "up" | "down") {
-    if (voteDirection !== null || voting) return;
+    if (voting) return;
     setVoting(true);
     const voterId = getOrCreateVoterId();
     try {
@@ -31,16 +31,25 @@ export default function TowerCard({ tower, voteDirection: initialVoteDirection, 
         body: JSON.stringify({ voter_id: voterId, direction }),
       });
       if (res.ok) {
-        setVotes((v) => direction === "up" ? v + 1 : v - 1);
-        setVoteDirection(direction);
-        onVoteSuccess(direction);
+        const data = await res.json();
+        if (data.action === "unvoted") {
+          setVotes((v) => direction === "up" ? v - 1 : v + 1);
+          setVoteDirection(null);
+          onVoteSuccess(null);
+        } else if (data.action === "changed") {
+          setVotes((v) => direction === "up" ? v + 2 : v - 2);
+          setVoteDirection(direction);
+          onVoteSuccess(direction);
+        } else {
+          setVotes((v) => direction === "up" ? v + 1 : v - 1);
+          setVoteDirection(direction);
+          onVoteSuccess(direction);
+        }
       }
     } finally {
       setVoting(false);
     }
   }
-
-  const voted = voteDirection !== null;
 
   return (
     <article className="post hentry" itemScope itemType="http://schema.org/Photograph">
@@ -102,14 +111,14 @@ export default function TowerCard({ tower, voteDirection: initialVoteDirection, 
           <button
             type="button"
             onClick={() => handleVote("up")}
-            disabled={voted || voting}
+            disabled={voting}
             style={{
               background: voteDirection === "up" ? "var(--orange)" : "transparent",
               color: voteDirection === "up" ? "#fff" : "var(--text-mid)",
               border: `1px solid ${voteDirection === "up" ? "var(--orange)" : "var(--border)"}`,
               borderRadius: "4px",
               padding: "0.35rem 0.85rem",
-              cursor: voted ? "default" : "pointer",
+              cursor: voting ? "default" : "pointer",
               fontWeight: 700,
               fontSize: "1.1rem",
               lineHeight: 1,
@@ -124,14 +133,14 @@ export default function TowerCard({ tower, voteDirection: initialVoteDirection, 
           <button
             type="button"
             onClick={() => handleVote("down")}
-            disabled={voted || voting}
+            disabled={voting}
             style={{
               background: voteDirection === "down" ? "var(--navy)" : "transparent",
               color: voteDirection === "down" ? "#fff" : "var(--text-mid)",
               border: `1px solid ${voteDirection === "down" ? "var(--navy)" : "var(--border)"}`,
               borderRadius: "4px",
               padding: "0.35rem 0.85rem",
-              cursor: voted ? "default" : "pointer",
+              cursor: voting ? "default" : "pointer",
               fontWeight: 700,
               fontSize: "1.1rem",
               lineHeight: 1,

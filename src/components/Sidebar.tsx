@@ -263,7 +263,9 @@ export default function Sidebar({ activities }: SidebarProps) {
         id="sidebar"
         className={[
           "flex flex-col",
-          mobileOpen ? "fixed inset-y-0 left-0 z-50 overflow-y-auto flex" : "hidden lg:flex",
+          mobileOpen
+            ? "fixed inset-y-0 left-0 z-50 overflow-y-auto"
+            : "hidden lg:flex",
         ].join(" ")}
       >
         {/* Mobile close */}

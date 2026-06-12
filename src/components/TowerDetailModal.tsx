@@ -8,7 +8,7 @@ interface TowerDetailModalProps {
   tower: Tower;
   initialVoteDirection: "up" | "down" | null;
   onClose: () => void;
-  onVoteSuccess: (direction: "up" | "down") => void;
+  onVoteSuccess: (direction: "up" | "down" | null) => void;
 }
 
 export default function TowerDetailModal({ tower, initialVoteDirection, onClose, onVoteSuccess }: TowerDetailModalProps) {
@@ -29,7 +29,7 @@ export default function TowerDetailModal({ tower, initialVoteDirection, onClose,
   }, []);
 
   async function handleVote(direction: "up" | "down") {
-    if (voteDirection !== null || voting) return;
+    if (voting) return;
     setVoting(true);
     const voterId = getOrCreateVoterId();
     try {
@@ -39,16 +39,25 @@ export default function TowerDetailModal({ tower, initialVoteDirection, onClose,
         body: JSON.stringify({ voter_id: voterId, direction }),
       });
       if (res.ok) {
-        setVotes((v) => direction === "up" ? v + 1 : v - 1);
-        setVoteDirection(direction);
-        onVoteSuccess(direction);
+        const data = await res.json();
+        if (data.action === "unvoted") {
+          setVotes((v) => direction === "up" ? v - 1 : v + 1);
+          setVoteDirection(null);
+          onVoteSuccess(null);
+        } else if (data.action === "changed") {
+          setVotes((v) => direction === "up" ? v + 2 : v - 2);
+          setVoteDirection(direction);
+          onVoteSuccess(direction);
+        } else {
+          setVotes((v) => direction === "up" ? v + 1 : v - 1);
+          setVoteDirection(direction);
+          onVoteSuccess(direction);
+        }
       }
     } finally {
       setVoting(false);
     }
   }
-
-  const voted = voteDirection !== null;
 
   return (
     <div 
@@ -151,14 +160,14 @@ export default function TowerDetailModal({ tower, initialVoteDirection, onClose,
                 <button
                   type="button"
                   onClick={() => handleVote("up")}
-                  disabled={voted || voting}
+                  disabled={voting}
                   style={{
                     background: voteDirection === "up" ? "var(--orange)" : "transparent",
                     color: voteDirection === "up" ? "#fff" : "var(--text-mid)",
                     border: `1px solid ${voteDirection === "up" ? "var(--orange)" : "var(--border)"}`,
                     borderRadius: "4px",
                     padding: "0.5rem 1rem",
-                    cursor: voted ? "default" : "pointer",
+                    cursor: voting ? "default" : "pointer",
                     fontWeight: 700,
                     fontSize: "1.2rem",
                     transition: "all 0.2s",
@@ -172,14 +181,14 @@ export default function TowerDetailModal({ tower, initialVoteDirection, onClose,
                 <button
                   type="button"
                   onClick={() => handleVote("down")}
-                  disabled={voted || voting}
+                  disabled={voting}
                   style={{
                     background: voteDirection === "down" ? "var(--navy)" : "transparent",
                     color: voteDirection === "down" ? "#fff" : "var(--text-mid)",
                     border: `1px solid ${voteDirection === "down" ? "var(--navy)" : "var(--border)"}`,
                     borderRadius: "4px",
                     padding: "0.5rem 1rem",
-                    cursor: voted ? "default" : "pointer",
+                    cursor: voting ? "default" : "pointer",
                     fontWeight: 700,
                     fontSize: "1.2rem",
                     transition: "all 0.2s",

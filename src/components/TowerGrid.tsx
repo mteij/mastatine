@@ -25,10 +25,14 @@ export default function TowerGrid({ initialTowers, children }: TowerGridProps) {
       .catch(() => {});
   }, []);
 
-  const handleVoteSuccess = (towerId: string, direction: "up" | "down") => {
+  const handleVoteSuccess = (towerId: string, direction: "up" | "down" | null) => {
     setVoteMap((prev) => {
       const newMap = new Map(prev);
-      newMap.set(towerId, direction);
+      if (direction === null) {
+        newMap.delete(towerId);
+      } else {
+        newMap.set(towerId, direction);
+      }
       return newMap;
     });
   };

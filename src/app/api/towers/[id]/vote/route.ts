@@ -14,22 +14,26 @@ export async function POST(
     return NextResponse.json({ error: "voter_id is required" }, { status: 400 });
   }
 
-  try {
-    await sql`
-      INSERT INTO votes (tower_id, voter_id, direction) VALUES (${id}, ${voter_id}, ${direction})
-    `;
-  } catch (err: unknown) {
-    if ((err as { code?: string }).code === "23505") {
-      return NextResponse.json({ error: "Already voted" }, { status: 409 });
-    }
-    throw err;
+  const existing = await sql<{ id: string; direction: string }[]>`
+    SELECT id, direction FROM votes WHERE tower_id = ${id} AND voter_id = ${voter_id}
+  `;
+
+  if (existing.length === 0) {
+    await sql`INSERT INTO votes (tower_id, voter_id, direction) VALUES (${id}, ${voter_id}, ${direction})`;
+    const delta = direction === "up" ? 1 : -1;
+    await sql`UPDATE towers SET vote_count = vote_count + ${delta} WHERE id = ${id}`;
+    return NextResponse.json({ success: true, action: "voted", direction });
   }
 
-  if (direction === "up") {
-    await sql`UPDATE towers SET vote_count = vote_count + 1 WHERE id = ${id}`;
-  } else {
-    await sql`UPDATE towers SET vote_count = vote_count - 1 WHERE id = ${id}`;
+  if (existing[0].direction === direction) {
+    await sql`DELETE FROM votes WHERE id = ${existing[0].id}`;
+    const delta = direction === "up" ? -1 : 1;
+    await sql`UPDATE towers SET vote_count = vote_count + ${delta} WHERE id = ${id}`;
+    return NextResponse.json({ success: true, action: "unvoted" });
   }
 
-  return NextResponse.json({ success: true });
+  await sql`UPDATE votes SET direction = ${direction} WHERE id = ${existing[0].id}`;
+  const delta = direction === "up" ? 2 : -2;
+  await sql`UPDATE towers SET vote_count = vote_count + ${delta} WHERE id = ${id}`;
+  return NextResponse.json({ success: true, action: "changed", direction });
 }

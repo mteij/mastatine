@@ -12,7 +12,7 @@ const lato = Lato({
 });
 
 export const metadata: Metadata = {
-  title: "S.A. Mastatine — The study association for open-minded engineers",
+  title: "S.A. Mastatine — The study association for mastende engineers",
   description:
     "S.A. Mastatine is the study association for Advanced Mast Technology. Submit your favourite mast and vote on the most impressive electromagnetic structures in the Netherlands.",
   icons: { icon: "/favicon.svg?v=2" },

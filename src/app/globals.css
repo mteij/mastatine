@@ -74,12 +74,27 @@ h6 { font-size: 0.8em; }
 
 /* ── Sidebar ── */
 #sidebar {
-  display: block;
   position: relative;
   padding: 2em 3em 3em;
   background-color: #fff;
   width: 380px;
   min-width: 380px;
+}
+
+/* ── Mobile layout ── */
+@media (max-width: 1023px) {
+  #container.two-columns-left .main {
+    padding-top: 0;
+    margin-top: 0;
+  }
+  .lp-text-inside {
+    padding-left: 1em;
+    padding-right: 0;
+  }
+  .main > article.hentry {
+    padding-top: 0;
+    padding-right: 0;
+  }
 }
 
 /* ── Branding / header in sidebar ── */
