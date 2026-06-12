@@ -1,108 +1,141 @@
 "use client";
 
+import { useState } from "react";
 import type { MastSlide } from "@/app/page";
+import TowerDetailModal from "./TowerDetailModal";
 
 export default function HeroCarousel({ masts }: { masts: MastSlide[] }) {
   const mast = masts[0] ?? null;
+  const [showModal, setShowModal] = useState(false);
+
+  const towerForModal = mast
+    ? {
+        id: mast.id,
+        title: mast.title,
+        image_url: mast.image_url,
+        submitter_name: mast.submitter_name,
+        vote_count: mast.vote_count,
+        description: mast.description,
+        height: mast.height,
+        created_at: mast.created_at,
+      }
+    : null;
 
   return (
-    <div
-      className="relative w-full overflow-hidden select-none"
-      style={{
-        background: "#111a25",
-        aspectRatio: "2/1",
-        maxHeight: 600,
-      }}
-    >
-      {mast ? (
-        <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={mast.image_url}
-            alt={mast.title}
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-            }}
-          />
-          {/* gradient overlay */}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.08) 55%)",
-            }}
-          />
-          {/* badge */}
-          <div
-            style={{
-              position: "absolute",
-              top: 16,
-              left: 16,
-              background: "#f57f20",
-              color: "#fff",
-              fontFamily: "Lato, Arial, sans-serif",
-              fontWeight: 700,
-              fontSize: "0.78em",
-              textTransform: "uppercase",
-              letterSpacing: "0.07em",
-              padding: "0.3em 0.8em",
-              zIndex: 10,
-            }}
-          >
-            Mast of the Month
-          </div>
-          {/* caption */}
-          <div
-            className="absolute bottom-0 left-0 right-0 z-10 pb-8 flex flex-col items-center gap-1"
-          >
-            <span
-              className="text-white font-bold text-center px-4"
-              style={{ fontSize: "1.4em", textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}
+    <>
+      <div
+        className="hero-carousel relative w-full overflow-hidden select-none"
+        style={{
+          background: "#111a25",
+          aspectRatio: "2/1",
+          maxHeight: 600,
+          cursor: mast ? "pointer" : "default",
+        }}
+        onClick={() => mast && setShowModal(true)}
+      >
+        {mast ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={mast.image_url}
+              alt={mast.title}
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+            />
+            {/* gradient overlay */}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background:
+                  "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.08) 55%)",
+              }}
+            />
+            {/* badge */}
+            <div
+              style={{
+                position: "absolute",
+                top: 16,
+                left: 16,
+                background: "#f57f20",
+                color: "#fff",
+                fontFamily: "Lato, Arial, sans-serif",
+                fontWeight: 700,
+                fontSize: "0.78em",
+                textTransform: "uppercase",
+                letterSpacing: "0.07em",
+                padding: "0.3em 0.8em",
+                zIndex: 10,
+              }}
             >
-              {mast.title}
-            </span>
-            <span style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.9em" }}>
-              Submitted by {mast.submitter_name}
+              Mast of the Month
+            </div>
+            {/* caption */}
+            <div className="absolute bottom-0 left-0 right-0 z-10 pb-6 flex flex-col items-center gap-0.5 px-4">
+              <span
+                className="text-white font-bold text-center"
+                style={{ fontSize: "1.4em", textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}
+              >
+                {mast.title}
+              </span>
+              <span
+                className="text-center"
+                style={{ color: "rgba(255,255,255,0.82)", fontSize: "0.88em" }}
+              >
+                Submitted by {mast.submitter_name}
+              </span>
               {mast.monthly_votes !== 0 && (
-                <>
-                  {" · "}
-                  {mast.monthly_votes > 0 ? "+" : ""}{mast.monthly_votes} this month
-                </>
+                <span
+                  className="text-center"
+                  style={{ color: "rgba(255,255,255,0.65)", fontSize: "0.82em" }}
+                >
+                  {mast.monthly_votes > 0 ? "+" : ""}
+                  {mast.monthly_votes} this month
+                </span>
               )}
+            </div>
+          </>
+        ) : (
+          /* Placeholder when no masts yet */
+          <div
+            className="absolute inset-0 flex items-center justify-center"
+            style={{ color: "rgba(255,255,255,0.5)", fontFamily: "Lato, Arial, sans-serif" }}
+          >
+            <svg
+              className="absolute inset-0 w-full h-full"
+              viewBox="0 0 1200 600"
+              preserveAspectRatio="xMidYMid slice"
+              aria-hidden
+              style={{ opacity: 0.12 }}
+            >
+              <TowerSvg cx={300} scale={0.85} />
+              <TowerSvg cx={600} scale={1} />
+              <TowerSvg cx={900} scale={0.75} />
+            </svg>
+            <span
+              className="text-[1.1em] font-normal text-center px-4 py-1.5"
+              style={{ background: "rgba(0,0,0,0.8)" }}
+            >
+              No masts submitted yet — be the first!
             </span>
           </div>
-        </>
-      ) : (
-        /* Placeholder when no masts yet */
-        <div
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ color: "rgba(255,255,255,0.5)", fontFamily: "Lato, Arial, sans-serif" }}
-        >
-          <svg
-            className="absolute inset-0 w-full h-full"
-            viewBox="0 0 1200 600"
-            preserveAspectRatio="xMidYMid slice"
-            aria-hidden
-            style={{ opacity: 0.12 }}
-          >
-            <TowerSvg cx={300} scale={0.85} />
-            <TowerSvg cx={600} scale={1} />
-            <TowerSvg cx={900} scale={0.75} />
-          </svg>
-          <span
-            className="text-[1.1em] font-normal text-center px-4 py-1.5"
-            style={{ background: "rgba(0,0,0,0.8)" }}
-          >
-            No masts submitted yet — be the first!
-          </span>
-        </div>
+        )}
+      </div>
+
+      {showModal && towerForModal && (
+        <TowerDetailModal
+          tower={towerForModal}
+          initialVoteDirection={null}
+          onClose={() => setShowModal(false)}
+          onVoteSuccess={() => {}}
+        />
       )}
-    </div>
+    </>
   );
 }
 

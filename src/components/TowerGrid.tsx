@@ -81,7 +81,7 @@ export default function TowerGrid({ initialTowers, children }: TowerGridProps) {
 
   return (
     <>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 0", gap: "1rem" }}>
+      <div className="justify-center lg:justify-between" style={{ display: "flex", alignItems: "center", padding: "1rem 0", gap: "1rem" }}>
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           {(Object.keys(SORT_LABELS) as SortKey[]).map((key) => (
             <button

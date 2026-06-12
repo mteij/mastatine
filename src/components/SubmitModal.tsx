@@ -53,7 +53,7 @@ export default function SubmitModal() {
         type="button"
         onClick={openModal}
         className="continue-reading-link"
-        style={{ marginLeft: "0.5em", backgroundColor: "var(--orange)" }}
+        style={{ backgroundColor: "var(--orange)" }}
       >
         Submit a Mast
       </button>

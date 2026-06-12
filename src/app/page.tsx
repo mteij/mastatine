@@ -11,6 +11,9 @@ export interface MastSlide {
   submitter_name: string;
   vote_count: number;
   monthly_votes: number;
+  description: string | null;
+  height: number | null;
+  created_at: string;
 }
 
 async function getTowers(search?: string): Promise<Tower[]> {
@@ -38,6 +41,7 @@ async function getMastsOfMonth(): Promise<MastSlide[]> {
     return await sql<MastSlide[]>`
       SELECT
         t.id, t.title, t.image_url, t.submitter_name, t.vote_count,
+        t.description, t.height, t.created_at,
         COALESCE(
           SUM(CASE WHEN v.direction = 'up' THEN 1 WHEN v.direction = 'down' THEN -1 ELSE 0 END),
           0

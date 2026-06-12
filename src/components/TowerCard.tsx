@@ -73,7 +73,7 @@ export default function TowerCard({ tower, voteDirection: initialVoteDirection, 
             boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
           }}>
             <img src="/klok.png" alt="KLOK" style={{ height: "1.6em", width: "auto" }} />
-            {Math.floor(tower.height / 0.168).toLocaleString()} KLOK high
+            {Math.floor(tower.height / 0.168).toLocaleString("en-US")} KLOK high
           </span>
         )}
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -81,7 +81,7 @@ export default function TowerCard({ tower, voteDirection: initialVoteDirection, 
       </div>
       <div className="featured-bar" />
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flex: 1 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flex: 1, overflow: "hidden" }}>
         <header className="entry-header" style={{ marginBottom: 0, flex: 1, paddingRight: "1em", minWidth: 0 }}>
           <h2 className="entry-title" itemProp="name" style={{ fontSize: "1.1rem", marginBottom: "0.2rem", cursor: "pointer", color: "var(--text)" }} onClick={() => onSelect(tower)}>
             {tower.title}

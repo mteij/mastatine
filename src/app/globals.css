@@ -83,6 +83,9 @@ h6 { font-size: 0.8em; }
 
 /* ── Mobile layout ── */
 @media (max-width: 1023px) {
+  #container.two-columns-left {
+    gap: 0;
+  }
   #container.two-columns-left .main {
     padding-top: 0;
     margin-top: 0;
@@ -94,6 +97,15 @@ h6 { font-size: 0.8em; }
   .main > article.hentry {
     padding-top: 0;
     padding-right: 0;
+  }
+  .content-masonry {
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+  }
+  .hero-carousel {
+    aspect-ratio: auto !important;
+    height: 260px;
+    max-height: none !important;
   }
 }
 
@@ -660,3 +672,205 @@ q, blockquote {
 }
 blockquote { quotes: none; }
 blockquote::before, blockquote::after { content: ""; content: none; }
+
+/* ── Tower detail modal ── */
+.tm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 9999;
+  display: flex;
+  align-items: stretch;   /* full-screen on mobile */
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+/* ── Modal box ── */
+.tm-box {
+  background: #fff;
+  width: 100%;
+  /* no max-height on mobile — fills full viewport via stretch */
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+/* ── Close button ── */
+.tm-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 1.4rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+}
+
+/* ── Scrollable area ── */
+.tm-scroll {
+  overflow-y: auto;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Image ── */
+.tm-img-wrap { position: relative; }
+
+.tm-img {
+  width: 100%;
+  height: 40vh;
+  object-fit: cover;
+  background-color: #111;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* ── KLOK badge ── */
+.tm-klok-badge {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--navy);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(4px);
+  padding: 0.3em 0.7em;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+/* ── Content area ── */
+.tm-content { padding: 1rem 1.25rem 1.25rem; }
+
+/* ── Info row: title left, votes right ── */
+.tm-info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.tm-text { min-width: 0; }
+
+.tm-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.2rem;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.tm-submitter {
+  font-size: 0.88rem;
+  color: var(--text-mid);
+  margin: 0;
+}
+
+/* ── Vote widget ── */
+.tm-votes {
+  display: flex;
+  align-items: stretch;
+  background: #f0f2f5;
+  border-radius: 10px;
+  overflow: hidden;
+  align-self: stretch;
+}
+
+.tm-vote-btn {
+  flex: 1;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.75rem 0;
+  transition: background 0.15s, color 0.15s;
+}
+.tm-vote-btn:disabled { cursor: default; }
+
+.tm-vote-count {
+  flex: 0 0 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text);
+  border-left: 1px solid #dde0e6;
+  border-right: 1px solid #dde0e6;
+}
+
+/* ── Description ── */
+.tm-description {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--text);
+}
+.tm-description p { margin: 0; }
+
+/* ── Tablet+ (640px): centred overlay, side-by-side info row ── */
+@media (min-width: 640px) {
+  .tm-backdrop {
+    align-items: center;
+    padding: 1.5rem;
+  }
+  .tm-box {
+    border-radius: 12px;
+    max-width: 680px;
+    max-height: 90vh;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+  }
+  .tm-img {
+    height: auto;
+    max-height: 46vh;
+    object-fit: contain;
+  }
+  .tm-klok-badge { font-size: 1rem; }
+  .tm-content { padding: 1.5rem; }
+  .tm-info-row {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.25rem;
+  }
+  .tm-title { font-size: 1.8rem; margin: 0 0 0.35rem; }
+  .tm-submitter { font-size: 1rem; }
+  .tm-votes {
+    align-self: flex-start;
+    flex-shrink: 0;
+  }
+  .tm-vote-btn { flex: none; padding: 0.5rem 1.1rem; font-size: 1.1rem; }
+  .tm-vote-count { font-size: 1.4rem; flex: 0 0 3.5rem; }
+  .tm-description { font-size: 1.05rem; margin-top: 1.5rem; padding-top: 1.5rem; }
+}
+
+/* ── Desktop (1024px+): larger image, bigger type ── */
+@media (min-width: 1024px) {
+  .tm-backdrop { padding: 2rem; }
+  .tm-box { max-width: 1000px; max-height: 90vh; }
+  .tm-img { max-height: 55vh; }
+  .tm-klok-badge { font-size: 1.25rem; }
+  .tm-content { padding: 2rem; }
+  .tm-title { font-size: 2.4rem; margin: 0 0 0.4rem; }
+  .tm-submitter { font-size: 1.1rem; }
+  .tm-vote-btn { padding: 0.55rem 1.25rem; font-size: 1.2rem; }
+  .tm-vote-count { font-size: 1.5rem; flex: 0 0 4rem; }
+  .tm-description { font-size: 1.1rem; }
+}
