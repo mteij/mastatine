@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { Lato } from "next/font/google";
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
-import Colophon from "@/components/Colophon";
-import { getThisWeekActivities } from "@/lib/calendar";
 
 const lato = Lato({
   subsets: ["latin"],
@@ -23,28 +20,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const activities = await getThisWeekActivities();
-
   return (
     <html lang="en" className={lato.className} suppressHydrationWarning>
       <body className="verbosa-landing-page verbosa-magazine-two verbosa-magazine-layout verbosa-no-sidebar-back">
-        <div id="site-wrapper">
-          <div id="content" className="cryout">
-            <div id="container" className="two-columns-left">
-              <Sidebar activities={activities} />
-              <main id="main" className="main">
-                {children}
-              </main>
-              <div style={{ clear: "both" }} />
-            </div>
-          </div>
-          <Colophon />
-        </div>
+        {children}
       </body>
     </html>
   );

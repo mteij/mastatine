@@ -1,0 +1,7 @@
+<svg viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg" font-family="Lato, Arial, sans-serif">
+  <text x="500" y="230" text-anchor="middle" font-size="100" font-weight="900" fill="#0f2254">I</text>
+
+  <path transform="translate(350,280) scale(3)" fill="#f57f20" d="M50,88 C20,60 0,40 0,20 C0,5 15,-5 30,0 C40,3 48,12 50,20 C52,12 60,3 70,0 C85,-5 100,5 100,20 C100,40 80,60 50,88 Z"/>
+
+  <text x="500" y="680" text-anchor="middle" font-size="140" font-weight="900" letter-spacing="-2" fill="#0f2254">MASTEN</text>
+</svg>

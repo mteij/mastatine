@@ -94,7 +94,8 @@ const NAV: NavItem[] = [
       },
     ],
   },
-  { label: "MastApps", href: "#" },
+  { label: "Shop", href: "/shop" },
+  { label: "MastApps", href: "/mastapps" },
   { label: "Contact", href: "/contact" },
 ];
 

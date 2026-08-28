@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { MastSlide } from "@/app/page";
+import type { MastSlide } from "@/lib/types";
 import TowerDetailModal from "./TowerDetailModal";
 
 export default function HeroCarousel({ masts }: { masts: MastSlide[] }) {

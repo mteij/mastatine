@@ -1,20 +1,8 @@
 import sql from "@/lib/db";
-import { Tower } from "@/lib/types";
+import { Tower, MastSlide } from "@/lib/types";
 import HeroCarousel from "@/components/HeroCarousel";
 import TowerGrid from "@/components/TowerGrid";
 import SubmitModal from "@/components/SubmitModal";
-
-export interface MastSlide {
-  id: string;
-  title: string;
-  image_url: string;
-  submitter_name: string;
-  vote_count: number;
-  monthly_votes: number;
-  description: string | null;
-  height: number | null;
-  created_at: string;
-}
 
 async function getTowers(search?: string): Promise<Tower[]> {
   try {
@@ -62,6 +50,25 @@ async function getMastsOfMonth(): Promise<MastSlide[]> {
 export const revalidate = 30;
 
 const NEWS = [
+  {
+    id: 2,
+    slug: "we-are-sooooo-back",
+    title: "We are sooooo back!",
+    date: "August 28, 2026",
+    content: (
+      <>
+        <p>We are sooooo BACK.</p>
+        <p>
+          After a well-deserved summer, S.A. Mastatine is back in full force. New masts, new
+          votes, new Mast of the Month glory — the towers are climbing again and we could not be
+          more hyped for the new academic year.
+        </p>
+        <p>Get your entries in and rally your housemates. Let&apos;s make this the best masting season yet.</p>
+        <p>Op de hoge masten,</p>
+        <p>The board</p>
+      </>
+    ),
+  },
   {
     id: 1,
     slug: "mastatine-celebrates-first-lustrum",
@@ -129,48 +136,61 @@ export default async function HomePage(
       <section id="lp-posts">
         <div className="lp-posts-inside">
           <TowerGrid initialTowers={towers}>
-            {NEWS.map((post) => (
-              <article
-                key={post.id}
-                className="post hentry"
-                itemScope
-                itemType="http://schema.org/BlogPosting"
-                itemProp="blogPost"
-              >
-                <header className="entry-header" style={{ marginBottom: "0.4em" }}>
-                  <h2 className="entry-title" itemProp="headline" style={{ fontSize: "1.15rem", fontWeight: "bold", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: "0.2em" }}>
-                    <a href={`/${post.slug}`} itemProp="mainEntityOfPage" rel="bookmark" style={{ color: "var(--navy)" }}>
-                      {post.title}
-                    </a>
-                  </h2>
-                  <div className="entry-meta">
-                    <span className="onDate date">
-                      <time className="published" itemProp="datePublished">
-                        {post.date}
-                      </time>
-                    </span>
-                  </div>
-                </header>
-                <div
-                  className="entry-content"
-                  itemProp="articleBody"
-                  style={{
-                    display: "-webkit-box",
-                    WebkitLineClamp: 6,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    flex: 1,
-                    fontSize: "0.9rem",
-                    lineHeight: 1.55,
-                    marginBottom: "0.5rem"
-                  }}
-                >
-                  {post.content}
+            <article
+              className="post hentry"
+              itemScope
+              itemType="http://schema.org/BlogPosting"
+              itemProp="blogPost"
+            >
+              <header className="entry-header" style={{ marginBottom: "0.4em" }}>
+                <h2 className="entry-title" itemProp="headline" style={{ fontSize: "1.15rem", fontWeight: "bold", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: "0.2em" }}>
+                  <a href={`/${NEWS[0].slug}`} itemProp="mainEntityOfPage" rel="bookmark" style={{ color: "var(--navy)" }}>
+                    {NEWS[0].title}
+                  </a>
+                </h2>
+                <div className="entry-meta">
+                  <span className="onDate date">
+                    <time className="published" itemProp="datePublished">
+                      {NEWS[0].date}
+                    </time>
+                  </span>
                 </div>
-                <SubmitModal />
-              </article>
-            ))}
+              </header>
+              <div
+                className="entry-content news-scroll"
+                itemProp="articleBody"
+                style={{
+                  overflowY: "auto",
+                  flex: 1,
+                  minHeight: 0,
+                  fontSize: "0.9rem",
+                  lineHeight: 1.55,
+                  marginBottom: "0.5rem",
+                }}
+              >
+                {NEWS.map((post, index) => (
+                  <div
+                    key={post.id}
+                    style={
+                      index > 0
+                        ? { marginTop: "1em", paddingTop: "1em", borderTop: "1px solid rgba(0,0,0,0.08)" }
+                        : undefined
+                    }
+                  >
+                    {index > 0 && (
+                      <div style={{ marginBottom: "0.3em" }}>
+                        <strong style={{ color: "var(--navy)" }}>{post.title}</strong>
+                        <div className="onDate date" style={{ fontSize: "0.75rem", opacity: 0.7 }}>
+                          {post.date}
+                        </div>
+                      </div>
+                    )}
+                    {post.content}
+                  </div>
+                ))}
+              </div>
+              <SubmitModal />
+            </article>
           </TowerGrid>
         </div>
       </section>

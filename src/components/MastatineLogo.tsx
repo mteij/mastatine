@@ -1,16 +1,18 @@
 interface MastaLogoProps {
   size?: number;
   className?: string;
+  /** Render every stroke/fill as currentColor, for use on colored backgrounds. */
+  mono?: boolean;
 }
 
-export default function MastatineLogo({ size = 64, className = "" }: MastaLogoProps) {
+export default function MastatineLogo({ size = 64, className = "", mono = false }: MastaLogoProps) {
   const cx = 100;
   const cy = 100;
   const rOuter = 78;
   const rInner = 52;
   const rDot = 11;
-  const stroke = "#1a1a1a";
-  const orange = "#f57f20";
+  const stroke = mono ? "currentColor" : "#1a1a1a";
+  const orange = mono ? "currentColor" : "#f57f20";
 
   // 7 electrons evenly spaced on the outer ring, starting at top (−90°)
   const electrons = Array.from({ length: 7 }, (_, i) => {

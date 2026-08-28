@@ -15,3 +15,15 @@ export interface Vote {
   voter_id: string;
   created_at: string;
 }
+
+export interface MastSlide {
+  id: string;
+  title: string;
+  image_url: string;
+  submitter_name: string;
+  vote_count: number;
+  monthly_votes: number;
+  description: string | null;
+  height: number | null;
+  created_at: string;
+}

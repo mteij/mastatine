@@ -458,6 +458,19 @@ button.continue-reading-link:disabled {
   }
 }
 
+/* News card: multiple posts stacked in one box, scroll to reveal older ones */
+.news-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+.news-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.news-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
 /* ── Post thumbnail (tower photo posts) ── */
 article.hentry .post-thumbnail-container {
   display: block;

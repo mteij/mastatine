@@ -1,0 +1,35 @@
+<svg viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg" font-family="Lato, Arial, sans-serif">
+  <rect x="0" y="0" width="1200" height="1200" fill="#f57f20"/>
+
+  <g transform="translate(340,230) scale(2.6)" color="#ffffff">
+    <circle cx="100" cy="100" r="78" fill="none" stroke="currentColor" stroke-width="2.5"/>
+    <circle cx="100" cy="100" r="52" fill="none" stroke="currentColor" stroke-width="2.5"/>
+    <circle cx="100" cy="22" r="11" fill="currentColor"/>
+    <circle cx="161" cy="51" r="11" fill="currentColor"/>
+    <circle cx="176" cy="117" r="11" fill="currentColor"/>
+    <circle cx="134" cy="170" r="11" fill="currentColor"/>
+    <circle cx="66" cy="170" r="11" fill="currentColor"/>
+    <circle cx="24" cy="117" r="11" fill="currentColor"/>
+    <circle cx="39" cy="51" r="11" fill="currentColor"/>
+    <g stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <line x1="100" y1="57" x2="100" y2="63" stroke-width="2.5"/>
+      <line x1="82" y1="68" x2="118" y2="68" stroke-width="2"/>
+      <line x1="95" y1="63" x2="92" y2="82" stroke-width="2"/>
+      <line x1="105" y1="63" x2="108" y2="82" stroke-width="2"/>
+      <line x1="95" y1="64" x2="108" y2="80" stroke-width="1.2"/>
+      <line x1="105" y1="64" x2="92" y2="80" stroke-width="1.2"/>
+      <line x1="83" y1="82" x2="117" y2="82" stroke-width="2"/>
+      <line x1="92" y1="82" x2="87" y2="118" stroke-width="2"/>
+      <line x1="108" y1="82" x2="113" y2="118" stroke-width="2"/>
+      <line x1="92" y1="84" x2="113" y2="112" stroke-width="1.2"/>
+      <line x1="108" y1="84" x2="87" y2="112" stroke-width="1.2"/>
+      <line x1="82" y1="118" x2="118" y2="118" stroke-width="2"/>
+      <line x1="87" y1="118" x2="82" y2="135" stroke-width="2"/>
+      <line x1="113" y1="118" x2="118" y2="135" stroke-width="2"/>
+      <line x1="77" y1="135" x2="123" y2="135" stroke-width="2.5"/>
+    </g>
+  </g>
+
+  <text x="600" y="778" text-anchor="middle" font-size="42" font-weight="700" letter-spacing="12" fill="#ffffff" fill-opacity="0.75">S.A.</text>
+  <text x="600" y="905" text-anchor="middle" font-size="130" font-weight="900" letter-spacing="-1" fill="#ffffff">MASTATINE</text>
+</svg>
