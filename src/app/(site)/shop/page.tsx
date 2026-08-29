@@ -8,17 +8,6 @@ export default function ShopPage() {
       </h1>
 
       <div className="space-y-6">
-        <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-          <h2 className="text-xl font-black text-[#1a2332] mb-3">
-            📡 Wear the mission
-          </h2>
-          <p className="text-slate-600">
-            Official Mastatine merch — t-shirts, hoodies, and other essentials
-            for anyone who takes transmission towers as seriously as we do.
-            Printed to order, one mast-lover at a time.
-          </p>
-        </div>
-
         {shopUrl ? (
           <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm text-center">
             <p className="text-slate-600 mb-4">
