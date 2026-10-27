@@ -2,9 +2,9 @@ import sql from "@/lib/db";
 import { MastSlide } from "@/lib/types";
 import { describeDbError } from "@/lib/db";
 import { PAGE_SIZE, listTowers, parseQuery, type TowerPage } from "@/lib/towers";
-import HeroCarousel from "@/components/HeroCarousel";
-import TowerGrid from "@/components/TowerGrid";
-import SubmitModal from "@/components/SubmitModal";
+import HeroCarousel from "@/classic/HeroCarousel";
+import TowerGrid from "@/classic/TowerGrid";
+import SubmitModal from "@/classic/SubmitModal";
 
 async function getFirstPage(q: string): Promise<TowerPage> {
   try {
@@ -127,14 +127,14 @@ export default async function HomePage(
         <div className="lp-posts-inside">
           <TowerGrid initialPage={firstPage} initialQuery={q}>
             <article
-              className="post hentry"
+              className="post hentry news-card"
               itemScope
               itemType="http://schema.org/BlogPosting"
               itemProp="blogPost"
             >
               <header className="entry-header" style={{ marginBottom: "0.4em" }}>
                 <h2 className="entry-title" itemProp="headline" style={{ fontSize: "1.15rem", fontWeight: "bold", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: "0.2em" }}>
-                  <a href={`/${NEWS[0].slug}`} itemProp="mainEntityOfPage" rel="bookmark" style={{ color: "var(--navy)" }}>
+                  <a href={`/news/${NEWS[0].slug}`} itemProp="mainEntityOfPage" rel="bookmark" style={{ color: "var(--navy)" }}>
                     {NEWS[0].title}
                   </a>
                 </h2>

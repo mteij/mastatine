@@ -6,6 +6,7 @@ import { requireEnv, siteUrl } from "@/lib/env";
 import { sendMail } from "@/lib/mailer";
 import { magicLinkEmail } from "@/lib/email-templates";
 import { allowMagicLinkFor } from "@/lib/magic-link-limit";
+import { deleteSubscriberByEmail } from "@/lib/newsletter";
 
 const MAGIC_LINK_TTL_SECONDS = 10 * 60;
 
@@ -35,6 +36,12 @@ function createAuth() {
     trustedOrigins: [siteUrl()],
     database: pool,
     session: { expiresIn: 60 * 60 * 24 * 30, updateAge: 60 * 60 * 24 },
+    user: {
+      deleteUser: {
+        enabled: true, // requires a fresh session, so a stolen old cookie cannot erase an account
+        afterDelete: async (user) => deleteSubscriberByEmail(user.email),
+      },
+    },
     advanced: {
       useSecureCookies: process.env.NODE_ENV === "production",
       // Requires the reverse proxy to overwrite (not append to) X-Forwarded-For.

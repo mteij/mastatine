@@ -1,7 +1,7 @@
 import path from "node:path";
 import sharp from "sharp";
 
-export const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR ?? "./uploads");
+export const UPLOAD_DIR = path.resolve(/* turbopackIgnore: true */ process.env.UPLOAD_DIR ?? "./uploads");
 
 // Server-generated names only: lowercase alphanumerics and dashes, known extension.
 export const UPLOAD_FILENAME_RE = /^[a-z0-9-]+\.(jpg|png|webp|gif)$/;
