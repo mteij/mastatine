@@ -1,56 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Tower } from "@/lib/types";
-import { getOrCreateVoterId } from "@/lib/voter-id";
+import type { VoteDirection } from "@/lib/vote";
 
 interface TowerDetailModalProps {
   tower: Tower;
-  initialVoteDirection: "up" | "down" | null;
+  voteDirection: VoteDirection | null;
   onClose: () => void;
-  onVoteSuccess: (direction: "up" | "down" | null) => void;
+  onVote: (direction: VoteDirection) => Promise<void>;
 }
 
-export default function TowerDetailModal({ tower, initialVoteDirection, onClose, onVoteSuccess }: TowerDetailModalProps) {
-  const [votes, setVotes] = useState(tower.vote_count);
-  const [voteDirection, setVoteDirection] = useState<"up" | "down" | null>(initialVoteDirection);
+export default function TowerDetailModal({ tower, voteDirection, onClose, onVote }: TowerDetailModalProps) {
   const [voting, setVoting] = useState(false);
-
-  useEffect(() => {
-    setVoteDirection(initialVoteDirection);
-  }, [initialVoteDirection]);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
   }, []);
 
-  async function handleVote(direction: "up" | "down") {
+  async function handleVote(direction: VoteDirection) {
     if (voting) return;
     setVoting(true);
-    const voterId = getOrCreateVoterId();
     try {
-      const res = await fetch(`/api/towers/${tower.id}/vote`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ voter_id: voterId, direction }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.action === "unvoted") {
-          setVotes((v) => direction === "up" ? v - 1 : v + 1);
-          setVoteDirection(null);
-          onVoteSuccess(null);
-        } else if (data.action === "changed") {
-          setVotes((v) => direction === "up" ? v + 2 : v - 2);
-          setVoteDirection(direction);
-          onVoteSuccess(direction);
-        } else {
-          setVotes((v) => direction === "up" ? v + 1 : v - 1);
-          setVoteDirection(direction);
-          onVoteSuccess(direction);
-        }
-      }
+      await onVote(direction);
     } finally {
       setVoting(false);
     }
@@ -68,16 +42,23 @@ export default function TowerDetailModal({ tower, initialVoteDirection, onClose,
           <div className="tm-img-wrap">
             {tower.height && tower.height > 0 && (
               <span className="tm-klok-badge">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/klok.png" alt="KLOK" style={{ height: "1.4em", width: "auto" }} />
+                <Image src="/klok.png" alt="KLOK" width={32} height={32} style={{ height: "1.4em", width: "auto" }} />
                 {Math.floor(tower.height / 0.168).toLocaleString("en-US")} KLOK
                 <span style={{ opacity: 0.6, fontWeight: 500, fontSize: "0.85em" }}>
                   · {tower.height} m
                 </span>
               </span>
             )}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="tm-img" src={tower.image_url} alt={tower.title} />
+            <Image
+              className="tm-img"
+              src={tower.image_url}
+              alt={tower.title}
+              width={1600}
+              height={900}
+              sizes="(max-width: 900px) 100vw, 800px"
+              quality={75}
+              preload
+            />
           </div>
 
           {/* Content */}
@@ -106,7 +87,7 @@ export default function TowerDetailModal({ tower, initialVoteDirection, onClose,
                 >
                   ▲
                 </button>
-                <span className="tm-vote-count">{votes}</span>
+                <span className="tm-vote-count">{tower.vote_count}</span>
                 <button
                   className="tm-vote-btn"
                   type="button"

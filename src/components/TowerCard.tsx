@@ -1,51 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import Image from "next/image";
 import { Tower } from "@/lib/types";
-import { getOrCreateVoterId } from "@/lib/voter-id";
+import type { VoteDirection } from "@/lib/vote";
 
 interface TowerCardProps {
   tower: Tower;
-  voteDirection: "up" | "down" | null;
+  voteDirection: VoteDirection | null;
   onSelect: (tower: Tower) => void;
-  onVoteSuccess: (direction: "up" | "down" | null) => void;
+  onVote: (direction: VoteDirection) => Promise<void>;
 }
 
-export default function TowerCard({ tower, voteDirection: initialVoteDirection, onSelect, onVoteSuccess }: TowerCardProps) {
-  const [votes, setVotes] = useState(tower.vote_count);
-  const [voteDirection, setVoteDirection] = useState(initialVoteDirection);
+export default function TowerCard({ tower, voteDirection, onSelect, onVote }: TowerCardProps) {
   const [voting, setVoting] = useState(false);
 
-  useEffect(() => {
-    setVoteDirection(initialVoteDirection);
-  }, [initialVoteDirection]);
-
-  async function handleVote(direction: "up" | "down") {
+  async function handleVote(direction: VoteDirection) {
     if (voting) return;
     setVoting(true);
-    const voterId = getOrCreateVoterId();
     try {
-      const res = await fetch(`/api/towers/${tower.id}/vote`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ voter_id: voterId, direction }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.action === "unvoted") {
-          setVotes((v) => direction === "up" ? v - 1 : v + 1);
-          setVoteDirection(null);
-          onVoteSuccess(null);
-        } else if (data.action === "changed") {
-          setVotes((v) => direction === "up" ? v + 2 : v - 2);
-          setVoteDirection(direction);
-          onVoteSuccess(direction);
-        } else {
-          setVotes((v) => direction === "up" ? v + 1 : v - 1);
-          setVoteDirection(direction);
-          onVoteSuccess(direction);
-        }
-      }
+      await onVote(direction);
     } finally {
       setVoting(false);
     }
@@ -72,12 +46,18 @@ export default function TowerCard({ tower, voteDirection: initialVoteDirection, 
             borderRadius: "16px", 
             boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
           }}>
-            <img src="/klok.png" alt="KLOK" style={{ height: "1.6em", width: "auto" }} />
+            <Image src="/klok.png" alt="KLOK" width={32} height={32} style={{ height: "1.6em", width: "auto" }} />
             {Math.floor(tower.height / 0.168).toLocaleString("en-US")} KLOK high
           </span>
         )}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={tower.image_url} alt={tower.title} loading="lazy" />
+        <Image
+          src={tower.image_url}
+          alt={tower.title}
+          width={800}
+          height={600}
+          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 400px"
+          quality={60}
+        />
       </div>
       <div className="featured-bar" />
 
@@ -128,7 +108,7 @@ export default function TowerCard({ tower, voteDirection: initialVoteDirection, 
             ▲
           </button>
           <span style={{ fontWeight: 700, minWidth: "2ch", textAlign: "center", color: "var(--text)", fontSize: "1.1rem", lineHeight: 1 }}>
-            {votes}
+            {tower.vote_count}
           </span>
           <button
             type="button"

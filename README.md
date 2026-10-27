@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# S.A. Mastatine
 
-## Getting Started
+Next.js 16 (App Router) + PostgreSQL on [Bun](https://bun.sh), self-hosted with Docker Compose.
 
-First, run the development server:
+## Run locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bun install
+bun run db:dev        # starts Postgres in Docker on 127.0.0.1:5432 and applies the migrations
+bun run dev           # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`.env.local` needs `DATABASE_URL`, `SITE_URL` and `BETTER_AUTH_SECRET` (see `.env.example`). Without Docker, point
+`DATABASE_URL` at any Postgres and run `bun run db:migrate`. With `MAIL_TRANSPORT=log` sign-in emails are printed
+in the dev server's terminal instead of being sent. Set `ADMIN_EMAILS` to get the admin role on first sign-in.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`dev` deliberately runs on Node: Next's dev tooling is not fully supported on Bun's runtime (slow, noisy
+source-map errors). Production builds and the Docker image run on Bun.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deploy to the VPS
 
-## Learn More
+```bash
+git clone <repo> && cd mastatine
+cp .env.example .env           # set POSTGRES_PASSWORD (and NEXT_PUBLIC_SHOP_URL)
+docker compose up -d --build
+```
 
-To learn more about Next.js, take a look at the following resources:
+The app listens on `127.0.0.1:3000`; point your existing reverse proxy at it. Example Caddy block:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+mastatine.nl {
+    reverse_proxy 127.0.0.1:3000
+}
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Data lives in two named volumes: `pgdata` (database) and `uploads` (tower photos). Back up both.
 
-## Deploy on Vercel
+### Migrating from Supabase (one-off)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+With the stack running, from a machine that can reach both databases (the Postgres port is not published; run it inside the app container or temporarily publish it):
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+docker compose cp scripts/migrate-from-supabase.mjs app:/app/migrate.mjs
+docker compose exec -e SOURCE_DATABASE_URL=... -e TARGET_DATABASE_URL=postgresql://mastatine:$POSTGRES_PASSWORD@db:5432/mastatine app bun migrate.mjs
+```
+
+It copies towers and votes and downloads every image into the `uploads` volume. Re-running is safe.
+
+### Updating
+
+```bash
+git pull && docker compose up -d --build
+```

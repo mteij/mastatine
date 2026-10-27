@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import TowerCard from "./TowerCard";
 import TowerDetailModal from "./TowerDetailModal";
 import { Tower } from "@/lib/types";
 import { getOrCreateVoterId } from "@/lib/voter-id";
-
-type SortKey = "rating" | "newest" | "height";
+import { submitVote, type VoteDirection } from "@/lib/vote";
+import type { SortKey, TowerPage } from "@/lib/towers";
 
 const SORT_LABELS: Record<SortKey, string> = {
   rating: "Rating",
@@ -14,70 +14,104 @@ const SORT_LABELS: Record<SortKey, string> = {
   height: "Height",
 };
 
+const SEARCH_DEBOUNCE_MS = 250;
+
 interface TowerGridProps {
-  initialTowers: Tower[];
+  initialPage: TowerPage;
+  initialQuery: string;
   children?: React.ReactNode;
 }
 
-export default function TowerGrid({ initialTowers, children }: TowerGridProps) {
-  const [voteMap, setVoteMap] = useState<Map<string, "up" | "down">>(new Map());
+async function fetchPage(sort: SortKey, q: string, offset: number): Promise<TowerPage> {
+  const params = new URLSearchParams({ sort, q, offset: String(offset) });
+  const res = await fetch(`/api/towers?${params}`);
+  if (!res.ok) throw new Error(`Failed to load towers (${res.status})`);
+  return res.json();
+}
+
+export default function TowerGrid({ initialPage, initialQuery, children }: TowerGridProps) {
+  const [towers, setTowers] = useState<Tower[]>(initialPage.towers);
+  const [hasMore, setHasMore] = useState(initialPage.hasMore);
+  const [loading, setLoading] = useState(false);
+  const [voteMap, setVoteMap] = useState<Map<string, VoteDirection>>(new Map());
   const [selectedTower, setSelectedTower] = useState<Tower | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("rating");
-  const [searchValue, setSearchValue] = useState("");
+  const [searchValue, setSearchValue] = useState(initialQuery);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setSearchValue(params.get("s") ?? "");
+  const requestId = useRef(0);
+  const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const sentinel = useRef<HTMLDivElement>(null);
+
+  // Replaces the list (offset 0) or appends the next page; stale responses are dropped.
+  const load = useCallback(async (sort: SortKey, q: string, offset: number) => {
+    const id = ++requestId.current;
+    setLoading(true);
+    try {
+      const page = await fetchPage(sort, q, offset);
+      if (id !== requestId.current) return;
+      setTowers((prev) =>
+        offset === 0 ? page.towers : [...prev, ...page.towers.filter((t) => !prev.some((p) => p.id === t.id))],
+      );
+      setHasMore(page.hasMore);
+    } catch (error) {
+      if (id === requestId.current) console.error(error);
+    } finally {
+      if (id === requestId.current) setLoading(false);
+    }
   }, []);
 
-  const sortedTowers = useMemo(() => {
-    const copy = [...initialTowers];
-    if (sortKey === "newest") {
-      copy.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    } else if (sortKey === "height") {
-      copy.sort((a, b) => (b.height ?? -Infinity) - (a.height ?? -Infinity));
-    } else {
-      copy.sort((a, b) => b.vote_count - a.vote_count);
-    }
-    return copy;
-  }, [initialTowers, sortKey]);
+  function changeSort(key: SortKey) {
+    setSortKey(key);
+    void load(key, searchValue.trim(), 0);
+  }
 
-  const visibleTowers = useMemo(() => {
-    const q = searchValue.trim().toLowerCase();
-    if (!q) return sortedTowers;
-    return sortedTowers.filter(
-      (t) =>
-        t.title.toLowerCase().includes(q) ||
-        t.submitter_name.toLowerCase().includes(q) ||
-        (t.description ?? "").toLowerCase().includes(q)
+  function changeSearch(value: string) {
+    setSearchValue(value);
+    clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => void load(sortKey, value.trim(), 0), SEARCH_DEBOUNCE_MS);
+  }
+
+  useEffect(() => () => clearTimeout(searchTimer.current), []);
+
+  // Infinite scroll: fetch the next page when the sentinel nears the viewport.
+  const towerCount = towers.length;
+  useEffect(() => {
+    const el = sentinel.current;
+    if (!el || !hasMore || loading) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) void load(sortKey, searchValue.trim(), towerCount);
+      },
+      { rootMargin: "600px" },
     );
-  }, [sortedTowers, searchValue]);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, loading, towerCount, sortKey, searchValue, load]);
 
   useEffect(() => {
     const voterId = getOrCreateVoterId();
     fetch(`/api/votes?voter_id=${voterId}`)
       .then((r) => r.json())
-      .then((data: { tower_votes: { tower_id: string; direction: "up" | "down" }[] }) => {
+      .then((data: { tower_votes: { tower_id: string; direction: VoteDirection }[] }) => {
         setVoteMap(new Map(data.tower_votes.map((v) => [v.tower_id, v.direction])));
       })
       .catch(() => {});
   }, []);
 
-  const handleVoteSuccess = (towerId: string, direction: "up" | "down" | null) => {
+  const handleVote = useCallback(async (towerId: string, direction: VoteDirection) => {
+    const result = await submitVote(towerId, direction);
+    if (!result) return;
+    setTowers((prev) => prev.map((t) => (t.id === towerId ? { ...t, vote_count: t.vote_count + result.delta } : t)));
     setVoteMap((prev) => {
-      const newMap = new Map(prev);
-      if (direction === null) {
-        newMap.delete(towerId);
-      } else {
-        newMap.set(towerId, direction);
-      }
-      return newMap;
+      const next = new Map(prev);
+      if (result.direction === null) next.delete(towerId);
+      else next.set(towerId, result.direction);
+      return next;
     });
-  };
+  }, []);
 
-  if (initialTowers.length === 0 && !children) {
-    return null;
-  }
+  // Prefer the live copy so the open modal reflects vote changes.
+  const openTower = selectedTower ? (towers.find((t) => t.id === selectedTower.id) ?? selectedTower) : null;
 
   return (
     <>
@@ -86,7 +120,7 @@ export default function TowerGrid({ initialTowers, children }: TowerGridProps) {
           {(Object.keys(SORT_LABELS) as SortKey[]).map((key) => (
             <button
               key={key}
-              onClick={() => setSortKey(key)}
+              onClick={() => changeSort(key)}
               style={{
                 padding: "0.4rem 1.1rem",
                 borderRadius: "20px",
@@ -124,7 +158,7 @@ export default function TowerGrid({ initialTowers, children }: TowerGridProps) {
             type="search"
             placeholder="Search masts…"
             value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
+            onChange={(e) => changeSearch(e.target.value)}
             style={{
               padding: "0.4em 1em",
               fontSize: "0.9em",
@@ -140,23 +174,31 @@ export default function TowerGrid({ initialTowers, children }: TowerGridProps) {
 
       <div className="content-masonry">
         {children}
-        {visibleTowers.map((tower) => (
+        {towers.map((tower) => (
           <TowerCard
             key={tower.id}
             tower={tower}
             voteDirection={voteMap.get(tower.id) ?? null}
             onSelect={setSelectedTower}
-            onVoteSuccess={(dir) => handleVoteSuccess(tower.id, dir)}
+            onVote={(direction) => handleVote(tower.id, direction)}
           />
         ))}
       </div>
-      
-      {selectedTower && (
-        <TowerDetailModal 
-          tower={selectedTower} 
-          initialVoteDirection={voteMap.get(selectedTower.id) ?? null}
-          onClose={() => setSelectedTower(null)} 
-          onVoteSuccess={(dir) => handleVoteSuccess(selectedTower.id, dir)}
+
+      {towers.length === 0 && !loading && searchValue.trim() && (
+        <p style={{ color: "#fff", textAlign: "center", padding: "2rem 0", fontWeight: 700 }}>
+          No masts found for &ldquo;{searchValue.trim()}&rdquo;.
+        </p>
+      )}
+
+      {hasMore && <div ref={sentinel} aria-hidden style={{ height: 1 }} />}
+
+      {openTower && (
+        <TowerDetailModal
+          tower={openTower}
+          voteDirection={voteMap.get(openTower.id) ?? null}
+          onClose={() => setSelectedTower(null)}
+          onVote={(direction) => handleVote(openTower.id, direction)}
         />
       )}
     </>

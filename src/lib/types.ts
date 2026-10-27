@@ -9,13 +9,6 @@ export interface Tower {
   created_at: string;
 }
 
-export interface Vote {
-  id: string;
-  tower_id: string;
-  voter_id: string;
-  created_at: string;
-}
-
 export interface MastSlide {
   id: string;
   title: string;

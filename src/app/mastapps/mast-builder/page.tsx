@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useClientValue } from "@/lib/use-client-value";
 
 interface Milestone {
   height: number;
@@ -36,13 +37,10 @@ const STORAGE_KEY = "mastapp-best-height";
 export default function MastBuilderPage() {
   const [height, setHeight] = useState(0);
   const [clicks, setClicks] = useState(0);
-  const [best, setBest] = useState(0);
+  const [newBest, setNewBest] = useState(0);
+  const storedBest = useClientValue(() => Number(localStorage.getItem(STORAGE_KEY) ?? "0") || 0, 0);
+  const best = Math.max(storedBest, newBest);
   const [log, setLog] = useState<string[]>([]);
-
-  useEffect(() => {
-    const stored = Number(localStorage.getItem(STORAGE_KEY) ?? "0");
-    if (!Number.isNaN(stored)) setBest(stored);
-  }, []);
 
   const handleBuild = () => {
     const prev = height;
@@ -63,7 +61,7 @@ export default function MastBuilderPage() {
     setClicks((c) => c + 1);
     if (events.length) setLog((l) => [...events, ...l].slice(0, 6));
     if (next > best) {
-      setBest(next);
+      setNewBest(next);
       localStorage.setItem(STORAGE_KEY, next.toFixed(1));
     }
   };

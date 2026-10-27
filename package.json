@@ -4,25 +4,31 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "build": "bun --bun next build",
+    "lint": "eslint",
+    "db:dev": "POSTGRES_PASSWORD=dev docker compose -f docker-compose.yml -f compose.dev.yaml up -d --wait db && DATABASE_URL=postgresql://mastatine:dev@127.0.0.1:5432/mastatine bun scripts/migrate.mjs",
+    "db:migrate": "bun scripts/migrate.mjs"
   },
   "dependencies": {
-    "@netlify/plugin-nextjs": "^5.15.11",
-    "@supabase/supabase-js": "^2.108.1",
     "bad-words": "^4.0.0",
+    "better-auth": "^1.7.14",
     "next": "16.2.9",
+    "nodemailer": "^10.2.1",
+    "pg": "^8.23.1",
     "postgres": "^3.4.9",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "sharp": "^0.35.5",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/bad-words": "^3.0.3",
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.2",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "^1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",

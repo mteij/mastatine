@@ -1,4 +1,4 @@
-export interface CalEvent {
+interface CalEvent {
   title: string;
   location?: string;
 }

@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mastatine
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: mastatine
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mastatine -d mastatine"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SHOP_URL: ${NEXT_PUBLIC_SHOP_URL:-}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://mastatine:${POSTGRES_PASSWORD}@db:5432/mastatine
+      SITE_URL: ${SITE_URL:?set SITE_URL in .env (public https origin, no trailing slash)}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in .env (openssl rand -base64 32)}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+      SMTP_HOST: ${SMTP_HOST:?set SMTP_HOST in .env}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_USER: ${SMTP_USER:?set SMTP_USER in .env}
+      SMTP_PASS: ${SMTP_PASS:?set SMTP_PASS in .env}
+      MAIL_FROM: ${MAIL_FROM:?set MAIL_FROM in .env}
+      MAIL_REPLY_TO: ${MAIL_REPLY_TO:-}
+      CONTACT_EMAIL: ${CONTACT_EMAIL:-}
+    volumes:
+      - uploads:/data/uploads
+      - imgcache:/app/.next/cache
+    # Loopback only: point your existing reverse proxy at 127.0.0.1:3000.
+    ports:
+      - "127.0.0.1:3000:3000"
+
+volumes:
+  pgdata:
+  uploads:
+  imgcache:

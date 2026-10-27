@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useClientValue } from "@/lib/use-client-value";
 
 function timeOfDayGreeting(hour: number): string {
   if (hour < 6) return "Good night";
@@ -10,11 +10,7 @@ function timeOfDayGreeting(hour: number): string {
 }
 
 export default function DashboardGreeting() {
-  const [greeting, setGreeting] = useState("Good afternoon");
-
-  useEffect(() => {
-    setGreeting(timeOfDayGreeting(new Date().getHours()));
-  }, []);
+  const greeting = useClientValue(() => timeOfDayGreeting(new Date().getHours()), "Good afternoon");
 
   return (
     <>

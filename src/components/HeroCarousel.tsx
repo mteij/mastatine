@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import type { MastSlide } from "@/lib/types";
 import TowerDetailModal from "./TowerDetailModal";
+import { submitVote, type VoteDirection } from "@/lib/vote";
 
 export default function HeroCarousel({ masts }: { masts: MastSlide[] }) {
   const mast = masts[0] ?? null;
   const [showModal, setShowModal] = useState(false);
+  const [voteDelta, setVoteDelta] = useState(0);
+  const [voteDirection, setVoteDirection] = useState<VoteDirection | null>(null);
 
   const towerForModal = mast
     ? {
@@ -35,17 +39,14 @@ export default function HeroCarousel({ masts }: { masts: MastSlide[] }) {
       >
         {mast ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={mast.image_url}
               alt={mast.title}
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-              }}
+              fill
+              sizes="(max-width: 1200px) 100vw, 1200px"
+              quality={75}
+              preload
+              style={{ objectFit: "cover" }}
             />
             {/* gradient overlay */}
             <div
@@ -129,10 +130,15 @@ export default function HeroCarousel({ masts }: { masts: MastSlide[] }) {
 
       {showModal && towerForModal && (
         <TowerDetailModal
-          tower={towerForModal}
-          initialVoteDirection={null}
+          tower={{ ...towerForModal, vote_count: towerForModal.vote_count + voteDelta }}
+          voteDirection={voteDirection}
           onClose={() => setShowModal(false)}
-          onVoteSuccess={() => {}}
+          onVote={async (direction) => {
+            const result = await submitVote(towerForModal.id, direction);
+            if (!result) return;
+            setVoteDelta((d) => d + result.delta);
+            setVoteDirection(result.direction);
+          }}
         />
       )}
     </>

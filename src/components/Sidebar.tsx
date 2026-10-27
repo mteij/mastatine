@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import MastatineLogo from "./MastatineLogo";
 import type { CalDay } from "@/lib/calendar";
 
@@ -285,15 +286,15 @@ export default function Sidebar({ activities }: SidebarProps) {
           {/* ── BRANDING ── */}
           <div id="branding" role="banner">
             <div className="identity">
-              <a id="logo" href="/" title="S.A. Mastatine" rel="home">
+              <Link id="logo" href="/" title="S.A. Mastatine" rel="home">
                 <MastatineLogo size={80} />
-              </a>
+              </Link>
             </div>
             <h1 id="site-title" itemProp="headline">
               <span>
-                <a href="/" title="The study association for mastende engineers" rel="home">
+                <Link href="/" title="The study association for mastende engineers" rel="home">
                   S.A. Mastatine
-                </a>
+                </Link>
               </span>
             </h1>
             <span id="site-description" itemProp="description">
@@ -447,7 +448,7 @@ export default function Sidebar({ activities }: SidebarProps) {
                   Powered by{" "}
                   <a href="https://nextjs.org" target="_blank" rel="noopener noreferrer">Next.js</a>
                   {" "}&amp;{" "}
-                  <a href="https://supabase.com" target="_blank" rel="noopener noreferrer">Supabase</a>.
+                  <a href="https://www.postgresql.org" target="_blank" rel="noopener noreferrer">PostgreSQL</a>.
                 </div>
               </div>
             </footer>

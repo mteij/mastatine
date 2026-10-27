@@ -1,41 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createStorageClient } from "@/lib/storage";
+import { randomUUID } from "node:crypto";
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { UPLOAD_DIR, encodeWebp, sniffImageExt } from "@/lib/uploads";
 
 const MAX_SIZE = 20 * 1024 * 1024; // generous ceiling; client compresses before sending
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
-  const file = formData.get("file") as File | null;
+  const file = formData.get("file");
 
-  if (!file) {
+  if (!(file instanceof File)) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
-  }
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return NextResponse.json(
-      { error: "Only JPG, PNG, WebP and GIF images are allowed" },
-      { status: 400 },
-    );
   }
   if (file.size > MAX_SIZE) {
     return NextResponse.json({ error: "File too large — max 20 MB" }, { status: 400 });
   }
 
-  // Client always sends image/jpeg after compression; keep extension consistent
-  const ext = file.type === "image/jpeg" ? "jpg" : (file.name.split(".").pop()?.toLowerCase() ?? "jpg");
-  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
   const buffer = new Uint8Array(await file.arrayBuffer());
-  const supabase = createStorageClient();
+  const invalid = () =>
+    NextResponse.json({ error: "Only JPG, PNG, WebP and GIF images are allowed" }, { status: 400 });
+  if (!sniffImageExt(buffer)) return invalid();
 
-  const { error } = await supabase.storage
-    .from("towers")
-    .upload(filename, buffer, { contentType: file.type, upsert: false });
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  let webp: Buffer;
+  try {
+    webp = await encodeWebp(buffer);
+  } catch {
+    return invalid();
   }
 
-  const { data } = supabase.storage.from("towers").getPublicUrl(filename);
-  return NextResponse.json({ url: data.publicUrl });
+  const filename = `${Date.now()}-${randomUUID()}.webp`;
+  try {
+    await mkdir(UPLOAD_DIR, { recursive: true });
+    await writeFile(path.join(UPLOAD_DIR, filename), webp);
+  } catch (error) {
+    console.error("Failed to store upload:", error);
+    return NextResponse.json({ error: "Could not store the image" }, { status: 500 });
+  }
+
+  return NextResponse.json({ url: `/uploads/${filename}` });
 }

@@ -1,25 +1,17 @@
 import sql from "@/lib/db";
-import { Tower, MastSlide } from "@/lib/types";
+import { MastSlide } from "@/lib/types";
+import { describeDbError } from "@/lib/db";
+import { PAGE_SIZE, listTowers, parseQuery, type TowerPage } from "@/lib/towers";
 import HeroCarousel from "@/components/HeroCarousel";
 import TowerGrid from "@/components/TowerGrid";
 import SubmitModal from "@/components/SubmitModal";
 
-async function getTowers(search?: string): Promise<Tower[]> {
+async function getFirstPage(q: string): Promise<TowerPage> {
   try {
-    if (search) {
-      const searchPattern = `%${search}%`;
-      return await sql<Tower[]>`
-        SELECT * FROM towers 
-        WHERE title ILIKE ${searchPattern} 
-           OR description ILIKE ${searchPattern}
-           OR submitter_name ILIKE ${searchPattern}
-        ORDER BY vote_count DESC
-      `;
-    }
-    return await sql<Tower[]>`SELECT * FROM towers ORDER BY vote_count DESC`;
+    return await listTowers({ sort: "rating", q, offset: 0, limit: PAGE_SIZE });
   } catch (error) {
-    console.error('Failed to get towers:', error);
-    return [];
+    console.error(`Failed to load towers: ${describeDbError(error)}`);
+    return { towers: [], hasMore: false };
   }
 }
 
@@ -42,12 +34,14 @@ async function getMastsOfMonth(): Promise<MastSlide[]> {
       ORDER BY monthly_votes DESC, t.vote_count DESC
       LIMIT 1
     `;
-  } catch {
+  } catch (error) {
+    console.error(`Failed to load mast of the month: ${describeDbError(error)}`);
     return [];
   }
 }
 
-export const revalidate = 30;
+// Rendered per request: the database is local, and the build has no DB to prerender from.
+export const dynamic = "force-dynamic";
 
 const NEWS = [
   {
@@ -90,15 +84,11 @@ const NEWS = [
 ];
 
 export default async function HomePage(
-  props: {
-    searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
-  }
+  props: { searchParams?: Promise<{ [key: string]: string | string[] | undefined }> }
 ) {
-  const searchParams = await props.searchParams;
-  const s = typeof searchParams?.s === 'string' ? searchParams.s : undefined;
-
-  const [towers, mastsOfMonth] = await Promise.all([
-    getTowers(s),
+  const q = parseQuery((await props.searchParams)?.s);
+  const [firstPage, mastsOfMonth] = await Promise.all([
+    getFirstPage(q),
     getMastsOfMonth(),
   ]);
 
@@ -135,7 +125,7 @@ export default async function HomePage(
       <div id="towers" style={{ scrollMarginTop: "2rem" }} />
       <section id="lp-posts">
         <div className="lp-posts-inside">
-          <TowerGrid initialTowers={towers}>
+          <TowerGrid initialPage={firstPage} initialQuery={q}>
             <article
               className="post hentry"
               itemScope

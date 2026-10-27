@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import sql from "@/lib/db";
 import { Filter } from "bad-words";
+import { MAX_PAGE_SIZE, PAGE_SIZE, listTowers, parseQuery, parseSort } from "@/lib/towers";
 
-export async function GET() {
-  const towers = await sql`
-    SELECT * FROM towers ORDER BY vote_count DESC
-  `;
-  return NextResponse.json(towers);
+export async function GET(req: NextRequest) {
+  const params = req.nextUrl.searchParams;
+  const limit = Math.min(Math.max(Number(params.get("limit")) || PAGE_SIZE, 1), MAX_PAGE_SIZE);
+  const offset = Math.min(Math.max(Number(params.get("offset")) || 0, 0), 100_000);
+
+  const page = await listTowers({
+    sort: parseSort(params.get("sort")),
+    q: parseQuery(params.get("q")),
+    offset,
+    limit,
+  });
+  return NextResponse.json(page);
 }
 
 export async function POST(req: NextRequest) {
@@ -18,6 +26,10 @@ export async function POST(req: NextRequest) {
       { error: "title, submitter_name and image_url are required" },
       { status: 400 }
     );
+  }
+
+  if (typeof image_url !== "string" || !/^\/uploads\/[a-z0-9-]+\.(jpg|png|webp|gif)$/.test(image_url)) {
+    return NextResponse.json({ error: "image_url must be an uploaded image" }, { status: 400 });
   }
 
   const filter = new Filter();

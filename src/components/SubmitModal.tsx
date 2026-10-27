@@ -3,15 +3,12 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import SubmitForm from "./SubmitForm";
+import { useClientValue } from "@/lib/use-client-value";
 
 export default function SubmitModal() {
   const [open, setOpen] = useState(false);
   const [done, setDone] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useClientValue(() => true, false);
 
   function openModal() {
     setDone(false);

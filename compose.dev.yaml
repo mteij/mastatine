@@ -1,0 +1,6 @@
+# Local development only: publishes Postgres on loopback so `bun run dev` can reach it.
+# Used by `bun run db:dev`; never deploy with this file.
+services:
+  db:
+    ports:
+      - "127.0.0.1:5432:5432"

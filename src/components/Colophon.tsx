@@ -1,4 +1,5 @@
 import MastatineLogo from "./MastatineLogo";
+import Link from "next/link";
 
 export default function Colophon() {
   return (
@@ -27,9 +28,9 @@ export default function Colophon() {
         {/* Column 2: Logo + tagline (mirrors Astatine's centre image) */}
         <section className="widget-container" style={{ alignItems: "center" }}>
           <div className="footer-widget-inside" style={{ textAlign: "center" }}>
-            <a href="/" title="S.A. Mastatine" style={{ display: "inline-block" }}>
+            <Link href="/" title="S.A. Mastatine" style={{ display: "inline-block" }}>
               <MastatineLogo size={80} />
-            </a>
+            </Link>
             <p style={{ marginTop: "0.5em", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", fontSize: "0.85em", color: "var(--text)" }}>
               S.A. Mastatine
             </p>

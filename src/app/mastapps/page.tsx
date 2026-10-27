@@ -1,4 +1,5 @@
 import sql from "@/lib/db";
+import Link from "next/link";
 import MastatineLogo from "@/components/MastatineLogo";
 import DashboardGreeting from "@/components/DashboardGreeting";
 import { getThisWeekActivities } from "@/lib/calendar";
@@ -28,9 +29,9 @@ export default async function MastAppsDashboard() {
     <div className="bg-[#f5f5f5] min-h-screen">
       {/* ── Top bar ── */}
       <div className="bg-white flex items-center justify-between px-6 py-4 gap-4 flex-wrap">
-        <a href="/" className="flex items-center gap-2 shrink-0">
+        <Link href="/" className="flex items-center gap-2 shrink-0">
           <MastatineLogo size={40} />
-        </a>
+        </Link>
         <div className="flex-1 max-w-xl">
           <input
             type="search"
@@ -156,7 +157,7 @@ export default async function MastAppsDashboard() {
       <div className="bg-[#f57f20] py-10 flex flex-col items-center gap-2 mt-4">
         <MastatineLogo size={48} mono className="text-white" />
         <div className="text-white font-black text-xl">S.A. MASTATINE</div>
-        <div className="text-white/90 text-sm">Powered by Next.js &amp; Supabase.</div>
+        <div className="text-white/90 text-sm">Powered by Next.js &amp; PostgreSQL.</div>
         <div className="text-white/90 text-sm">Copyright 2026.</div>
       </div>
     </div>

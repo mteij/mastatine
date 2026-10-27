@@ -70,19 +70,15 @@ export default function SubmitForm({ onSuccess }: SubmitFormProps = {}) {
   const [description, setDescription] = useState("");
   const [height, setHeight] = useState("");
   
-  // Ref for the bad-words filter
-  const filterRef = useRef<any>(null);
+  // bad-words is large, so it is loaded lazily.
+  const [filter, setFilter] = useState<{ isProfane: (text: string) => boolean } | null>(null);
 
   useEffect(() => {
-    import("bad-words").then(({ Filter }) => {
-      filterRef.current = new Filter();
-    });
+    import("bad-words").then(({ Filter }) => setFilter(new Filter()));
   }, []);
 
-  const isProfane = filterRef.current
-    ? filterRef.current.isProfane(name) ||
-      filterRef.current.isProfane(title) ||
-      filterRef.current.isProfane(description)
+  const isProfane = filter
+    ? filter.isProfane(name) || filter.isProfane(title) || filter.isProfane(description)
     : false;
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -166,7 +162,7 @@ export default function SubmitForm({ onSuccess }: SubmitFormProps = {}) {
       if (onSuccess) {
         setTimeout(onSuccess, 1400);
       } else {
-        setTimeout(() => router.push("/towers"), 2000);
+        setTimeout(() => router.push("/#towers"), 2000);
       }
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : "Something went wrong.");
