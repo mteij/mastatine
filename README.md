@@ -47,6 +47,25 @@ All settings are runtime environment variables (see `.env.example`), including `
 `docker compose up -d`, no rebuild needed. Data lives in named volumes: `pgdata` (database), `uploads` (tower photos)
 and `imgcache`. Back up the first two.
 
+### Backups
+
+Back up the database and the uploaded photos regularly, and test a restore once:
+
+```bash
+docker compose exec -T db pg_dump -U mastatine mastatine | gzip > mastatine-$(date +%F).sql.gz
+docker run --rm -v mastatine_uploads:/data -v "$PWD":/backup alpine tar czf /backup/uploads-$(date +%F).tgz -C /data .
+```
+
+(The volume name is prefixed with the compose project name; check `docker volume ls`.) Restore with
+`gunzip -c dump.sql.gz | docker compose exec -T db psql -U mastatine mastatine`. Dumps contain email addresses, so store
+them encrypted and delete old ones; see `docs/privacy-processing-record.md`.
+
+### Compliance
+
+`/privacy`, `/terms` and the contact page are part of the site. Before launch set `CONTACT_EMAIL` (and `LEGAL_NAME`,
+`LEGAL_ADDRESS`, `KVK_NUMBER` if you have them) and fill in the blanks in `docs/`. A daily job removes expired
+sessions and unconfirmed newsletter sign-ups (look for `[purge] removed` in the logs).
+
 ### Updating and rolling back
 
 ```bash
@@ -93,3 +112,7 @@ docker compose exec -e SOURCE_DATABASE_URL=... -e TARGET_DATABASE_URL=postgresql
 
 It copies towers and votes and downloads every image into the `uploads` volume. Re-running is safe.
 
+
+## License
+
+[MIT](LICENSE.md) for the code. The name, logo and editorial text are a parody; see the notice in the license file.

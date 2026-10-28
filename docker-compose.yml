@@ -13,6 +13,9 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
 
   app:
     # Built and published by GitHub Actions (.github/workflows/ci.yml). `docker compose up -d --build` still builds locally.
@@ -44,6 +47,9 @@ services:
     # Loopback only: point your existing reverse proxy at 127.0.0.1:3000.
     ports:
       - "127.0.0.1:3000:3000"
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
 
 volumes:
   pgdata:
