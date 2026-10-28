@@ -65,7 +65,7 @@ export default async function HomePage(
             <h5 className="wp-block-heading has-text-align-center">
               <strong>
                 S.A. Mastatine is the study association for students of Advanced Mastology
-                and Nanomastology, and co-association of Mastotics at the University of Twente.
+                and Nanomastology, and co-association of Mastotics at the University of Maste.
                 We are an international, non-profit association that supports students (and staff)
                 of Advanced Mastology, Nanomastology and Mastotics in building a community,
                 creating personal development opportunities, and evaluating the curriculum. We do
