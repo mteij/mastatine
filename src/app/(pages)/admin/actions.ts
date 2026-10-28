@@ -157,7 +157,7 @@ const committeeSchema = z.object({
 
 function refreshCommittees() {
   revalidatePath("/admin/committees");
-  revalidatePath("/admin/members");
+  revalidatePath("/admin/users");
 }
 
 export async function createCommittee(formData: FormData) {
