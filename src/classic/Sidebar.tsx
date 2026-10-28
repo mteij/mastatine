@@ -30,7 +30,7 @@ function buildNav(shopUrl: string | null): NavItem[] {
     ],
   },
   { label: "MastApps", href: "/mastapps" },
-  ...(shopUrl ? [{ label: "Shop", href: shopUrl, external: true }] : []),
+  ...(shopUrl ? [{ label: "Merch shop", href: shopUrl, external: true }] : []),
   { label: "Contact", href: "/contact" },
   ];
 }

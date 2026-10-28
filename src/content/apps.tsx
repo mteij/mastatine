@@ -42,11 +42,6 @@ export const Icons = {
       <path d="M7 11c0 3-1 4-3 5M15 11c0 3-1 4-3 5" />
     </svg>
   ),
-  masts: (
-    <svg {...svg}>
-      <path d="M12 3v18M8 21h8M9 8h6M7.5 14h9" />
-    </svg>
-  ),
   merch: (
     <svg {...svg}>
       <path d="M8 4 3 7l2 4 3-1v10h8V10l3 1 2-4-5-3a4 4 0 0 1-8 0z" />
@@ -97,13 +92,6 @@ export function getApps(shopUrl: string | null): MastApp[] {
         { label: "Statistics", href: "/mastapps/quotes/statistics", icon: <ChartIcon /> },
         { label: "New quote", href: "/mastapps/quotes/new", icon: <PlusIcon /> },
       ],
-    },
-    {
-      slug: "masts",
-      name: "Masts",
-      description: "Browse the gallery and vote on your favourites.",
-      href: "/#towers",
-      icon: Icons.masts,
     },
     ...(shopUrl
       ? [{ slug: "merch", name: "Merch", description: "Wear the tallest opinions in the room.", href: shopUrl, external: true, icon: Icons.merch }]
