@@ -114,8 +114,8 @@ export function getManagedActivities(user: Viewer) {
 }
 
 export function getParticipants(activityId: string) {
-  return sql<{ id: string; name: string; email: string; choices: SignupPick[]; price_cents: number | null }[]>`
-    SELECT u.id, u.name, u.email, s.choices, s.price_cents FROM activity_subscriptions s JOIN "user" u ON u.id = s.user_id
+  return sql<{ id: string; name: string; choices: SignupPick[]; price_cents: number | null }[]>`
+    SELECT u.id, u.name, s.choices, s.price_cents FROM activity_subscriptions s JOIN "user" u ON u.id = s.user_id
     WHERE s.activity_id = ${activityId} ORDER BY s.created_at
   `;
 }

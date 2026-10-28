@@ -8,7 +8,6 @@ export interface Committee {
 export interface Person {
   id: string;
   name: string;
-  email: string;
 }
 
 type Viewer = { id: string; role?: string | null };
@@ -31,8 +30,8 @@ export async function isCommitteeMember(user: Viewer, committeeId: string): Prom
 /** Members of one committee, for handing out action points. */
 export function getCommitteePeople(committeeId: string) {
   return sql<Person[]>`
-    SELECT u.id, u.name, u.email FROM "user" u JOIN committee_members m ON m.user_id = u.id
-    WHERE m.committee_id = ${committeeId} ORDER BY u.name, u.email
+    SELECT u.id, u.name FROM "user" u JOIN committee_members m ON m.user_id = u.id
+    WHERE m.committee_id = ${committeeId} ORDER BY u.name
   `;
 }
 
@@ -61,4 +60,5 @@ export async function getPublicCommittees(): Promise<PublicCommittee[]> {
   }));
 }
 
-export const displayName = (u: { name: string | null; email: string }): string => u.name?.trim() || u.email;
+/** What other people see for a person. Never falls back to an email address. */
+export const displayName = (u: { name: string | null }): string => u.name?.trim() || "Unnamed member";

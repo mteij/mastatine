@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { NAME_MAX, validateDisplayName } from "@/lib/profile";
 
 export default function AccountPanel({ initialName }: { initialName: string }) {
   const id = useId();
@@ -16,7 +17,9 @@ export default function AccountPanel({ initialName }: { initialName: string }) {
     e.preventDefault();
     setError("");
     setSaved(false);
-    const { error: updateError } = await authClient.updateUser({ name: name.trim() });
+    const checked = validateDisplayName(name);
+    if ("error" in checked) return setError(checked.error);
+    const { error: updateError } = await authClient.updateUser({ name: checked.name });
     if (updateError) return setError("Could not save your name. Please try again.");
     setSaved(true);
     router.refresh();
@@ -48,7 +51,7 @@ export default function AccountPanel({ initialName }: { initialName: string }) {
       <form onSubmit={saveName} className="card p-4">
         <label htmlFor={`${id}-name`} className="label">Display name</label>
         <div className="flex gap-2">
-          <input id={`${id}-name`} className="input min-w-0 flex-1" value={name} maxLength={80} onChange={(e) => { setName(e.target.value); setSaved(false); }} />
+          <input id={`${id}-name`} className="input min-w-0 flex-1" value={name} maxLength={NAME_MAX} onChange={(e) => { setName(e.target.value); setSaved(false); }} />
           <button type="submit" className="btn btn-primary" disabled={!name.trim() || name.trim() === initialName}>Save</button>
         </div>
         {saved && <p role="status" className="mt-2 text-sm text-success">Saved</p>}

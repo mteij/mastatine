@@ -8,6 +8,7 @@ import { isCommitteeMember } from "@/lib/committees";
 import { displayName } from "@/lib/committees";
 import { formatDateTime, formatDayMonth, formatTime, zonedDay } from "@/lib/datetime";
 import { getMembership } from "@/lib/membership";
+import { hasDisplayName } from "@/lib/profile";
 import { getSession } from "@/lib/session";
 import { formatAdjustment, formatEuro, parseSignupGroups, priceLabel, tallyPicks } from "@/lib/signup-options";
 import { subscribe, unsubscribe } from "../actions";
@@ -33,6 +34,7 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
   const { isMember } = await getMembership();
   if (!activity || (!activity.is_visible && !canManage) || (activity.members_only && !isMember)) notFound();
 
+  const needsName = !!user && !hasDisplayName(user.name);
   const groups = parseSignupGroups(activity.signup_options);
   const state = subscribeState(activity);
   const participants = user ? await getParticipants(activity.id) : [];
@@ -117,6 +119,10 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
                 Sign in to join
               </Link>
               </>
+            ) : state === "open" && needsName ? (
+              <Link href={`/account/name?next=${encodeURIComponent(`/mastapps/activities/${activity.id}`)}`} className="btn btn-primary w-full py-3 text-base">
+                Choose a display name to join
+              </Link>
             ) : state === "open" ? (
               <form action={subscribe} className="space-y-4">
                 <input type="hidden" name="id" value={activity.id} />

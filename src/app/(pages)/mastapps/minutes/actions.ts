@@ -8,16 +8,12 @@ import { isCommitteeMember } from "@/lib/committees";
 import { fromLocalInput } from "@/lib/datetime";
 import { LOCK_SECONDS } from "@/lib/minutes-live";
 import { parseAgenda, type MeetingStatus } from "@/lib/meetings";
-import { getSession } from "@/lib/session";
+import { requireNamedSession } from "@/lib/session";
 
 const BASE = "/mastapps/minutes";
 
 // Server actions are public HTTP endpoints: each one re-checks the session and committee membership itself.
-async function requireSignedIn() {
-  const session = await getSession();
-  if (!session) redirect(`/login?next=${encodeURIComponent(BASE)}`);
-  return session;
-}
+const requireSignedIn = () => requireNamedSession(BASE);
 
 async function requireMeetingAccess(meetingId: string) {
   const session = await requireSignedIn();

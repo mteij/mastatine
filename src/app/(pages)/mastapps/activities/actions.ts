@@ -12,7 +12,7 @@ import { isCommitteeMember } from "@/lib/committees";
 import { fromLocalInput } from "@/lib/datetime";
 import { storePoster } from "@/lib/poster";
 import { createRateLimiter } from "@/lib/rate-limit";
-import { getSession } from "@/lib/session";
+import { requireNamedSession } from "@/lib/session";
 import { lowestTotalIsValid, parseSignupGroups, quoteSignup, signupGroupsSchema } from "@/lib/signup-options";
 
 const BASE = "/mastapps/activities";
@@ -20,11 +20,8 @@ const saveLimiter = createRateLimiter(30, 60 * 60 * 1000);
 const subscribeLimiter = createRateLimiter(60, 60 * 1000);
 
 // Server actions are public HTTP endpoints: each one re-checks the session itself.
-async function requireSignedIn() {
-  const session = await getSession();
-  if (!session) redirect(`/login?next=${encodeURIComponent(BASE)}`);
-  return session;
-}
+// Signed in, and with a display name: other people see that name, never the email address.
+const requireSignedIn = () => requireNamedSession(BASE);
 
 function refresh(id?: string) {
   revalidatePath(BASE);

@@ -6,18 +6,14 @@ import { z } from "zod";
 import sql from "@/lib/db";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { getMembership } from "@/lib/membership";
-import { getSession } from "@/lib/session";
+import { requireNamedSession } from "@/lib/session";
 
 const QUOTES_PATH = "/mastapps/quotes";
 const addLimiter = createRateLimiter(10, 60 * 60 * 1000);
 const voteLimiter = createRateLimiter(60, 60 * 1000);
 
 // Server actions are public HTTP endpoints: each one re-checks the session itself.
-async function requireSignedIn() {
-  const session = await getSession();
-  if (!session) redirect(`/login?next=${encodeURIComponent(QUOTES_PATH)}`);
-  return session;
-}
+const requireSignedIn = () => requireNamedSession(QUOTES_PATH);
 
 /** Quotes are private to members: anyone else is sent to the page that explains how to become one. */
 async function requireMember() {
