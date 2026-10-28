@@ -71,11 +71,10 @@ export default function LoginForm({ next }: { next: string }) {
         <input id={`${id}-email`} type="email" required autoComplete="email" inputMode="email" autoCapitalize="none" spellCheck={false} maxLength={254} value={email} onChange={(e) => setEmail(e.target.value)} className="input" placeholder="you@example.com" />
       </div>
       {!returning && (
-        <label className="flex items-start gap-3 text-sm">
-          <input type="checkbox" checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} className="mt-1" />
+        <label className="flex items-center gap-3 text-sm">
+          <input type="checkbox" checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} />
           <span>
-            New here? Send me the quarterly newsletter (about four emails a year) when my account is created. Untick this if you do not want it.
-            You can unsubscribe at any time. Already a member? This changes nothing.
+            Also send me the newsletter <span className="text-muted">(about 4 a year, only for new accounts)</span>
           </span>
         </label>
       )}
