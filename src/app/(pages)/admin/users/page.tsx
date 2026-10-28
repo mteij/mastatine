@@ -54,7 +54,7 @@ export default async function AdminUsers(props: { searchParams: Promise<{ q?: st
               return (
                 <tr key={u.id}>
                   <td>
-                    <p className="font-medium">{u.name || "—"}{isMe && <span className="badge ml-2">You</span>}</p>
+                    <p className="font-medium">{u.name || "No name"}{isMe && <span className="badge ml-2">You</span>}</p>
                     <p className="text-sm text-muted">{u.email}</p>
                     <p className="text-xs text-muted">Joined {new Date(u.createdAt).toLocaleDateString("en-GB")}</p>
                   </td>

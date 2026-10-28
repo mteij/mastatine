@@ -21,7 +21,7 @@ const lato = Lato({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: {
-    default: "S.A. Mastatine — The study association for mastende engineers",
+    default: "S.A. Mastatine | The study association for mastende engineers",
     template: "%s · S.A. Mastatine",
   },
   description:

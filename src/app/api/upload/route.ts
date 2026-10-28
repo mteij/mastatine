@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   // Reject oversized bodies before buffering them.
   const declared = Number(req.headers.get("content-length"));
   if (declared > MAX_SIZE + 1024 * 1024) {
-    return NextResponse.json({ error: "File too large — max 20 MB" }, { status: 413 });
+    return NextResponse.json({ error: "File too large (max 20 MB)" }, { status: 413 });
   }
 
   const formData = await req.formData().catch(() => null);
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
   if (file.size > MAX_SIZE) {
-    return NextResponse.json({ error: "File too large — max 20 MB" }, { status: 413 });
+    return NextResponse.json({ error: "File too large (max 20 MB)" }, { status: 413 });
   }
 
   const buffer = new Uint8Array(await file.arrayBuffer());

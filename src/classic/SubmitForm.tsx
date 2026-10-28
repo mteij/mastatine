@@ -243,7 +243,7 @@ export default function SubmitForm({ onSuccess }: SubmitFormProps = {}) {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          placeholder="Tell us something interesting about this mast — height, purpose, location, why it's spectacular…"
+          placeholder="Tell us something interesting about this mast: height, purpose, location, why it's spectacular…"
           className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f57f20] focus:border-transparent resize-none"
         />
       </div>

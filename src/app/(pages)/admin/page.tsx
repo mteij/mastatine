@@ -122,7 +122,7 @@ export default async function AdminOverview() {
           <ul className="mt-3 divide-y divide-line">
             {newest.map((u) => (
               <li key={u.id} className="flex items-baseline justify-between gap-3 py-2">
-                <span className="min-w-0 truncate"><span className="font-medium">{u.name || "—"}</span> <span className="text-sm text-muted">{u.email}</span></span>
+                <span className="min-w-0 truncate"><span className="font-medium">{u.name || "No name"}</span> <span className="text-sm text-muted">{u.email}</span></span>
                 <span className="shrink-0 text-sm text-muted">{new Date(u.createdAt).toLocaleDateString("en-GB")}</span>
               </li>
             ))}
