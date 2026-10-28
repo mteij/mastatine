@@ -1,0 +1,176 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import sql from "@/lib/db";
+import { isCommitteeMember } from "@/lib/committees";
+import { fromLocalInput } from "@/lib/datetime";
+import { storePoster } from "@/lib/poster";
+import { createRateLimiter } from "@/lib/rate-limit";
+import { getSession } from "@/lib/session";
+
+const BASE = "/mastapps/activities";
+const saveLimiter = createRateLimiter(30, 60 * 60 * 1000);
+const subscribeLimiter = createRateLimiter(60, 60 * 1000);
+
+// Server actions are public HTTP endpoints: each one re-checks the session itself.
+async function requireSignedIn() {
+  const session = await getSession();
+  if (!session) redirect(`/login?next=${encodeURIComponent(BASE)}`);
+  return session;
+}
+
+function refresh(id?: string) {
+  revalidatePath(BASE);
+  revalidatePath(`${BASE}/mine`);
+  if (id) revalidatePath(`${BASE}/${id}`);
+}
+
+export interface ActivityFormState {
+  error?: string;
+}
+
+const optionalInt = (max: number) =>
+  z.preprocess((v) => (v === "" || v == null ? null : Number(v)), z.number().int().min(0).max(max).nullable());
+const optionalMoney = z.preprocess((v) => (v === "" || v == null ? null : Number(String(v).replace(",", "."))), z.number().min(0).max(10000).nullable());
+const yesNo = z.enum(["yes", "no"]).transform((v) => v === "yes");
+const checkbox = z.string().optional().transform((v) => v === "on");
+const dateTime = (message: string) => z.string().transform((v, ctx) => {
+  const date = fromLocalInput(v);
+  if (!date) ctx.addIssue({ code: "custom", message });
+  return date as Date;
+});
+const optionalDateTime = (message: string) => z.string().transform((v, ctx) => {
+  if (!v) return null;
+  const date = fromLocalInput(v);
+  if (!date) ctx.addIssue({ code: "custom", message });
+  return date;
+});
+
+const activitySchema = z.object({
+  id: z.uuid().optional().or(z.literal("")),
+  committee_id: z.uuid("Pick a committee."),
+  name: z.string().trim().min(1, "Give the activity a name.").max(120, "That name is too long."),
+  description: z.string().trim().max(5000, "The description is too long."),
+  location: z.string().trim().max(200, "The location is too long."),
+  cost: optionalMoney,
+  subscription_limit: optionalInt(100000),
+  estimated_attendees: optionalInt(100000),
+  starts_at: dateTime("Pick a valid start date and time."),
+  ends_at: optionalDateTime("Pick a valid end date and time."),
+  subscription_opens_at: optionalDateTime("Pick a valid date for when the subscription opens."),
+  subscription_closes_at: optionalDateTime("Pick a valid date for when the subscription closes."),
+  allow_unsubscribe: checkbox,
+  needs_ero: yesNo,
+  uses_budget: yesNo,
+  invite_boss: checkbox,
+  boss_note: z.string().trim().max(2000),
+  invite_flitcie: checkbox,
+  flitcie_note: z.string().trim().max(2000),
+  is_visible: checkbox,
+});
+
+export async function saveActivity(_prev: ActivityFormState, formData: FormData): Promise<ActivityFormState> {
+  const session = await requireSignedIn();
+  const parsed = activitySchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const d = parsed.data;
+
+  if (!saveLimiter.allow(`user:${session.user.id}`)) return { error: "You are saving quickly. Try again in a while." };
+  if (d.ends_at && d.ends_at <= d.starts_at) return { error: "The end must be after the start." };
+  if (d.subscription_opens_at && d.subscription_closes_at && d.subscription_closes_at <= d.subscription_opens_at) {
+    return { error: "The subscription must close after it opens." };
+  }
+  if (!(await isCommitteeMember(session.user, d.committee_id))) return { error: "You are not a member of that committee." };
+
+  const id = d.id || null;
+  let existingPoster: string | null = null;
+  if (id) {
+    const [existing] = await sql<{ committee_id: string; poster_url: string | null }[]>`SELECT committee_id, poster_url FROM activities WHERE id = ${id}`;
+    if (!existing || !(await isCommitteeMember(session.user, existing.committee_id))) return { error: "You cannot edit this activity." };
+    existingPoster = existing.poster_url;
+  }
+
+  let posterUrl = existingPoster;
+  const poster = formData.get("poster");
+  if (poster instanceof File && poster.size > 0) {
+    const stored = await storePoster(poster);
+    if ("error" in stored) return { error: stored.error };
+    posterUrl = stored.url;
+  }
+
+  const cost_cents = d.cost === null ? null : Math.round(d.cost * 100);
+  const values = {
+    committee_id: d.committee_id,
+    name: d.name,
+    description: d.description,
+    location: d.location,
+    cost_cents,
+    subscription_limit: d.subscription_limit || null,
+    estimated_attendees: d.estimated_attendees,
+    starts_at: d.starts_at,
+    ends_at: d.ends_at,
+    subscription_opens_at: d.subscription_opens_at,
+    subscription_closes_at: d.subscription_closes_at,
+    allow_unsubscribe: d.allow_unsubscribe,
+    needs_ero: d.needs_ero,
+    uses_budget: d.uses_budget,
+    invite_boss: d.invite_boss,
+    boss_note: d.boss_note,
+    invite_flitcie: d.invite_flitcie,
+    flitcie_note: d.flitcie_note,
+    is_visible: d.is_visible,
+    poster_url: posterUrl,
+  };
+
+  if (id) {
+    await sql`UPDATE activities SET ${sql(values)} WHERE id = ${id}`;
+    refresh(id);
+    redirect(`${BASE}/${id}`);
+  }
+  const [created] = await sql<{ id: string }[]>`INSERT INTO activities ${sql({ ...values, created_by: session.user.id })} RETURNING id`;
+  refresh();
+  redirect(`${BASE}/${created.id}`);
+}
+
+const activityId = z.uuid();
+
+export async function subscribe(formData: FormData) {
+  const session = await requireSignedIn();
+  const id = activityId.parse(formData.get("id"));
+  if (!subscribeLimiter.allow(`user:${session.user.id}`)) throw new Error("Slow down a little.");
+
+  // One statement so the limit holds under concurrent sign-ups.
+  await sql`
+    INSERT INTO activity_subscriptions (activity_id, user_id)
+    SELECT a.id, ${session.user.id} FROM activities a
+    WHERE a.id = ${id} AND a.is_visible
+      AND (a.subscription_opens_at IS NULL OR a.subscription_opens_at <= NOW())
+      AND COALESCE(a.subscription_closes_at, a.starts_at) > NOW()
+      AND (a.subscription_limit IS NULL OR (SELECT COUNT(*) FROM activity_subscriptions s WHERE s.activity_id = a.id) < a.subscription_limit)
+    ON CONFLICT DO NOTHING
+  `;
+  refresh(id);
+}
+
+export async function unsubscribe(formData: FormData) {
+  const session = await requireSignedIn();
+  const id = activityId.parse(formData.get("id"));
+  await sql`
+    DELETE FROM activity_subscriptions
+    WHERE activity_id = ${id} AND user_id = ${session.user.id}
+      AND EXISTS (SELECT 1 FROM activities a WHERE a.id = ${id} AND a.allow_unsubscribe AND a.starts_at > NOW())
+  `;
+  refresh(id);
+}
+
+export async function deleteActivity(formData: FormData) {
+  const session = await requireSignedIn();
+  const id = activityId.parse(formData.get("id"));
+  const [row] = await sql<{ committee_id: string }[]>`SELECT committee_id FROM activities WHERE id = ${id}`;
+  if (!row || !(await isCommitteeMember(session.user, row.committee_id))) return;
+  await sql`DELETE FROM activities WHERE id = ${id}`;
+  refresh();
+  redirect(`${BASE}/mine`);
+}

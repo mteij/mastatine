@@ -147,3 +147,51 @@ export async function removeSubscriber(formData: FormData) {
   await sql`DELETE FROM newsletter_subscribers WHERE id = ${id.parse(formData.get("id"))}`;
   revalidatePath("/admin/newsletter");
 }
+
+/* ─────────────────────────────── committees ─────────────────────────────── */
+
+const committeeSchema = z.object({
+  name: z.string().trim().min(1).max(80),
+  description: z.string().trim().max(200),
+});
+
+function refreshCommittees() {
+  revalidatePath("/admin/committees");
+  revalidatePath("/admin/members");
+}
+
+export async function createCommittee(formData: FormData) {
+  await requireAdmin();
+  const data = committeeSchema.parse(Object.fromEntries(formData));
+  await sql`INSERT INTO committees (name, description) VALUES (${data.name}, ${data.description || null}) ON CONFLICT DO NOTHING`;
+  refreshCommittees();
+}
+
+export async function deleteCommittee(formData: FormData) {
+  await requireAdmin();
+  await sql`DELETE FROM committees WHERE id = ${id.parse(formData.get("id"))}`;
+  refreshCommittees();
+}
+
+export async function addCommitteeMember(formData: FormData) {
+  await requireAdmin();
+  const committeeId = id.parse(formData.get("committeeId"));
+  const member = userId.parse(formData.get("userId"));
+  await sql`INSERT INTO committee_members (committee_id, user_id) VALUES (${committeeId}, ${member}) ON CONFLICT DO NOTHING`;
+  refreshCommittees();
+}
+
+export async function removeCommitteeMember(formData: FormData) {
+  await requireAdmin();
+  await sql`DELETE FROM committee_members WHERE committee_id = ${id.parse(formData.get("committeeId"))} AND user_id = ${userId.parse(formData.get("userId"))}`;
+  refreshCommittees();
+}
+
+export async function toggleCommitteeChair(formData: FormData) {
+  await requireAdmin();
+  await sql`
+    UPDATE committee_members SET is_chair = NOT is_chair
+    WHERE committee_id = ${id.parse(formData.get("committeeId"))} AND user_id = ${userId.parse(formData.get("userId"))}
+  `;
+  refreshCommittees();
+}

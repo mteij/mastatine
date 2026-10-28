@@ -1,0 +1,68 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import AppFrame from "@/components/ui/AppFrame";
+import { displayName, getCommitteePeople } from "@/lib/committees";
+import { formatDateTime } from "@/lib/datetime";
+import { STATUS_LABEL, getItems, getMeetingActions, itemLabels } from "@/lib/meetings";
+import { addAction } from "../../actions";
+import ActionList from "../../ActionList";
+import LiveRefresh from "../../LiveRefresh";
+import { loadMeeting } from "./access";
+
+export const metadata: Metadata = { title: "Meeting", robots: { index: false } };
+export const dynamic = "force-dynamic";
+
+export default async function MeetingPage(props: { params: Promise<{ id: string }> }) {
+  const { meeting } = await loadMeeting(props.params);
+  const [items, actions, people] = await Promise.all([getItems(meeting.id), getMeetingActions(meeting.id), getCommitteePeople(meeting.committee_id)]);
+  const labels = itemLabels(items);
+  const base = `/mastapps/minutes/meetings/${meeting.id}`;
+
+  return (
+    <AppFrame title={meeting.title} tagline={`${meeting.committee_name} · ${formatDateTime(meeting.starts_at)}${meeting.location ? ` @${meeting.location}` : ""}`}>
+      <LiveRefresh />
+      <div className="mb-6 flex flex-wrap items-center gap-2">
+        <Link href={`${base}/agenda`} className="btn btn-secondary btn-sm">Edit agenda</Link>
+        <Link href={`${base}/minutes`} className="btn btn-secondary btn-sm">Edit minutes</Link>
+        <Link href={`${base}/edit`} className="btn btn-secondary btn-sm">Details</Link>
+        <span className="text-sm text-muted">Minutes status: <em>{STATUS_LABEL[meeting.minutes_status]}</em></span>
+      </div>
+
+      <div className="grid gap-8 lg:grid-cols-[1fr_24rem]">
+        <section className="card p-6 sm:p-8">
+          <h2 className="mb-4 text-xl font-extrabold">Minutes</h2>
+          {items.length === 0 && <p className="text-muted">The agenda is empty. <Link href={`${base}/agenda`} className="underline">Add agenda items</Link>.</p>}
+          <ol className="space-y-4">
+            {items.map((item, i) => (
+              <li key={item.id} className={item.level === 1 ? "ml-8" : ""}>
+                <h3 className={`font-bold text-accent-text ${item.level === 0 ? "text-lg" : "text-base"}`}>{labels[i]} {item.title}</h3>
+                {item.notes && <p className="mt-1 whitespace-pre-line">{item.notes}</p>}
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <aside className="space-y-4">
+          <section className="card p-5">
+            <h2 className="mb-1 text-lg font-extrabold text-accent-text">Action points</h2>
+            <ActionList actions={actions} showAssignee canDelete />
+          </section>
+          <form action={addAction} className="card space-y-3 p-5">
+            <h2 className="text-lg font-extrabold">Add action point</h2>
+            <input type="hidden" name="id" value={meeting.id} />
+            <textarea name="body" aria-label="Action point" className="input" required maxLength={500} placeholder="What needs to happen?" />
+            <select name="assignee_id" aria-label="Assigned to" className="input" defaultValue="">
+              <option value="">Unassigned</option>
+              {people.map((p) => <option key={p.id} value={p.id}>{displayName(p)}</option>)}
+            </select>
+            <div>
+              <label className="label" htmlFor="deadline">Deadline (empty: next meeting)</label>
+              <input id="deadline" name="deadline" type="date" className="input" />
+            </div>
+            <button type="submit" className="btn btn-primary">Add</button>
+          </form>
+        </aside>
+      </div>
+    </AppFrame>
+  );
+}
