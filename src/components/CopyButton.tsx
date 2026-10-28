@@ -17,7 +17,7 @@ export default function CopyButton({ value, label = "Copy" }: { value: string; l
   }
 
   return (
-    <button type="button" onClick={copy} className="mc-bar__copy" aria-live="polite">
+    <button type="button" onClick={copy} className="mc__copy" aria-live="polite">
       {copied ? "Copied!" : label}
     </button>
   );
