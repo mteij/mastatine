@@ -1,7 +1,9 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { authClient } from "@/lib/auth-client";
+
+const RETURNING_KEY = "mastatine:returning";
 
 type Status = "idle" | "sending" | "sent";
 
@@ -11,6 +13,13 @@ export default function LoginForm({ next }: { next: string }) {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
   const [newsletter, setNewsletter] = useState(true);
+  const [returning, setReturning] = useState(false);
+
+  useEffect(() => {
+    try {
+      setReturning(localStorage.getItem(RETURNING_KEY) === "1");
+    } catch {}
+  }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -20,13 +29,16 @@ export default function LoginForm({ next }: { next: string }) {
       email: email.trim().toLowerCase(),
       callbackURL: next,
       newUserCallbackURL: next,
-      metadata: { newsletter },
+      metadata: { newsletter: returning ? false : newsletter },
     });
     if (authError) {
       setStatus("idle");
       setError(authError.status === 429 ? "Too many attempts. Please wait a minute and try again." : "We could not send a link right now. Please try again.");
       return;
     }
+    try {
+      localStorage.setItem(RETURNING_KEY, "1");
+    } catch {}
     setStatus("sent");
   }
 
@@ -51,13 +63,15 @@ export default function LoginForm({ next }: { next: string }) {
         <label htmlFor={`${id}-email`} className="label">Email address</label>
         <input id={`${id}-email`} type="email" required autoComplete="email" autoFocus maxLength={254} value={email} onChange={(e) => setEmail(e.target.value)} className="input" placeholder="you@example.com" />
       </div>
-      <label className="flex items-start gap-3 text-sm">
-        <input type="checkbox" checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} className="mt-1" />
-        <span>
-          Send me the quarterly newsletter (about four emails a year) when I create my account. Untick this if you do not want it.
-          You can unsubscribe at any time.
-        </span>
-      </label>
+      {!returning && (
+        <label className="flex items-start gap-3 text-sm">
+          <input type="checkbox" checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} className="mt-1" />
+          <span>
+            New here? Send me the quarterly newsletter (about four emails a year) when my account is created. Untick this if you do not want it.
+            You can unsubscribe at any time. Already a member? This changes nothing.
+          </span>
+        </label>
+      )}
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       <button type="submit" disabled={status === "sending" || !email} className="btn btn-primary w-full py-3">
         {status === "sending" ? "Sending link…" : "Email me a sign-in link"}
