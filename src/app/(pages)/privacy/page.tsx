@@ -89,6 +89,10 @@ export default function PrivacyPage() {
           <li>
             <strong><code>mastatine_voter_id</code> (local storage).</strong> Same purpose for votes on masts. Stays until you clear it.
           </li>
+          <li>
+            <strong><code>mastatine_dismissed_announcement</code> (local storage).</strong> Remembers that you closed the news banner, so it
+            does not return until there is new news. Stays until you clear it.
+          </li>
         </ul>
 
         <h2>Why, and on what basis</h2>

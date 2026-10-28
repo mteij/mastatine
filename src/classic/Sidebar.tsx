@@ -186,7 +186,8 @@ export default function Sidebar({ shopUrl }: { shopUrl: string | null }) {
       // until the slider bottom exits the viewport, then locks in place.
       const sliderAbsoluteBottom =
         slider!.getBoundingClientRect().bottom + window.scrollY;
-      aside!.style.top = `-${Math.max(0, sliderAbsoluteBottom)}px`;
+      // The sticky announcement bar publishes its height; stay below it.
+      aside!.style.top = `calc(var(--announce-h, 0px) - ${Math.max(0, sliderAbsoluteBottom)}px)`;
     }
 
     setTop();
