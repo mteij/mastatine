@@ -65,6 +65,29 @@ export async function requestSubscription(rawEmail: string): Promise<void> {
   await sendMail({ to: email, ...confirmSubscriptionEmail(url) });
 }
 
+/** Remembers the newsletter choice from the sign-in form until the account exists. Opting in is the default. */
+export async function rememberSignupChoice(rawEmail: string, newsletter: boolean): Promise<void> {
+  await sql`
+    INSERT INTO signup_preferences (email, newsletter) VALUES (${normaliseEmail(rawEmail)}, ${newsletter})
+    ON CONFLICT ((lower(email))) DO UPDATE SET newsletter = EXCLUDED.newsletter, created_at = NOW()
+  `;
+}
+
+/**
+ * Runs when a new account is created. The sign-in link already proved the address, so unless the person unticked the box
+ * on the form they are subscribed straight away (no second confirmation email). Every newsletter carries an unsubscribe link.
+ */
+export async function applySignupChoice(rawEmail: string): Promise<void> {
+  const email = normaliseEmail(rawEmail);
+  const [choice] = await sql<{ newsletter: boolean }[]>`DELETE FROM signup_preferences WHERE lower(email) = ${email} RETURNING newsletter`;
+  if (choice && !choice.newsletter) return;
+  await sql`
+    INSERT INTO newsletter_subscribers (email, status, confirmed_at) VALUES (${email}, 'confirmed', NOW())
+    ON CONFLICT ((lower(email))) DO UPDATE SET
+      status = 'confirmed', confirmed_at = NOW(), unsubscribed_at = NULL, confirm_token_hash = NULL, confirm_expires_at = NULL
+  `;
+}
+
 export async function confirmSubscription(token: string): Promise<boolean> {
   if (!/^[A-Za-z0-9_-]{20,100}$/.test(token)) return false;
   const rows = await sql`

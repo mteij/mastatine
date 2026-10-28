@@ -10,6 +10,7 @@ export default function LoginForm({ next }: { next: string }) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
+  const [newsletter, setNewsletter] = useState(true);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -19,6 +20,7 @@ export default function LoginForm({ next }: { next: string }) {
       email: email.trim().toLowerCase(),
       callbackURL: next,
       newUserCallbackURL: next,
+      metadata: { newsletter },
     });
     if (authError) {
       setStatus("idle");
@@ -49,6 +51,13 @@ export default function LoginForm({ next }: { next: string }) {
         <label htmlFor={`${id}-email`} className="label">Email address</label>
         <input id={`${id}-email`} type="email" required autoComplete="email" autoFocus maxLength={254} value={email} onChange={(e) => setEmail(e.target.value)} className="input" placeholder="you@example.com" />
       </div>
+      <label className="flex items-start gap-3 text-sm">
+        <input type="checkbox" checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} className="mt-1" />
+        <span>
+          Send me the quarterly newsletter (about four emails a year) when I create my account. Untick this if you do not want it.
+          You can unsubscribe at any time.
+        </span>
+      </label>
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       <button type="submit" disabled={status === "sending" || !email} className="btn btn-primary w-full py-3">
         {status === "sending" ? "Sending link…" : "Email me a sign-in link"}

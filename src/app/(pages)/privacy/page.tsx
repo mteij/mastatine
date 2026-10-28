@@ -94,7 +94,7 @@ export default function PrivacyPage() {
         <ul>
           <li>Votes, ratings, submitted masts and quotes: to run the gallery (legitimate interest).</li>
           <li>Accounts: to let you sign in (necessary to provide the service you asked for).</li>
-          <li>Newsletter: only with your consent, confirmed by a link we email you. Withdraw it any time with the unsubscribe link in every email.</li>
+          <li>Newsletter: only with your consent, either confirmed by a link we email you or given with the box on the sign-in form (shown ticked, and you can untick it) once your sign-in link proves the address is yours. Withdraw it any time with the unsubscribe link in every email.</li>
           <li>Technical logs and rate limiting: to keep the site secure and stop abuse (legitimate interest).</li>
         </ul>
 

@@ -21,6 +21,7 @@ export async function purgeExpiredData(): Promise<PurgeResult> {
     WHERE status = 'pending' AND created_at < NOW() - make_interval(days => ${UNCONFIRMED_SUBSCRIBER_DAYS})
     RETURNING id
   `;
+  await sql`DELETE FROM signup_preferences WHERE created_at < NOW() - INTERVAL '1 day'`;
   return {
     sessions: sessions.length,
     verifications: verifications.length,

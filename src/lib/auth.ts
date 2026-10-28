@@ -6,7 +6,7 @@ import { requireEnv, siteUrl } from "@/lib/env";
 import { sendMail } from "@/lib/mailer";
 import { magicLinkEmail } from "@/lib/email-templates";
 import { allowMagicLinkFor } from "@/lib/magic-link-limit";
-import { deleteSubscriberByEmail } from "@/lib/newsletter";
+import { applySignupChoice, deleteSubscriberByEmail, rememberSignupChoice } from "@/lib/newsletter";
 
 const MAGIC_LINK_TTL_SECONDS = 10 * 60;
 
@@ -63,6 +63,10 @@ function createAuth() {
           before: async (user) => ({
             data: { ...user, role: adminEmails().has(user.email.toLowerCase()) ? "admin" : "user" },
           }),
+          // New members get the newsletter unless they unticked the box on the sign-in form.
+          after: async (user) => {
+            await applySignupChoice(user.email).catch((error) => console.error("Newsletter sign-up failed:", (error as Error).message));
+          },
         },
       },
     },
@@ -70,9 +74,10 @@ function createAuth() {
       magicLink({
         expiresIn: MAGIC_LINK_TTL_SECONDS,
         storeToken: "hashed",
-        sendMagicLink: async ({ email, url }) => {
+        sendMagicLink: async ({ email, url, metadata }) => {
           // Silently skip when one address is being hammered; the caller always sees "check your email".
           if (!allowMagicLinkFor(email)) return;
+          await rememberSignupChoice(email, metadata?.newsletter !== false);
           await sendMail({ to: email, ...magicLinkEmail(url, MAGIC_LINK_TTL_SECONDS / 60) });
         },
       }),

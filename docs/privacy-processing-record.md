@@ -15,7 +15,7 @@ Internal document. Keep it up to date whenever the site stores something new. No
 | 5 | Accounts | email, display name, role, ban flag | members | sign-in, admin access | contract (service requested) | mail provider (sign-in emails) | until the account is deleted | `user`, `account` |
 | 6 | Sessions | session token, IP address, browser type | members | keep signed in, security | contract / legitimate interest | none | auto-deleted when expired (max 30 days) by the daily purge | `session` |
 | 7 | Sign-in links | hashed token, email | members | passwordless sign-in | contract | none | auto-deleted when expired (10 min) by the daily purge | `verification` |
-| 8 | Newsletter | email, status, confirm/unsubscribe timestamps | subscribers | send the newsletter | consent (double opt-in) | mail provider | confirmed: until unsubscribe + removal request; unconfirmed: 7 days (purge); unsubscribed addresses kept only as a suppression list | `newsletter_subscribers`, `newsletter_sends` |
+| 8 | Newsletter | email, status, confirm/unsubscribe timestamps | subscribers | send the newsletter | consent (double opt-in, or the sign-in form's newsletter box, shown ticked and verified by the sign-in link; `signup_preferences` holds the choice for at most a day) | mail provider | confirmed: until unsubscribe + removal request; unconfirmed: 7 days (purge); unsubscribed addresses kept only as a suppression list | `newsletter_subscribers`, `newsletter_sends` |
 | 9 | Rate limiting | IP address | all visitors | stop abuse | legitimate interest | none | in memory only, minutes | server process |
 
 ## Processors and transfers
