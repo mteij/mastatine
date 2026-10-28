@@ -50,13 +50,14 @@ export interface UpcomingActivity {
   name: string;
   location: string;
   starts_at: Date;
+  ends_at: Date | null;
   committee_name: string;
 }
 
 /** The next visible activities that have not ended yet, for the public homepage. */
 export function getUpcomingActivities(limit: number) {
   return sql<UpcomingActivity[]>`
-    SELECT a.id, a.name, a.location, a.starts_at, c.name AS committee_name
+    SELECT a.id, a.name, a.location, a.starts_at, a.ends_at, c.name AS committee_name
     FROM activities a JOIN committees c ON c.id = a.committee_id
     WHERE a.is_visible AND COALESCE(a.ends_at, a.starts_at + INTERVAL '3 hours') > NOW()
     ORDER BY a.starts_at LIMIT ${limit}

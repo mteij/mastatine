@@ -121,7 +121,7 @@ export default function HeroCarousel({ masts, overlay }: { masts: MastSlide[]; o
         )}
         {overlay && (
           // Interacting with the overlay must not open the mast popup that the whole hero is a button for.
-          <div className="absolute right-4 top-4 z-20 max-w-[calc(100%-2rem)]" onClick={(e) => e.stopPropagation()}>
+          <div className="absolute right-4 top-4 z-20 flex max-w-[calc(100%-2rem)] flex-col items-end gap-2" onClick={(e) => e.stopPropagation()}>
             {overlay}
           </div>
         )}
