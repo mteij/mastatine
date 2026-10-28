@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import PageHeader from "@/components/ui/PageHeader";
+import { getLegalIdentity } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -17,7 +18,8 @@ const TOPICS = [
 ];
 
 export default function ContactPage() {
-  const email = process.env.CONTACT_EMAIL;
+  const legal = getLegalIdentity();
+  const email = legal.email;
 
   return (
     <>
@@ -35,6 +37,17 @@ export default function ContactPage() {
             <p className="text-muted">The contact address has not been configured yet.</p>
           )}
         </div>
+
+        {legal.name || legal.address || legal.kvk ? (
+          <div className="card mx-auto mt-6 max-w-3xl p-6 sm:p-8">
+            <h2 className="text-lg font-bold">Who runs this site</h2>
+            <dl className="mt-2 space-y-1 text-base">
+              {legal.name && <div><dt className="inline font-semibold">Name: </dt><dd className="inline">{legal.name}</dd></div>}
+              {legal.address && <div><dt className="inline font-semibold">Address: </dt><dd className="inline">{legal.address}</dd></div>}
+              {legal.kvk && <div><dt className="inline font-semibold">KvK number: </dt><dd className="inline">{legal.kvk}</dd></div>}
+            </dl>
+          </div>
+        ) : null}
 
         <ul className="mx-auto mt-6 grid max-w-3xl gap-4 sm:grid-cols-2">
           {TOPICS.map((topic) => (

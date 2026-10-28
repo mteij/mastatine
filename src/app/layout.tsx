@@ -3,7 +3,12 @@ import { Lato } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/classic/Sidebar";
 import Colophon from "@/classic/Colophon";
+import AppShell from "@/classic/AppShell";
 import { siteUrl } from "@/lib/env";
+import { getShopUrl } from "@/lib/shop";
+
+// Rendered per request so runtime settings (the shop link) take effect without a rebuild.
+export const dynamic = "force-dynamic";
 
 const lato = Lato({
   subsets: ["latin"],
@@ -41,18 +46,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         >
           Skip to content
         </a>
-        <div id="site-wrapper">
-          <div id="content" className="cryout">
-            <div id="container" className="two-columns-left">
-              <Sidebar />
-              <main id="main" className="main">
-                {children}
-              </main>
-              <div style={{ clear: "both" }} />
-            </div>
-          </div>
-          <Colophon />
-        </div>
+        <AppShell shopUrl={getShopUrl()} sidebar={<Sidebar shopUrl={getShopUrl()} />} colophon={<Colophon />}>
+          {children}
+        </AppShell>
       </body>
     </html>
   );

@@ -7,9 +7,11 @@ type Status = "idle" | "sending" | "sent" | "error";
 interface NewsletterFormProps {
   /** Stacked layout for cards; inline for banners. */
   layout?: "inline" | "stacked";
+  /** Hides the footnote under the field (used where space is tight). */
+  compact?: boolean;
 }
 
-export default function NewsletterForm({ layout = "inline" }: NewsletterFormProps) {
+export default function NewsletterForm({ layout = "inline", compact = false }: NewsletterFormProps) {
   const id = useId();
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState(""); // honeypot
@@ -77,7 +79,7 @@ export default function NewsletterForm({ layout = "inline" }: NewsletterFormProp
           {message}
         </p>
       )}
-      <p className="hint">About four emails a year. Unsubscribe in one click.</p>
+      {!compact && <p className="hint">About four emails a year. Unsubscribe in one click.</p>}
     </form>
   );
 }

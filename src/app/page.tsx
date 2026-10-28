@@ -1,3 +1,4 @@
+import Link from "next/link";
 import sql from "@/lib/db";
 import { MastSlide } from "@/lib/types";
 import { describeDbError } from "@/lib/db";
@@ -5,6 +6,7 @@ import { PAGE_SIZE, listTowers, parseQuery, type TowerPage } from "@/lib/towers"
 import HeroCarousel from "@/classic/HeroCarousel";
 import TowerGrid from "@/classic/TowerGrid";
 import SubmitModal from "@/classic/SubmitModal";
+import { NEWS, formatDate } from "@/content/site";
 
 async function getFirstPage(q: string): Promise<TowerPage> {
   try {
@@ -43,50 +45,11 @@ async function getMastsOfMonth(): Promise<MastSlide[]> {
 // Rendered per request: the database is local, and the build has no DB to prerender from.
 export const dynamic = "force-dynamic";
 
-const NEWS = [
-  {
-    id: 2,
-    slug: "we-are-sooooo-back",
-    title: "We are sooooo back!",
-    date: "August 28, 2026",
-    content: (
-      <>
-        <p>We are sooooo BACK.</p>
-        <p>
-          After a well-deserved summer, S.A. Mastatine is back in full force. New masts, new
-          votes, new Mast of the Month glory — the towers are climbing again and we could not be
-          more hyped for the new academic year.
-        </p>
-        <p>Get your entries in and rally your housemates. Let&apos;s make this the best masting season yet.</p>
-        <p>Op de hoge masten,</p>
-        <p>The board</p>
-      </>
-    ),
-  },
-  {
-    id: 1,
-    slug: "mastatine-celebrates-first-lustrum",
-    title: "Mastatine celebrates its first lustrum",
-    date: "January 20, 2026",
-    content: (
-      <>
-        <p>Dear members,</p>
-        <p>
-          In the academic year 2025–2026, S.A. Mastatine celebrates its first lustrum with the
-          theme: <strong>Masten</strong>. We hope to see you all at the fantastic activities the lustrum committee
-          has organised.
-        </p>
-        <p>Op de hoge masten,</p>
-        <p>The lustrum committee</p>
-      </>
-    ),
-  },
-];
-
 export default async function HomePage(
   props: { searchParams?: Promise<{ [key: string]: string | string[] | undefined }> }
 ) {
   const q = parseQuery((await props.searchParams)?.s);
+  const latest = NEWS[0];
   const [firstPage, mastsOfMonth] = await Promise.all([
     getFirstPage(q),
     getMastsOfMonth(),
@@ -132,51 +95,42 @@ export default async function HomePage(
               itemType="http://schema.org/BlogPosting"
               itemProp="blogPost"
             >
+              <div className="news-card__top">
+                <span className="news-card__label">Latest news</span>
+                <Link href="/news" className="news-card__all">
+                  All news
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </Link>
+              </div>
               <header className="entry-header" style={{ marginBottom: "0.4em" }}>
                 <h2 className="entry-title" itemProp="headline" style={{ fontSize: "1.15rem", fontWeight: "bold", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: "0.2em" }}>
-                  <a href={`/news/${NEWS[0].slug}`} itemProp="mainEntityOfPage" rel="bookmark" style={{ color: "var(--navy)" }}>
-                    {NEWS[0].title}
-                  </a>
+                  <Link href={`/news/${latest.slug}`} itemProp="mainEntityOfPage" rel="bookmark" style={{ color: "var(--navy)" }}>
+                    {latest.title}
+                  </Link>
                 </h2>
                 <div className="entry-meta">
                   <span className="onDate date">
-                    <time className="published" itemProp="datePublished">
-                      {NEWS[0].date}
+                    <time className="published" itemProp="datePublished" dateTime={latest.date}>
+                      {formatDate(latest.date)}
                     </time>
                   </span>
                 </div>
               </header>
               <div
-                className="entry-content news-scroll"
+                className="entry-content"
                 itemProp="articleBody"
                 style={{
-                  overflowY: "auto",
                   flex: 1,
                   minHeight: 0,
-                  fontSize: "0.9rem",
+                  fontSize: "1rem",
                   lineHeight: 1.55,
                   marginBottom: "0.5rem",
                 }}
               >
-                {NEWS.map((post, index) => (
-                  <div
-                    key={post.id}
-                    style={
-                      index > 0
-                        ? { marginTop: "1em", paddingTop: "1em", borderTop: "1px solid rgba(0,0,0,0.08)" }
-                        : undefined
-                    }
-                  >
-                    {index > 0 && (
-                      <div style={{ marginBottom: "0.3em" }}>
-                        <strong style={{ color: "var(--navy)" }}>{post.title}</strong>
-                        <div className="onDate date" style={{ fontSize: "0.75rem", opacity: 0.7 }}>
-                          {post.date}
-                        </div>
-                      </div>
-                    )}
-                    {post.content}
-                  </div>
+                {latest.body.map((paragraph, i) => (
+                  <p key={i}>{paragraph}</p>
                 ))}
               </div>
               <SubmitModal />

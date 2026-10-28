@@ -1,8 +1,9 @@
 import MastatineLogo from "./MastatineLogo";
 import Link from "next/link";
-import { SHOP_URL } from "@/lib/shop";
+import { getShopUrl } from "@/lib/shop";
 
 export default function Colophon() {
+  const shopUrl = getShopUrl();
   return (
     <aside id="colophon" className="footer-three cryout" itemScope itemType="http://schema.org/WPSideBar">
       <div id="colophon-inside">
@@ -14,6 +15,7 @@ export default function Colophon() {
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               {[
                 { label: "Privacy Policy", href: "/privacy" },
+                { label: "Site rules", href: "/terms" },
                 { label: "Contact", href: "/contact" },
                 { label: "About & Disclaimer", href: "/about#disclaimer" },
               ].map(({ label, href }) => (
@@ -48,7 +50,7 @@ export default function Colophon() {
               {[
                 { label: "Newsletter", href: "/newsletter", external: false },
                 { label: "Sign in", href: "/login", external: false },
-                ...(SHOP_URL ? [{ label: "Merch shop", href: SHOP_URL, external: true }] : []),
+                ...(shopUrl ? [{ label: "Merch shop", href: shopUrl, external: true }] : []),
               ].map(({ label, href, external }) => (
                 <li key={label} style={{ marginBottom: "0.25em" }}>
                   <a href={href} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>{label}</a>

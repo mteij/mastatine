@@ -15,10 +15,9 @@ services:
       retries: 10
 
   app:
-    build:
-      context: .
-      args:
-        NEXT_PUBLIC_SHOP_URL: ${NEXT_PUBLIC_SHOP_URL:-}
+    # Built and published by GitHub Actions (.github/workflows/ci.yml). `docker compose up -d --build` still builds locally.
+    image: ${MASTATINE_IMAGE:-ghcr.io/mteij/mastatine:latest}
+    build: .
     restart: unless-stopped
     depends_on:
       db:
@@ -35,6 +34,10 @@ services:
       MAIL_FROM: ${MAIL_FROM:?set MAIL_FROM in .env}
       MAIL_REPLY_TO: ${MAIL_REPLY_TO:-}
       CONTACT_EMAIL: ${CONTACT_EMAIL:-}
+      LEGAL_NAME: ${LEGAL_NAME:-}
+      LEGAL_ADDRESS: ${LEGAL_ADDRESS:-}
+      KVK_NUMBER: ${KVK_NUMBER:-}
+      SHOP_URL: ${SHOP_URL:-}
     volumes:
       - uploads:/data/uploads
       - imgcache:/app/.next/cache

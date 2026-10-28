@@ -64,6 +64,12 @@ export default function AccountPanel({ initialName }: { initialName: string }) {
         <button type="button" className="btn btn-secondary" onClick={signOut}>Sign out</button>
       </div>
 
+      <div className="card space-y-4 p-6">
+        <h2 className="text-lg font-bold">Your data</h2>
+        <p className="text-sm text-muted">Download everything linked to your account (profile, sessions, newsletter status, quotes and ratings) as a JSON file.</p>
+        <a href="/api/account/export" download className="btn btn-secondary">Download my data</a>
+      </div>
+
       <div className="card space-y-4 border-danger/30 p-6">
         <h2 className="text-lg font-bold">Delete account</h2>
         <p className="text-sm text-muted">

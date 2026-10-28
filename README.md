@@ -6,24 +6,33 @@ Next.js 16 (App Router) + PostgreSQL on [Bun](https://bun.sh), self-hosted with 
 
 ```bash
 bun install
-bun run db:dev        # starts Postgres in Docker on 127.0.0.1:5432 and applies the migrations
-bun run dev           # http://localhost:3000
+bun run db:dev:local   # terminal 1: Docker-free Postgres on 127.0.0.1:5432, data kept in ./.pglite
+bun run dev            # terminal 2: http://localhost:3000
 ```
 
-`.env.local` needs `DATABASE_URL`, `SITE_URL` and `BETTER_AUTH_SECRET` (see `.env.example`). Without Docker, point
-`DATABASE_URL` at any Postgres and run `bun run db:migrate`. With `MAIL_TRANSPORT=log` sign-in emails are printed
-in the dev server's terminal instead of being sent. Set `ADMIN_EMAILS` to get the admin role on first sign-in.
+With Docker installed you can use `bun run db:dev` instead (Postgres in a container). Either way the same migrations run,
+and `.env.local` needs `DATABASE_URL`, `SITE_URL` and `BETTER_AUTH_SECRET` (see `.env.example`). With any other Postgres,
+point `DATABASE_URL` at it and run `bun run db:migrate`. With `MAIL_TRANSPORT=log` sign-in emails are printed in the dev
+server's terminal instead of being sent. Set `ADMIN_EMAILS` to get the admin role on first sign-in.
 
 `dev` deliberately runs on Node: Next's dev tooling is not fully supported on Bun's runtime (slow, noisy
 source-map errors). Production builds and the Docker image run on Bun.
 
 ## Deploy to the VPS
 
+GitHub Actions (`.github/workflows/ci.yml`) lints, builds and typechecks every push and pull request. On pushes to
+`master` it also builds the Docker image and publishes it to `ghcr.io/mteij/mastatine` (tags `latest` and the short
+commit hash). The VPS only pulls it; nothing is compiled there.
+
 ```bash
 git clone <repo> && cd mastatine
-cp .env.example .env     # fill in every value; compose refuses to start without the required ones
-docker compose up -d --build
+cp .env.example .env           # fill in the required values (compose refuses to start without them)
+docker compose pull
+docker compose up -d
 ```
+
+If the repository or package is private, log in once on the VPS with a token that has `read:packages`:
+`echo $TOKEN | docker login ghcr.io -u <github-user> --password-stdin`.
 
 Migrations run automatically on every container start. The app listens on `127.0.0.1:3000`; point your existing reverse
 proxy at it and make sure it **overwrites** `X-Forwarded-For` (rate limits trust it) and sets `Host`. Example Caddy block:
@@ -34,7 +43,18 @@ mastatine.nl {
 }
 ```
 
-Data lives in named volumes: `pgdata` (database), `uploads` (tower photos) and `imgcache`. Back up the first two.
+All settings are runtime environment variables (see `.env.example`), including `SHOP_URL`: change one and run
+`docker compose up -d`, no rebuild needed. Data lives in named volumes: `pgdata` (database), `uploads` (tower photos)
+and `imgcache`. Back up the first two.
+
+### Updating and rolling back
+
+```bash
+docker compose pull && docker compose up -d                 # latest build from master
+MASTATINE_IMAGE=ghcr.io/mteij/mastatine:<short-sha> docker compose up -d   # pin an earlier build
+```
+
+To build the image on the VPS instead (no registry), use `docker compose up -d --build`.
 
 ### First admin
 
@@ -73,8 +93,3 @@ docker compose exec -e SOURCE_DATABASE_URL=... -e TARGET_DATABASE_URL=postgresql
 
 It copies towers and votes and downloads every image into the `uploads` volume. Re-running is safe.
 
-### Updating
-
-```bash
-git pull && docker compose up -d --build
-```

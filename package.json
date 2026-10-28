@@ -7,7 +7,8 @@
     "build": "bun --bun next build",
     "lint": "eslint",
     "db:dev": "POSTGRES_PASSWORD=dev docker compose -f docker-compose.yml -f compose.dev.yaml up -d --wait db && DATABASE_URL=postgresql://mastatine:dev@127.0.0.1:5432/mastatine bun scripts/migrate.mjs",
-    "db:migrate": "bun scripts/migrate.mjs"
+    "db:migrate": "bun scripts/migrate.mjs",
+    "db:dev:local": "bun scripts/dev-db.mjs"
   },
   "dependencies": {
     "bad-words": "^4.0.0",
@@ -22,6 +23,8 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.12",
+    "@electric-sql/pglite-socket": "0.2.15",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/nodemailer": "^8.0.2",

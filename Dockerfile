@@ -9,9 +9,6 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-# NEXT_PUBLIC_* values are inlined at build time.
-ARG NEXT_PUBLIC_SHOP_URL
-ENV NEXT_PUBLIC_SHOP_URL=$NEXT_PUBLIC_SHOP_URL
 RUN bun --bun next build
 
 FROM oven/bun:1-slim AS runner

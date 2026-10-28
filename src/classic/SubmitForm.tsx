@@ -295,6 +295,11 @@ export default function SubmitForm({ onSuccess }: SubmitFormProps = {}) {
         </div>
       )}
 
+      <p className="text-xs text-slate-500">
+        Your name, title, description and photo will be shown publicly. Only upload photos you may share. See the{" "}
+        <a href="/privacy" className="underline">privacy page</a> and <a href="/terms" className="underline">site rules</a>.
+      </p>
+
       <button
         type="submit"
         disabled={isLoading || isProfane}

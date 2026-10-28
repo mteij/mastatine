@@ -23,7 +23,6 @@ export const NEWS: NewsPost[] = [
     date: "2026-08-28",
     summary: "After a well-deserved summer, the towers are climbing again.",
     body: [
-      "We are sooooo BACK.",
       "After a well-deserved summer, S.A. Mastatine is back in full force. New masts, new votes, new Mast of the Month glory: the towers are climbing again and we could not be more hyped for the new academic year.",
       "Get your entries in and rally your housemates. Let's make this the best masting season yet.",
       "Op de hoge masten,",

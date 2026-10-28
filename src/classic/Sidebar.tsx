@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import MastatineLogo from "./MastatineLogo";
-import { SHOP_URL } from "@/lib/shop";
 import SidebarAccount from "./SidebarAccount";
+import NewsletterForm from "@/components/NewsletterForm";
 
 interface NavItem {
   label: string;
@@ -14,7 +14,8 @@ interface NavItem {
   children?: NavItem[];
 }
 
-const NAV: NavItem[] = [
+function buildNav(shopUrl: string | null): NavItem[] {
+  return [
   { label: "Home", href: "/" },
   { label: "News", href: "/news" },
   {
@@ -29,10 +30,10 @@ const NAV: NavItem[] = [
     ],
   },
   { label: "MastApps", href: "/mastapps" },
-  ...(SHOP_URL ? [{ label: "Shop", href: SHOP_URL, external: true }] : []),
-  { label: "Newsletter", href: "/newsletter" },
+  ...(shopUrl ? [{ label: "Shop", href: shopUrl, external: true }] : []),
   { label: "Contact", href: "/contact" },
-];
+  ];
+}
 
 function NavNode({ item, depth = 0, onNavigate }: { item: NavItem; depth?: number; onNavigate?: () => void }) {
   const [open, setOpen] = useState(false);
@@ -44,7 +45,7 @@ function NavNode({ item, depth = 0, onNavigate }: { item: NavItem; depth?: numbe
 
   return (
     <li style={{ position: "relative", display: "block", float: "none", clear: "both" }}>
-      <div style={{ display: "flex", alignItems: "center" }}>
+      <div data-navrow style={{ display: "flex", alignItems: "center" }}>
         <Tag
           href={has ? undefined : item.href}
           className="nav-link"
@@ -68,7 +69,7 @@ function NavNode({ item, depth = 0, onNavigate }: { item: NavItem; depth?: numbe
             cursor: "pointer",
             userSelect: "none",
             flex: 1,
-            paddingLeft: `${0.3 + depth * 1.1}em`,
+            paddingLeft: `${0.9 + depth * 1.1}em`,
             textDecoration: "none",
             transition: "color .3s",
             maxWidth: has ? "calc(100% - 3em)" : "100%",
@@ -89,27 +90,15 @@ function NavNode({ item, depth = 0, onNavigate }: { item: NavItem; depth?: numbe
         </Tag>
         {has && (
           <button
+            type="button"
+            className="nav-toggle"
             onClick={() => setOpen((o) => !o)}
-            style={{
-              display: "inline-block",
-              float: "right",
-              border: 0,
-              padding: 0,
-              cursor: "pointer",
-              background: "transparent",
-              opacity: 0.75,
-              fontSize: "1em",
-              color: "inherit",
-              width: "3em",
-              height: "3em",
-              lineHeight: "3em",
-              textAlign: "center",
-              transition: ".6s all ease-in-out",
-              transform: open ? "rotateX(-180deg)" : "rotateX(0)",
-            }}
-            aria-label={open ? "Close submenu" : "Open submenu"}
+            aria-expanded={open}
+            aria-label={`${open ? "Close" : "Open"} ${item.label} submenu`}
           >
-            ▾
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden style={{ transform: open ? "rotate(180deg)" : "none" }}>
+              <path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </button>
         )}
       </div>
@@ -124,7 +113,65 @@ function NavNode({ item, depth = 0, onNavigate }: { item: NavItem; depth?: numbe
   );
 }
 
-export default function Sidebar() {
+/** Menu list with one highlight pill that glides to the hovered/focused row and rests on the current page. */
+function NavList({ items, onNavigate }: { items: NavItem[]; onNavigate: () => void }) {
+  const listRef = useRef<HTMLUListElement>(null);
+  const pillRef = useRef<HTMLSpanElement>(null);
+  const pathname = usePathname();
+
+  const moveTo = useCallback((row: HTMLElement | null) => {
+    const list = listRef.current;
+    const pill = pillRef.current;
+    if (!list || !pill) return;
+    if (!row) {
+      pill.style.opacity = "0";
+      return;
+    }
+    const listBox = list.getBoundingClientRect();
+    const rowBox = row.getBoundingClientRect();
+    pill.style.opacity = "1";
+    pill.style.height = `${rowBox.height}px`;
+    pill.style.transform = `translateY(${rowBox.top - listBox.top}px)`;
+  }, []);
+
+  const rest = useCallback(() => {
+    const active = listRef.current?.querySelector<HTMLElement>('.nav-link[data-active="true"]');
+    moveTo(active?.closest<HTMLElement>("[data-navrow]") ?? null);
+  }, [moveTo]);
+
+  const rowOf = (target: EventTarget) =>
+    target instanceof Element ? target.closest<HTMLElement>("[data-navrow]") : null;
+
+  // Settle on the current page after navigation, and whenever a submenu opens or the list resizes.
+  useLayoutEffect(() => {
+    rest();
+    const list = listRef.current;
+    if (!list) return;
+    const observer = new ResizeObserver(rest);
+    observer.observe(list);
+    return () => observer.disconnect();
+  }, [pathname, rest]);
+
+  return (
+    <ul
+      id="prime_nav"
+      ref={listRef}
+      className="nav-list"
+      style={{ listStyle: "none", padding: 0, margin: 0 }}
+      onMouseOver={(e) => moveTo(rowOf(e.target))}
+      onMouseLeave={rest}
+      onFocus={(e) => moveTo(rowOf(e.target))}
+      onBlur={rest}
+    >
+      <span ref={pillRef} className="nav-pill" aria-hidden />
+      {items.map((item) => (
+        <NavNode key={item.label} item={item} onNavigate={onNavigate} />
+      ))}
+    </ul>
+  );
+}
+
+export default function Sidebar({ shopUrl }: { shopUrl: string | null }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
 
@@ -217,24 +264,26 @@ export default function Sidebar() {
                 <span>Menu</span>
               </h3>
               <div>
-                <ul id="prime_nav" style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                  {NAV.map((item) => (
-                    <NavNode key={item.label} item={item} onNavigate={() => setMobileOpen(false)} />
-                  ))}
-                </ul>
+                <NavList items={buildNav(shopUrl)} onNavigate={() => setMobileOpen(false)} />
               </div>
             </nav>
 
             {/* ── spacer ── */}
             <div style={{ flex: 1 }} />
 
-            {/* ── NEWSLETTER / ACCOUNT WIDGET ── */}
-            <div className="widget-container" style={{ borderTop: "1px solid #eee", paddingTop: "1em", marginTop: "1em" }}>
-              <h3 className="widget-title"><span>Stay in the loop</span></h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.4em", alignItems: "center", fontSize: "0.9em" }}>
-                <a href="/newsletter" style={{ fontWeight: 700 }}>Subscribe to the newsletter</a>
-                <SidebarAccount />
-              </div>
+            {/* ── NEWSLETTER CARD + ACCOUNT ── */}
+            <section className="loop-card" aria-labelledby="loop-title">
+              <span className="loop-card__icon" aria-hidden>
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 6h16v12H4zM4 7l8 6 8-6" />
+                </svg>
+              </span>
+              <h3 id="loop-title" className="loop-card__title">Stay in the loop</h3>
+              <p className="loop-card__text">The best masts and news, four times a year.</p>
+              <NewsletterForm layout="stacked" compact />
+            </section>
+            <div className="loop-account">
+              <SidebarAccount />
             </div>
 
             {/* ── SEARCH WIDGET (mobile only — desktop search lives in the sort row) ── */}
@@ -297,6 +346,7 @@ export default function Sidebar() {
               <div id="footer-inside">
                 <nav id="sfooter" aria-label="Legal" style={{ display: "flex", justifyContent: "center", gap: "1em", flexWrap: "wrap", fontSize: ".9em", margin: "0 0 .8em" }}>
                   <a href="/privacy">Privacy</a>
+                  <a href="/terms">Site rules</a>
                   <a href="/contact">Contact</a>
                   <a href="/about#disclaimer">Disclaimer</a>
                 </nav>

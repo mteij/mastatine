@@ -46,8 +46,6 @@ const nextConfig: NextConfig = {
       { source: "/towers", destination: "/#towers", permanent: false },
       { source: "/towers/:id", destination: "/#towers", permanent: false },
       { source: "/submit", destination: "/#towers", permanent: false },
-      // The in-between merch page is gone: /shop forwards to the external shop, or home when none is set.
-      { source: "/shop", destination: process.env.NEXT_PUBLIC_SHOP_URL?.trim() || "/", permanent: false },
     ];
   },
   images: {
