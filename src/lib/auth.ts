@@ -3,6 +3,7 @@ import { admin, magicLink } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 import { Pool } from "pg";
 import { requireEnv, siteUrl } from "@/lib/env";
+import sql from "@/lib/db";
 import { sendMail } from "@/lib/mailer";
 import { magicLinkEmail } from "@/lib/email-templates";
 import { allowMagicLinkFor } from "@/lib/magic-link-limit";
@@ -57,6 +58,17 @@ function createAuth() {
       },
     },
     databaseHooks: {
+      session: {
+        create: {
+          // Addresses added to ADMIN_EMAILS later are promoted at their next sign-in (the link proves the address is theirs).
+          after: async (session) => {
+            const [row] = await sql<{ email: string; role: string }[]>`SELECT email, role FROM "user" WHERE id = ${session.userId}`;
+            if (row && row.role !== "admin" && adminEmails().has(row.email.toLowerCase())) {
+              await sql`UPDATE "user" SET role = 'admin' WHERE id = ${session.userId}`;
+            }
+          },
+        },
+      },
       user: {
         create: {
           // Users are only created once an emailed magic link is opened, so the address is verified.
