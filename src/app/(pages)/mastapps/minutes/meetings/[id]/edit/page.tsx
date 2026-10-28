@@ -4,13 +4,13 @@ import ConfirmButton from "@/components/admin/ConfirmButton";
 import { toLocalInput } from "@/lib/datetime";
 import { deleteMeeting, updateMeeting } from "../../../actions";
 import MeetingFields from "../../MeetingFields";
-import { loadMeeting } from "../access";
+import { loadEditableMeeting } from "../access";
 
 export const metadata: Metadata = { title: "Meeting details", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 export default async function EditMeetingPage(props: { params: Promise<{ id: string }> }) {
-  const { meeting } = await loadMeeting(props.params);
+  const { meeting } = await loadEditableMeeting(props.params);
 
   return (
     <AppFrame title="Meeting details" tagline={meeting.committee_name}>

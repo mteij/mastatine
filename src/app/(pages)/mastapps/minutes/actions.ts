@@ -7,7 +7,7 @@ import sql from "@/lib/db";
 import { isCommitteeMember } from "@/lib/committees";
 import { fromLocalInput } from "@/lib/datetime";
 import { LOCK_SECONDS } from "@/lib/minutes-live";
-import { parseAgenda } from "@/lib/meetings";
+import { parseAgenda, type MeetingStatus } from "@/lib/meetings";
 import { getSession } from "@/lib/session";
 
 const BASE = "/mastapps/minutes";
@@ -21,9 +21,18 @@ async function requireSignedIn() {
 
 async function requireMeetingAccess(meetingId: string) {
   const session = await requireSignedIn();
-  const [meeting] = await sql<{ committee_id: string }[]>`SELECT committee_id FROM meetings WHERE id = ${meetingId}`;
+  const [meeting] = await sql<{ committee_id: string; minutes_status: MeetingStatus }[]>`
+    SELECT committee_id, minutes_status FROM meetings WHERE id = ${meetingId}
+  `;
   if (!meeting || !(await isCommitteeMember(session.user, meeting.committee_id))) redirect(BASE);
-  return { session, committeeId: meeting.committee_id };
+  return { session, committeeId: meeting.committee_id, status: meeting.minutes_status };
+}
+
+/** Like requireMeetingAccess, but a locked meeting cannot be changed: the caller is sent back to read it. */
+async function requireEditableMeeting(meetingId: string) {
+  const access = await requireMeetingAccess(meetingId);
+  if (access.status === "locked") redirect(`${BASE}/meetings/${meetingId}`);
+  return access;
 }
 
 function refresh(meetingId?: string) {
@@ -67,7 +76,7 @@ export async function createMeeting(formData: FormData) {
 
 export async function updateMeeting(formData: FormData) {
   const id = uuid.parse(formData.get("id"));
-  await requireMeetingAccess(id);
+  await requireEditableMeeting(id);
   const data = meetingDetails.parse(Object.fromEntries(formData));
   await sql`UPDATE meetings SET title = ${data.title}, location = ${data.location}, starts_at = ${data.starts_at} WHERE id = ${id}`;
   refresh(id);
@@ -76,7 +85,9 @@ export async function updateMeeting(formData: FormData) {
 
 export async function deleteMeeting(formData: FormData) {
   const id = uuid.parse(formData.get("id"));
-  await requireMeetingAccess(id);
+  const { session, status } = await requireMeetingAccess(id);
+  // A locked meeting is a record: only an admin may remove it.
+  if (status === "locked" && session.user.role !== "admin") redirect(`${BASE}/meetings/${id}`);
   await sql`DELETE FROM meetings WHERE id = ${id}`;
   refresh();
   redirect(`${BASE}/meetings`);
@@ -87,7 +98,7 @@ export async function deleteMeeting(formData: FormData) {
 /** Rewrites the agenda from one line per item, keeping the notes of items whose title is unchanged. */
 export async function saveAgenda(formData: FormData) {
   const id = uuid.parse(formData.get("id"));
-  await requireMeetingAccess(id);
+  await requireEditableMeeting(id);
   const agenda = parseAgenda(String(formData.get("agenda") ?? ""));
 
   await sql.begin(async (tx) => {
@@ -104,23 +115,33 @@ export async function saveAgenda(formData: FormData) {
   redirect(`${BASE}/meetings/${id}`);
 }
 
-const statusSchema = z.enum(["todo", "draft", "done"]);
+const statusSchema = z.enum(["open", "done", "locked"]);
 
-export async function setMinutesStatus(meetingId: string, status: string): Promise<void> {
+/** Marks a meeting open, done or locked. Once locked, only an admin can change it again. */
+export async function setMeetingStatus(meetingId: string, status: string): Promise<void> {
   const id = uuid.parse(meetingId);
-  await requireMeetingAccess(id);
-  await sql`UPDATE meetings SET minutes_status = ${statusSchema.parse(status)} WHERE id = ${id}`;
+  const { session } = await requireMeetingAccess(id);
+  const next = statusSchema.parse(status);
+  const isAdmin = session.user.role === "admin";
+
+  // One statement, so a lock cannot be undone by a request that raced it.
+  const changed = await sql`
+    UPDATE meetings SET minutes_status = ${next}
+    WHERE id = ${id} AND (minutes_status <> 'locked' OR minutes_status = ${next} OR ${isAdmin}) RETURNING id
+  `;
+  if (changed.length === 0) throw new Error("Only an admin can reopen a locked meeting.");
+  if (next === "locked") await sql`UPDATE meeting_items SET locked_by = NULL, locked_at = NULL WHERE meeting_id = ${id}`;
   refresh(id);
 }
 
 /** Loads an item and checks the caller may edit its meeting. */
 async function requireItemAccess(itemId: string) {
   const session = await requireSignedIn();
-  const [row] = await sql<{ meeting_id: string; committee_id: string }[]>`
-    SELECT i.meeting_id, m.committee_id FROM meeting_items i JOIN meetings m ON m.id = i.meeting_id WHERE i.id = ${itemId}
+  const [row] = await sql<{ meeting_id: string; committee_id: string; minutes_status: MeetingStatus }[]>`
+    SELECT i.meeting_id, m.committee_id, m.minutes_status FROM meeting_items i JOIN meetings m ON m.id = i.meeting_id WHERE i.id = ${itemId}
   `;
   if (!row || !(await isCommitteeMember(session.user, row.committee_id))) throw new Error("Not allowed.");
-  return { userId: session.user.id, meetingId: row.meeting_id };
+  return { userId: session.user.id, meetingId: row.meeting_id, locked: row.minutes_status === "locked" };
 }
 
 /** The lock is free, expired or already ours. Used by both locking and saving so they cannot disagree. */
@@ -130,7 +151,8 @@ const lockAvailable = (userId: string) =>
 /** Takes or renews the lock on one item. Returns false when a colleague holds it. */
 export async function acquireItemLock(itemId: string): Promise<boolean> {
   const id = uuid.parse(itemId);
-  const { userId } = await requireItemAccess(id);
+  const { userId, locked } = await requireItemAccess(id);
+  if (locked) return false;
   const rows = await sql`
     UPDATE meeting_items SET locked_by = ${userId}, locked_at = NOW()
     WHERE id = ${id} AND ${lockAvailable(userId)} RETURNING id
@@ -147,7 +169,8 @@ export async function releaseItemLock(itemId: string): Promise<void> {
 /** Autosave: only succeeds while the caller holds (or can take) the lock, so two people never overwrite each other. */
 export async function saveItemNotes(itemId: string, notes: string): Promise<boolean> {
   const id = uuid.parse(itemId);
-  const { userId, meetingId } = await requireItemAccess(id);
+  const { userId, meetingId, locked } = await requireItemAccess(id);
+  if (locked) return false;
   const rows = await sql`
     UPDATE meeting_items SET notes = ${notes.slice(0, 10000)}, locked_by = ${userId}, locked_at = NOW()
     WHERE id = ${id} AND ${lockAvailable(userId)} RETURNING id
@@ -168,7 +191,7 @@ const actionSchema = z.object({
 
 export async function addAction(formData: FormData) {
   const data = actionSchema.parse(Object.fromEntries(formData));
-  const { committeeId } = await requireMeetingAccess(data.id);
+  const { committeeId } = await requireEditableMeeting(data.id);
   if (data.assignee_id) {
     const [member] = await sql`SELECT 1 FROM committee_members WHERE committee_id = ${committeeId} AND user_id = ${data.assignee_id}`;
     if (!member) throw new Error("Action points can only go to committee members.");
@@ -182,8 +205,9 @@ export async function addAction(formData: FormData) {
 
 async function requireActionAccess(actionId: string) {
   const session = await requireSignedIn();
-  const [row] = await sql<{ committee_id: string; meeting_id: string; assignee_id: string | null }[]>`
-    SELECT committee_id, meeting_id, assignee_id FROM action_points WHERE id = ${actionId}
+  const [row] = await sql<{ committee_id: string; meeting_id: string; assignee_id: string | null; meeting_status: MeetingStatus }[]>`
+    SELECT a.committee_id, a.meeting_id, a.assignee_id, m.minutes_status AS meeting_status
+    FROM action_points a JOIN meetings m ON m.id = a.meeting_id WHERE a.id = ${actionId}
   `;
   if (!row) redirect(BASE);
   const allowed = row.assignee_id === session.user.id || (await isCommitteeMember(session.user, row.committee_id));
@@ -204,6 +228,7 @@ export async function deleteAction(formData: FormData) {
   // Assignees may tick their own points off, but only committee members may remove them.
   const session = await requireSignedIn();
   if (!(await isCommitteeMember(session.user, row.committee_id))) redirect(BASE);
+  if (row.meeting_status === "locked") redirect(`${BASE}/meetings/${row.meeting_id}`);
   await sql`DELETE FROM action_points WHERE id = ${id}`;
   refresh(row.meeting_id);
 }

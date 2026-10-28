@@ -2,21 +2,22 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AUTOSAVE_MS, HEARTBEAT_MS, POLL_MS, itemLabels } from "@/lib/minutes-live";
-import type { LiveItem, MinutesStatus } from "@/lib/meetings";
-import { acquireItemLock, releaseItemLock, saveItemNotes, setMinutesStatus } from "./actions";
+import type { LiveItem, MeetingStatus } from "@/lib/meetings";
+import { acquireItemLock, releaseItemLock, saveItemNotes, setMeetingStatus } from "./actions";
 
 interface MinutesEditorProps {
   meetingId: string;
   initialItems: LiveItem[];
-  initialStatus: MinutesStatus;
+  initialStatus: MeetingStatus;
+  isAdmin: boolean;
 }
 
 type SaveState = "saved" | "saving" | "rejected" | "error";
 
-const STATUSES: { value: MinutesStatus; label: string }[] = [
-  { value: "todo", label: "to do" },
-  { value: "draft", label: "draft" },
-  { value: "done", label: "done" },
+const STATUSES: { value: MeetingStatus; label: string }[] = [
+  { value: "open", label: "Open" },
+  { value: "done", label: "Done" },
+  { value: "locked", label: "Locked (read-only)" },
 ];
 
 const SAVE_TEXT: Record<SaveState, string> = {
@@ -30,7 +31,7 @@ const SAVE_TEXT: Record<SaveState, string> = {
  * Minutes with autosave. Focusing an item takes a short lock that is renewed while you stay in it; colleagues see the item
  * disabled with your name. The server enforces the lock, so a stale tab can never overwrite someone else's text.
  */
-export default function MinutesEditor({ meetingId, initialItems, initialStatus }: MinutesEditorProps) {
+export default function MinutesEditor({ meetingId, initialItems, initialStatus, isAdmin }: MinutesEditorProps) {
   const [items, setItems] = useState(initialItems);
   const [status, setStatus] = useState(initialStatus);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -46,7 +47,7 @@ export default function MinutesEditor({ meetingId, initialItems, initialStatus }
       try {
         const res = await fetch(`/api/minutes/${meetingId}/live`, { cache: "no-store", signal: controller.signal });
         if (!res.ok) return;
-        const data: { status: MinutesStatus; items: LiveItem[] } = await res.json();
+        const data: { status: MeetingStatus; items: LiveItem[] } = await res.json();
         setItems(data.items);
         setStatus(data.status);
       } catch {
@@ -109,25 +110,34 @@ export default function MinutesEditor({ meetingId, initialItems, initialStatus }
     await releaseItemLock(id).catch(() => {});
   }
 
-  async function onStatus(next: MinutesStatus) {
+  async function onStatus(next: MeetingStatus) {
+    const previous = status;
     setStatus(next);
     try {
-      await setMinutesStatus(meetingId, next);
+      await setMeetingStatus(meetingId, next);
     } catch {
+      setStatus(previous);
       setSaveState("error");
     }
   }
 
   const labels = itemLabels(items);
+  const locked = status === "locked";
 
   return (
     <div className="space-y-5">
+      {locked && (
+        <p role="status" className="rounded-xl bg-soft px-4 py-3 text-sm font-bold">
+          This meeting is locked. {isAdmin ? "You can reopen it below." : "Only an admin can reopen it."}
+        </p>
+      )}
       <p role="status" aria-live="polite" className={`text-sm ${saveState === "saved" || saveState === "saving" ? "text-muted" : "font-bold text-danger"}`}>
         {SAVE_TEXT[saveState]}
       </p>
 
       {items.map((item, i) => {
         const lockedByOther = item.locked_by_name !== null;
+        const readOnly = lockedByOther || locked;
         return (
           <div key={item.id} className={`card p-5 ${item.level === 1 ? "ml-6 sm:ml-10" : ""}`}>
             <label className="label font-bold text-accent-text" htmlFor={`notes-${item.id}`}>
@@ -138,7 +148,7 @@ export default function MinutesEditor({ meetingId, initialItems, initialStatus }
               id={`notes-${item.id}`}
               className="input min-h-24"
               maxLength={10000}
-              disabled={lockedByOther}
+              disabled={readOnly}
               value={drafts[item.id] ?? item.notes}
               onChange={(e) => onChange(item.id, e.target.value)}
               onFocus={() => void onFocus(item.id)}
@@ -149,8 +159,8 @@ export default function MinutesEditor({ meetingId, initialItems, initialStatus }
       })}
 
       <div className="card flex flex-wrap items-center gap-4 p-5">
-        <label className="font-bold" htmlFor="status">Minutes status</label>
-        <select id="status" className="input !w-auto" value={status} onChange={(e) => void onStatus(e.target.value as MinutesStatus)}>
+        <label className="font-bold" htmlFor="status">Meeting status</label>
+        <select id="status" className="input !w-auto" value={status} disabled={locked && !isAdmin} onChange={(e) => void onStatus(e.target.value as MeetingStatus)}>
           {STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
       </div>

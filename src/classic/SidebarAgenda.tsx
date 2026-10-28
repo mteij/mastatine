@@ -36,7 +36,7 @@ export default async function SidebarAgenda() {
         </ul>
       )}
       <Link href="/mastapps/activities" className="agenda__all">All activities &rarr;</Link>
-      <CalendarSubscribe />
+      <CalendarSubscribe className="cal-btn--inline cal-btn--quiet" />
     </section>
   );
 }

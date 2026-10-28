@@ -1072,7 +1072,8 @@ blockquote::before, blockquote::after { content: ""; content: none; }
   @media (min-width: 1024px) {
     #sidebar { margin: 15px 0 0 15px; border-radius: var(--radius); }
   }
-  #colophon { border-top: 0; border-radius: var(--radius) var(--radius) 0 0; }
+  /* Flush under the newsletter band: rounded top corners would show the orange page behind as a speck. */
+  #colophon { border-top: 0; border-radius: 0; }
   .hero-carousel { border-radius: var(--radius); box-shadow: var(--shadow-md); }
   .btn,
   .input,
@@ -1206,6 +1207,12 @@ blockquote::before, blockquote::after { content: ""; content: none; }
   .dash .card { border: 1.5px solid #c9ced6; box-shadow: 0 1px 2px rgb(10 20 40 / 0.08), 0 8px 20px -10px rgb(10 20 40 / 0.25); }
   .dash a.card { transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s; }
   .dash a.card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: var(--shadow-md); }
+  /* Agenda editor row buttons */
+  .agenda-btn { display: grid; width: 2.25rem; height: 2.5rem; place-items: center; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; transition: background-color 0.15s, color 0.15s; }
+  .agenda-btn:hover:not(:disabled) { background: var(--accent-soft); color: var(--accent-text); }
+  .agenda-btn--danger:hover:not(:disabled) { background: rgb(185 28 28 / 0.1); color: var(--danger); }
+  .agenda-btn:disabled { opacity: 0.3; cursor: default; }
+  @media (max-width: 480px) { .agenda-btn { width: 2rem; } }
   .dash-back { display: flex; align-items: center; gap: 0.45rem; margin: 0.5rem 0; padding: 0.4rem 0.9rem 0.4rem 0.7rem; border: 1px solid #f1dcc6; border-radius: 999px; background: #fff8f0; color: #c2570c; font-size: 0.95rem; font-weight: 800; white-space: nowrap; transition: background-color 0.15s, border-color 0.15s, color 0.15s; }
   .dash-back:hover { border-color: #f57f20; background: #fff1e4; color: #c2570c; }
   .dash-head { display: block; margin-bottom: 1.75rem; }
@@ -1252,6 +1259,9 @@ blockquote::before, blockquote::after { content: ""; content: none; }
   .cal-btn:hover { border-color: var(--accent); color: var(--accent-text); }
   /* Quiet text-link variant for page headers */
   .cal-btn--inline { width: auto; margin: 0; padding: 0.3rem 0.1rem; border-color: transparent; background: transparent; color: var(--accent-text); font-size: 0.95rem; }
+  /* Even quieter, centred: for the sidebar agenda */
+  .cal-btn--quiet { width: 100%; justify-content: center; margin-top: 0.15rem; color: var(--muted); font-size: 0.85rem; font-weight: 700; }
+  .cal-btn--quiet svg { width: 14px; height: 14px; }
   .cal-btn--inline:hover { border-color: transparent; color: var(--accent-hover); text-decoration: underline; text-underline-offset: 3px; }
   .cal-dialog { width: min(24rem, calc(100vw - 2rem)); margin: auto; padding: 0; border: 0; border-radius: 18px; background: #fff; color: var(--ink); box-shadow: 0 30px 80px -20px rgb(0 0 0 / 0.5); }
   .cal-dialog::backdrop { background: rgb(0 0 0 / 0.5); backdrop-filter: blur(3px); }

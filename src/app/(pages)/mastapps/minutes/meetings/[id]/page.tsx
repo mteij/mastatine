@@ -3,17 +3,19 @@ import Link from "next/link";
 import AppFrame from "@/components/ui/AppFrame";
 import { displayName, getCommitteePeople } from "@/lib/committees";
 import { formatDateTime } from "@/lib/datetime";
-import { STATUS_LABEL, getItems, getMeetingActions, itemLabels } from "@/lib/meetings";
+import { getItems, getMeetingActions, itemLabels } from "@/lib/meetings";
 import { addAction } from "../../actions";
 import ActionList from "../../ActionList";
 import LiveRefresh from "../../LiveRefresh";
+import MeetingStatusBar from "../../MeetingStatusBar";
 import { loadMeeting } from "./access";
 
 export const metadata: Metadata = { title: "Meeting", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 export default async function MeetingPage(props: { params: Promise<{ id: string }> }) {
-  const { meeting } = await loadMeeting(props.params);
+  const { user, meeting } = await loadMeeting(props.params);
+  const locked = meeting.minutes_status === "locked";
   const [items, actions, people] = await Promise.all([getItems(meeting.id), getMeetingActions(meeting.id), getCommitteePeople(meeting.committee_id)]);
   const labels = itemLabels(items);
   const base = `/mastapps/minutes/meetings/${meeting.id}`;
@@ -21,11 +23,15 @@ export default async function MeetingPage(props: { params: Promise<{ id: string 
   return (
     <AppFrame title={meeting.title} tagline={`${meeting.committee_name} · ${formatDateTime(meeting.starts_at)}${meeting.location ? ` @${meeting.location}` : ""}`}>
       <LiveRefresh />
-      <div className="mb-6 flex flex-wrap items-center gap-2">
-        <Link href={`${base}/agenda`} className="btn btn-secondary btn-sm">Edit agenda</Link>
-        <Link href={`${base}/minutes`} className="btn btn-secondary btn-sm">Edit minutes</Link>
-        <Link href={`${base}/edit`} className="btn btn-secondary btn-sm">Details</Link>
-        <span className="text-sm text-muted">Minutes status: <em>{STATUS_LABEL[meeting.minutes_status]}</em></span>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        {!locked && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Link href={`${base}/agenda`} className="btn btn-secondary btn-sm">Edit agenda</Link>
+            <Link href={`${base}/minutes`} className="btn btn-secondary btn-sm">Edit minutes</Link>
+            <Link href={`${base}/edit`} className="btn btn-secondary btn-sm">Details</Link>
+          </div>
+        )}
+        <MeetingStatusBar meetingId={meeting.id} status={meeting.minutes_status} isAdmin={user.role === "admin"} />
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[1fr_24rem]">
@@ -45,9 +51,9 @@ export default async function MeetingPage(props: { params: Promise<{ id: string 
         <aside className="space-y-4">
           <section className="card p-5">
             <h2 className="mb-1 text-lg font-extrabold text-accent-text">Action points</h2>
-            <ActionList actions={actions} showAssignee canDelete />
+            <ActionList actions={actions} showAssignee canDelete={!locked} />
           </section>
-          <form action={addAction} className="card space-y-3 p-5">
+          {!locked && <form action={addAction} className="card space-y-3 p-5">
             <h2 className="text-lg font-extrabold">Add action point</h2>
             <input type="hidden" name="id" value={meeting.id} />
             <textarea name="body" aria-label="Action point" className="input" required maxLength={500} placeholder="What needs to happen?" />
@@ -60,7 +66,7 @@ export default async function MeetingPage(props: { params: Promise<{ id: string 
               <input id="deadline" name="deadline" type="date" className="input" />
             </div>
             <button type="submit" className="btn btn-primary">Add</button>
-          </form>
+          </form>}
         </aside>
       </div>
     </AppFrame>

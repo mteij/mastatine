@@ -1,7 +1,8 @@
 import sql from "@/lib/db";
 import { LOCK_SECONDS } from "@/lib/minutes-live";
 
-export type MinutesStatus = "todo" | "draft" | "done";
+/** Open: being worked on. Done: held and finished. Locked: read-only; only an admin can reopen it. */
+export type MeetingStatus = "open" | "done" | "locked";
 
 export interface Meeting {
   id: string;
@@ -10,7 +11,8 @@ export interface Meeting {
   title: string;
   starts_at: Date;
   location: string;
-  minutes_status: MinutesStatus;
+  /** The meeting's status (the column predates the open/done/locked statuses and kept its name). */
+  minutes_status: MeetingStatus;
 }
 
 export interface MeetingItem {
@@ -129,7 +131,7 @@ export function parseAgenda(text: string): { level: 0 | 1; title: string }[] {
     .filter((item) => item.title.length > 0);
 }
 
-export const STATUS_LABEL: Record<MinutesStatus, string> = { todo: "to do", draft: "draft", done: "done" };
+export const STATUS_LABEL: Record<MeetingStatus, string> = { open: "open", done: "done", locked: "locked" };
 
 export function formatDeadline(deadline: string | null): string {
   if (!deadline) return "Next meeting";
