@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import type { ReactNode } from "react";
 import type { MastSlide } from "@/lib/types";
 import TowerDetailModal from "./TowerDetailModal";
 import { submitVote, type VoteDirection } from "@/lib/vote";
 
-export default function HeroCarousel({ masts }: { masts: MastSlide[] }) {
+/** `overlay` floats in the top-right corner of the image (the server status chip). */
+export default function HeroCarousel({ masts, overlay }: { masts: MastSlide[]; overlay?: ReactNode }) {
   const mast = masts[0] ?? null;
   const [showModal, setShowModal] = useState(false);
   const [voteDelta, setVoteDelta] = useState(0);
@@ -115,6 +117,12 @@ export default function HeroCarousel({ masts }: { masts: MastSlide[] }) {
             >
               No masts submitted yet — be the first!
             </span>
+          </div>
+        )}
+        {overlay && (
+          // Interacting with the overlay must not open the mast popup that the whole hero is a button for.
+          <div className="absolute right-4 top-4 z-20 max-w-[calc(100%-2rem)]" onClick={(e) => e.stopPropagation()}>
+            {overlay}
           </div>
         )}
       </div>

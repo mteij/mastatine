@@ -59,7 +59,6 @@ export default async function HomePage(
 
   return (
     <>
-      <MinecraftBar />
       <UpcomingActivities />
 
       {/* ── lp-text: intro paragraph ── */}
@@ -85,7 +84,7 @@ export default async function HomePage(
       {/* ── lp-slider: image carousel ── */}
       <section className="lp-slider-overlay" id="home">
         <div className="lp-dynamic-slider">
-          <HeroCarousel masts={mastsOfMonth} />
+          <HeroCarousel masts={mastsOfMonth} overlay={<MinecraftBar />} />
         </div>
       </section>
 
