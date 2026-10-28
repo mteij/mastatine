@@ -1201,9 +1201,13 @@ blockquote::before, blockquote::after { content: ""; content: none; }
   /* ── MastApps dashboard: full screen, a subtle orange top bar over a warm canvas ── */
   .dash { position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; background: #fbf7f2; color: var(--ink); }
   .dash-bar { display: flex; flex-shrink: 0; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.5rem; padding: 0 1.5rem; border-top: 3px solid #f57f20; border-bottom: 1px solid #f1dcc6; background: #fff; box-shadow: 0 1px 10px rgb(245 127 32 / 0.08); }
-  .dash-brand { display: flex; align-items: center; gap: 0.65rem; padding: 0.6rem 0; color: var(--ink); font-size: 1.15rem; font-weight: 800; letter-spacing: -0.01em; }
-  .dash-brand:hover { color: var(--ink); }
-  .dash-brand__icon { display: grid; width: 2.1rem; height: 2.1rem; flex-shrink: 0; place-items: center; border-radius: 10px; background: #fff1e4; color: #c2570c; }
+  /* Cards need to stand out from the warm canvas: a firmer edge and a clearer shadow (same look as the MastApps tiles). */
+  .dash { background: #f6efe6; }
+  .dash .card { border: 1.5px solid #c9ced6; box-shadow: 0 1px 2px rgb(10 20 40 / 0.08), 0 8px 20px -10px rgb(10 20 40 / 0.25); }
+  .dash a.card { transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s; }
+  .dash a.card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: var(--shadow-md); }
+  .dash-back { display: flex; align-items: center; gap: 0.45rem; margin: 0.5rem 0; padding: 0.4rem 0.9rem 0.4rem 0.7rem; border: 1px solid #f1dcc6; border-radius: 999px; background: #fff8f0; color: #c2570c; font-size: 0.95rem; font-weight: 800; white-space: nowrap; transition: background-color 0.15s, border-color 0.15s, color 0.15s; }
+  .dash-back:hover { border-color: #f57f20; background: #fff1e4; color: #c2570c; }
   .dash-head { display: block; margin-bottom: 1.75rem; }
   .tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 1.4rem; margin-bottom: 1.5rem; border-bottom: 1px solid #dfe2e8; }
   .tabs-label { color: var(--muted); font-size: 1rem; font-weight: 700; }
@@ -1224,7 +1228,6 @@ blockquote::before, blockquote::after { content: ""; content: none; }
   .dash-head p { margin: 0.5rem 0 0; color: var(--muted); font-size: 1.15rem; }
   @media (max-width: 767px) {
     .dash-bar { gap: 0 0.5rem; padding: 0 0.75rem; }
-    .dash-brand { padding: 0.5rem 0; }
     .dash-foot { order: 2; }
     .dash-foot a span { display: none; }
     .dash-nav { order: 3; width: 100%; padding-bottom: 0.5rem; overflow-x: auto; }
@@ -1247,6 +1250,9 @@ blockquote::before, blockquote::after { content: ""; content: none; }
   .agenda__all:hover { color: var(--accent-hover); }
   .cal-btn { display: flex; width: 100%; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 0.5rem; padding: 0.55rem 0.75rem; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); font: inherit; font-size: 0.9rem; font-weight: 800; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
   .cal-btn:hover { border-color: var(--accent); color: var(--accent-text); }
+  /* Quiet text-link variant for page headers */
+  .cal-btn--inline { width: auto; margin: 0; padding: 0.3rem 0.1rem; border-color: transparent; background: transparent; color: var(--accent-text); font-size: 0.95rem; }
+  .cal-btn--inline:hover { border-color: transparent; color: var(--accent-hover); text-decoration: underline; text-underline-offset: 3px; }
   .cal-dialog { width: min(24rem, calc(100vw - 2rem)); margin: auto; padding: 0; border: 0; border-radius: 18px; background: #fff; color: var(--ink); box-shadow: 0 30px 80px -20px rgb(0 0 0 / 0.5); }
   .cal-dialog::backdrop { background: rgb(0 0 0 / 0.5); backdrop-filter: blur(3px); }
   .cal-dialog__body { position: relative; padding: 1.5rem; }

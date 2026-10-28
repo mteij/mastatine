@@ -17,8 +17,7 @@ export default async function ActivitiesPage() {
   const activities = await getActivities(session?.user.id ?? null);
 
   return (
-    <AppFrame title="Activities" tagline={session ? "Everything the committees organise. Subscribe and show up." : "Everything the committees organise. Sign in to subscribe."}>
-      <CalendarSubscribe className="mb-6 max-w-xs" />
+    <AppFrame title="Activities" actions={<CalendarSubscribe className="cal-btn--inline" />} tagline={session ? "Everything the committees organise. Subscribe and show up." : "Everything the committees organise. Sign in to subscribe."}>
       {activities.length === 0 ? (
         <p className="py-10 text-center text-muted">No activities yet.</p>
       ) : (
