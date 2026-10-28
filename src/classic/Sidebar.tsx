@@ -172,7 +172,7 @@ function NavList({ items, onNavigate }: { items: NavItem[]; onNavigate: () => vo
   );
 }
 
-export default function Sidebar({ shopUrl }: { shopUrl: string | null }) {
+export default function Sidebar({ shopUrl, agenda }: { shopUrl: string | null; /** Upcoming activities, rendered on the server; desktop only. */ agenda?: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
 
@@ -293,6 +293,8 @@ export default function Sidebar({ shopUrl }: { shopUrl: string | null }) {
                 <NavList items={buildNav(shopUrl)} onNavigate={() => setMobileOpen(false)} />
               </div>
             </nav>
+
+            {agenda && <div className="hidden lg:block">{agenda}</div>}
 
             {/* ── spacer ── */}
             <div style={{ flex: 1 }} />

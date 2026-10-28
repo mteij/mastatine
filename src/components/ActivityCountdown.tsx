@@ -1,8 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 const nowSeconds = () => Math.floor(Date.now() / 1000);
+
+function subscribeToClock(onTick: () => void) {
+  const timer = setInterval(onTick, 1000);
+  return () => clearInterval(timer);
+}
 
 /** "in 3d 4h", "in 2h 15m", "in 5m 10s" or "now", counting down live in the browser. */
 export function formatCountdown(secondsLeft: number): string {
@@ -23,13 +28,8 @@ interface ActivityCountdownProps {
 }
 
 export default function ActivityCountdown({ startsAt, endsAt, fallback }: ActivityCountdownProps) {
-  // null until mounted, so the server render and first client render match and never mismatch on the clock.
-  const [now, setNow] = useState<number | null>(null);
-  useEffect(() => {
-    setNow(nowSeconds());
-    const timer = setInterval(() => setNow(nowSeconds()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+  // null on the server and during hydration, so the first client render matches and never mismatches on the clock.
+  const now = useSyncExternalStore(subscribeToClock, nowSeconds, () => null);
   if (now === null) return <>{fallback}</>;
 
   const start = Math.floor(new Date(startsAt).getTime() / 1000);

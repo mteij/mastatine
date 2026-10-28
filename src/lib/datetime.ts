@@ -50,7 +50,12 @@ export function formatDateTime(date: Date): string {
   return numeric.format(date).replace(/\//g, "-").replace(",", "");
 }
 
-export const formatDayMonth = (date: Date): string => dayMonth.format(date);
+const dayNumber = new Intl.DateTimeFormat("en-GB", { timeZone: TIME_ZONE, day: "numeric" });
+const monthShort = new Intl.DateTimeFormat("en-GB", { timeZone: TIME_ZONE, month: "short" });
+
+export const formatDayNumber = (date: Date): string => dayNumber.format(date);
+export const formatMonthShort = (date: Date): string => monthShort.format(date);
+export const formatDayMonth =(date: Date): string => dayMonth.format(date);
 export const formatTime = (date: Date): string => timeOnly.format(date);
 
 /** YYYY-MM-DD of an instant in the association's time zone. */

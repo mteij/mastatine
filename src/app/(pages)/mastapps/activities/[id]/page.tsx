@@ -144,8 +144,11 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
               By subscribing you are expected at the activity. If you are unable to join, please contact the organising committee or the board.
               If you do not cancel in time, you may still be invoiced the participants&apos; fee or a fine.
             </p>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <Link href="/mastapps/activities" className="btn btn-secondary">Go back</Link>
+              {activity.is_visible && (
+                <a href={`/mastapps/activities/${activity.id}/event.ics`} download className="btn btn-secondary">Add to calendar</a>
+              )}
               {canManage && <Link href={`/mastapps/activities/${activity.id}/edit`} className="btn btn-secondary">Edit</Link>}
             </div>
           </div>

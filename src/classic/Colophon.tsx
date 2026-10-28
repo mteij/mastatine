@@ -1,5 +1,6 @@
 import MastatineLogo from "./MastatineLogo";
 import Link from "next/link";
+import { siteUrl } from "@/lib/env";
 import { getShopUrl } from "@/lib/shop";
 
 export default function Colophon() {
@@ -49,6 +50,7 @@ export default function Colophon() {
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               {[
                 { label: "Newsletter", href: "/newsletter", external: false },
+                { label: "Calendar", href: `${siteUrl()}/calendar.ics`.replace(/^https?:/, "webcal:"), external: false },
                 { label: "Sign in", href: "/login", external: false },
                 ...(shopUrl ? [{ label: "Merch shop", href: shopUrl, external: true }] : []),
               ].map(({ label, href, external }) => (

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Lato } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/classic/Sidebar";
+import SidebarAgenda from "@/classic/SidebarAgenda";
 import Colophon from "@/classic/Colophon";
 import AppShell from "@/classic/AppShell";
 import AnnouncementBar from "@/components/AnnouncementBar";
@@ -49,7 +50,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         >
           Skip to content
         </a>
-        <AppShell shopUrl={getShopUrl()} sidebar={<Sidebar shopUrl={getShopUrl()} />} colophon={<Colophon />} announcement={latestNews && <AnnouncementBar slug={latestNews.slug} title={latestNews.title} summary={latestNews.summary} />}>
+        <AppShell shopUrl={getShopUrl()} sidebar={<Sidebar shopUrl={getShopUrl()} agenda={<SidebarAgenda />} />} colophon={<Colophon />} announcement={latestNews && <AnnouncementBar slug={latestNews.slug} title={latestNews.title} summary={latestNews.summary} />}>
           {children}
         </AppShell>
       </body>

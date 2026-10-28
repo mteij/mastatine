@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import AppFrame from "@/components/ui/AppFrame";
+import CalendarSubscribe from "@/components/CalendarSubscribe";
 import { formatParticipants, getActivities } from "@/lib/activities";
 import { formatDateTime } from "@/lib/datetime";
 import { getSession } from "@/lib/session";
@@ -16,6 +17,7 @@ export default async function ActivitiesPage() {
 
   return (
     <AppFrame title="Activities" tagline={session ? "Everything the committees organise. Subscribe and show up." : "Everything the committees organise. Sign in to subscribe."}>
+      <CalendarSubscribe className="mb-6 max-w-xs" />
       {activities.length === 0 ? (
         <p className="py-10 text-center text-muted">No activities yet.</p>
       ) : (

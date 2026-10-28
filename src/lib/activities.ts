@@ -72,6 +72,26 @@ export function getUpcomingActivities(limit: number) {
   `;
 }
 
+/** Visible activities from the last 60 days onwards, for the public calendar feed. */
+export function getCalendarActivities() {
+  return sql<UpcomingActivity[]>`
+    SELECT a.id, a.name, a.location, a.starts_at, a.ends_at, c.name AS committee_name
+    FROM activities a JOIN committees c ON c.id = a.committee_id
+    WHERE a.is_visible AND a.starts_at > NOW() - INTERVAL '60 days'
+    ORDER BY a.starts_at LIMIT 500
+  `;
+}
+
+/** One visible activity in calendar form, or null when it does not exist or is hidden. */
+export async function getCalendarActivity(id: string): Promise<UpcomingActivity | null> {
+  const [row] = await sql<UpcomingActivity[]>`
+    SELECT a.id, a.name, a.location, a.starts_at, a.ends_at, c.name AS committee_name
+    FROM activities a JOIN committees c ON c.id = a.committee_id
+    WHERE a.id = ${id} AND a.is_visible
+  `;
+  return row ?? null;
+}
+
 export async function getActivity(id: string, userId: string | null): Promise<Activity | null> {
   const [row] = await sql<Activity[]>`
     SELECT ${columns(userId)} FROM activities a JOIN committees c ON c.id = a.committee_id WHERE a.id = ${id}

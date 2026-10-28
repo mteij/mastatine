@@ -1,9 +1,22 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useId, useState, useSyncExternalStore } from "react";
 import { authClient } from "@/lib/auth-client";
 
 const RETURNING_KEY = "mastatine:returning";
+
+function subscribeToStorage(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  return () => window.removeEventListener("storage", onChange);
+}
+
+function readReturning(): boolean {
+  try {
+    return localStorage.getItem(RETURNING_KEY) === "1";
+  } catch {
+    return false; // storage blocked: treat everyone as new
+  }
+}
 
 type Status = "idle" | "sending" | "sent";
 
@@ -13,13 +26,7 @@ export default function LoginForm({ next }: { next: string }) {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
   const [newsletter, setNewsletter] = useState(true);
-  const [returning, setReturning] = useState(false);
-
-  useEffect(() => {
-    try {
-      setReturning(localStorage.getItem(RETURNING_KEY) === "1");
-    } catch {}
-  }, []);
+  const returning = useSyncExternalStore(subscribeToStorage, readReturning, () => false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
