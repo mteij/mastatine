@@ -122,19 +122,19 @@ export default function ActivityForm({ values: v, committees }: ActivityFormProp
       </div>
 
       <div className="space-y-2">
-        <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="invite_boss" defaultChecked={v.invite_boss} /> Invite the Bar Crew</label>
+        <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="invite_boss" defaultChecked={v.invite_boss} /> Invite the BarCie</label>
         <p className="text-sm text-muted">
-          The Bar Crew can serve drinks for your activity. 30 minutes before the start of the event, they start their preparations at the bar.
+          The BarCie can serve drinks for your activity. 30 minutes before the start of the event, they start their preparations at the bar.
           They take care of everything behind the bar, but they will <em>not</em> provide snacks for you. If you have a special request, describe it here.
           Also tell us in advance if you are going to hand out free drink coupons.
         </p>
-        <textarea name="boss_note" aria-label="Notes for the Bar Crew" className="input min-h-24" maxLength={2000} defaultValue={v.boss_note} />
+        <textarea name="boss_note" aria-label="Notes for the BarCie" className="input min-h-24" maxLength={2000} defaultValue={v.boss_note} />
       </div>
 
       <div className="space-y-2">
-        <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="invite_flitcie" defaultChecked={v.invite_flitcie} /> Invite the Photo Crew</label>
-        <p className="text-sm text-muted">The Photo Crew can take pictures of your activity and upload them afterwards. If you have special requests, describe them here.</p>
-        <textarea name="flitcie_note" aria-label="Notes for the Photo Crew" className="input min-h-24" maxLength={2000} defaultValue={v.flitcie_note} />
+        <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="invite_flitcie" defaultChecked={v.invite_flitcie} /> Invite the PhotoCie</label>
+        <p className="text-sm text-muted">The PhotoCie can take pictures of your activity and upload them afterwards. If you have special requests, describe them here.</p>
+        <textarea name="flitcie_note" aria-label="Notes for the PhotoCie" className="input min-h-24" maxLength={2000} defaultValue={v.flitcie_note} />
       </div>
 
       <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="is_visible" defaultChecked={v.is_visible} /> Show activity</label>
