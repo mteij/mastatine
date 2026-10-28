@@ -3,6 +3,7 @@ import Link from "next/link";
 import sql from "@/lib/db";
 import ConfirmButton from "@/components/admin/ConfirmButton";
 import { deleteMast } from "../actions";
+import { requireAdmin } from "@/lib/session";
 
 const PAGE_SIZE = 25;
 
@@ -17,6 +18,8 @@ interface Row {
 }
 
 export default async function AdminMasts(props: { searchParams: Promise<{ q?: string; page?: string }> }) {
+  // Layouts do not re-run on client navigation, so each admin page checks the role itself.
+  await requireAdmin();
   const { q = "", page = "1" } = await props.searchParams;
   const pageNumber = Math.max(1, Math.min(Number(page) || 1, 10_000));
   const query = q.trim().slice(0, 100);

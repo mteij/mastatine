@@ -7,6 +7,7 @@ import ConfirmButton from "@/components/admin/ConfirmButton";
 import { PARODY_NOTICE, textToHtml } from "@/lib/email-templates";
 import { issueStats } from "@/lib/newsletter";
 import { deleteIssue, saveIssue, sendTest, startSending } from "../../actions";
+import { requireAdmin } from "@/lib/session";
 
 interface Issue {
   id: string;
@@ -25,6 +26,8 @@ const NOTICES: Record<string, { text: string; tone: "ok" | "bad" }> = {
 };
 
 export default async function IssuePage(props: { params: Promise<{ id: string }>; searchParams: Promise<{ notice?: string }> }) {
+  // Layouts do not re-run on client navigation, so each admin page checks the role itself.
+  await requireAdmin();
   const { id } = await props.params;
   const { notice } = await props.searchParams;
   if (!z.string().uuid().safeParse(id).success) notFound();

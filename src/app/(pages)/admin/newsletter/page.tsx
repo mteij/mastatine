@@ -2,6 +2,7 @@ import Link from "next/link";
 import sql from "@/lib/db";
 import ConfirmButton from "@/components/admin/ConfirmButton";
 import { removeSubscriber } from "../actions";
+import { requireAdmin } from "@/lib/session";
 
 interface Issue {
   id: string;
@@ -26,6 +27,8 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 export default async function AdminNewsletter() {
+  // Layouts do not re-run on client navigation, so each admin page checks the role itself.
+  await requireAdmin();
   const [issues, subscribers, counts] = await Promise.all([
     sql<Issue[]>`
       SELECT n.id, n.subject, n.status, n.created_at, n.sent_at,

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import sql from "@/lib/db";
 import { formatDateTime } from "@/lib/datetime";
+import { requireAdmin } from "@/lib/session";
 
 const WEEKS = 8;
 
@@ -16,6 +17,8 @@ interface Stats {
 }
 
 export default async function AdminOverview() {
+  // Layouts do not re-run on client navigation, so each admin page checks the role itself.
+  await requireAdmin();
   const [[stats], weekly, upcoming, newest, topMasts, committees] = await Promise.all([
     sql<Stats[]>`
       SELECT

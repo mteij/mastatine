@@ -2,6 +2,7 @@ import sql from "@/lib/db";
 import ConfirmButton from "@/components/admin/ConfirmButton";
 import { displayName } from "@/lib/committees";
 import { addCommitteeMember, createCommittee, deleteCommittee, removeCommitteeMember, toggleCommitteeChair, updateCommittee } from "../actions";
+import { requireAdmin } from "@/lib/session";
 
 interface CommitteeRow {
   id: string;
@@ -18,6 +19,8 @@ interface MemberRow {
 }
 
 export default async function AdminCommittees() {
+  // Layouts do not re-run on client navigation, so each admin page checks the role itself.
+  await requireAdmin();
   const [committees, members, users] = await Promise.all([
     sql<CommitteeRow[]>`SELECT id, name, description FROM committees ORDER BY name`,
     sql<MemberRow[]>`

@@ -40,18 +40,19 @@ const meetingScope = (user: Viewer) =>
 const actionScope = (user: Viewer) =>
   user.role === "admin" ? sql`TRUE` : sql`a.committee_id IN (SELECT committee_id FROM committee_members WHERE user_id = ${user.id})`;
 
-const meetingColumns = sql`m.id, m.committee_id, c.name AS committee_name, m.title, m.starts_at, m.location, m.minutes_status`;
+// Fragments are built per call: sql`` must not run at import time (`next build` has no DATABASE_URL).
+const meetingColumns = () => sql`m.id, m.committee_id, c.name AS committee_name, m.title, m.starts_at, m.location, m.minutes_status`;
 
 export function getMeetings(user: Viewer, limit = 100) {
   return sql<Meeting[]>`
-    SELECT ${meetingColumns} FROM meetings m JOIN committees c ON c.id = m.committee_id
+    SELECT ${meetingColumns()} FROM meetings m JOIN committees c ON c.id = m.committee_id
     WHERE ${meetingScope(user)} ORDER BY m.starts_at DESC LIMIT ${limit}
   `;
 }
 
 export async function getMeeting(id: string, user: Viewer): Promise<Meeting | null> {
   const [row] = await sql<Meeting[]>`
-    SELECT ${meetingColumns} FROM meetings m JOIN committees c ON c.id = m.committee_id
+    SELECT ${meetingColumns()} FROM meetings m JOIN committees c ON c.id = m.committee_id
     WHERE m.id = ${id} AND ${meetingScope(user)}
   `;
   return row ?? null;
@@ -80,14 +81,14 @@ export function getLiveItems(meetingId: string, userId: string) {
   `;
 }
 
-const actionColumns = sql`
+const actionColumns = () => sql`
   a.id, a.meeting_id, c.name AS committee_name, a.assignee_id, u.name AS assignee_name,
   a.body, a.deadline::text AS deadline, a.is_done
 `;
 
 export function getMeetingActions(meetingId: string) {
   return sql<ActionPoint[]>`
-    SELECT ${actionColumns} FROM action_points a JOIN committees c ON c.id = a.committee_id LEFT JOIN "user" u ON u.id = a.assignee_id
+    SELECT ${actionColumns()} FROM action_points a JOIN committees c ON c.id = a.committee_id LEFT JOIN "user" u ON u.id = a.assignee_id
     WHERE a.meeting_id = ${meetingId} ORDER BY a.is_done, a.created_at
   `;
 }
@@ -95,7 +96,7 @@ export function getMeetingActions(meetingId: string) {
 /** Open action points assigned to the user. */
 export function getMyActions(userId: string) {
   return sql<ActionPoint[]>`
-    SELECT ${actionColumns} FROM action_points a JOIN committees c ON c.id = a.committee_id LEFT JOIN "user" u ON u.id = a.assignee_id
+    SELECT ${actionColumns()} FROM action_points a JOIN committees c ON c.id = a.committee_id LEFT JOIN "user" u ON u.id = a.assignee_id
     WHERE a.assignee_id = ${userId} AND NOT a.is_done
     ORDER BY c.name, a.deadline NULLS LAST, a.created_at
   `;
@@ -105,7 +106,7 @@ export function getMyActions(userId: string) {
 export function getCommitteeActions(user: Viewer, includeDone: boolean) {
   const done = includeDone ? sql`TRUE` : sql`NOT a.is_done`;
   return sql<ActionPoint[]>`
-    SELECT ${actionColumns} FROM action_points a JOIN committees c ON c.id = a.committee_id LEFT JOIN "user" u ON u.id = a.assignee_id
+    SELECT ${actionColumns()} FROM action_points a JOIN committees c ON c.id = a.committee_id LEFT JOIN "user" u ON u.id = a.assignee_id
     WHERE ${actionScope(user)} AND ${done}
     ORDER BY a.is_done, c.name, a.deadline NULLS LAST, a.created_at LIMIT 300
   `;

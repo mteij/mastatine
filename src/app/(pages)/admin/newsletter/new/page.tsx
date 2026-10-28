@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { createIssue } from "../../actions";
+import { requireAdmin } from "@/lib/session";
 
-export default function NewIssuePage() {
+export default async function NewIssuePage() {
+  // Layouts do not re-run on client navigation, so each admin page checks the role itself.
+  await requireAdmin();
   return (
     <div className="max-w-2xl">
       <Link href="/admin/newsletter" className="text-sm font-medium text-accent-text hover:underline">&larr; Newsletter</Link>

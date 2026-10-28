@@ -5,8 +5,11 @@ import { z } from "zod";
 import sql from "@/lib/db";
 import type { Tower } from "@/lib/types";
 import { updateMast } from "../../actions";
+import { requireAdmin } from "@/lib/session";
 
 export default async function EditMastPage(props: { params: Promise<{ id: string }> }) {
+  // Layouts do not re-run on client navigation, so each admin page checks the role itself.
+  await requireAdmin();
   const { id } = await props.params;
   if (!z.string().uuid().safeParse(id).success) notFound();
   const [mast] = await sql<Tower[]>`SELECT * FROM towers WHERE id = ${id}`;
