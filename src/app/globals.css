@@ -1180,6 +1180,9 @@ blockquote::before, blockquote::after { content: ""; content: none; }
   .news-card { display: flex; flex-direction: column; padding: 1.4rem 1.5rem 1.5rem; }
   .verbosa-magazine-two #content-masonry article.hentry.news-card,
   article.hentry.news-card { border: 2px solid #b8bcc4; }
+  /* The legacy card rule pins article.hentry to 420px; the news card must instead stretch to the height of the mast card beside it. */
+  .verbosa-magazine-two #content-masonry article.hentry.news-card,
+  .verbosa-magazine-two .content-masonry article.hentry.news-card { height: auto; align-self: stretch; }
   .news-card__top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.9rem; }
   .news-card .entry-content { overflow-y: auto; overscroll-behavior: contain; padding-right: 0.25rem; }
   .news-card .continue-reading-link { flex-shrink: 0; width: 100%; }
