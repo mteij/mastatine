@@ -23,6 +23,8 @@ export interface Activity {
   invite_flitcie: boolean;
   flitcie_note: string;
   is_visible: boolean;
+  /** Hidden from everyone who is not a member. */
+  members_only: boolean;
   poster_url: string | null;
   created_by: string | null;
   signup_options: SignupGroup[];
@@ -44,11 +46,14 @@ const columns = (userId: string | null) => sql`
   (SELECT s.price_cents FROM activity_subscriptions s WHERE s.activity_id = a.id AND s.user_id = ${userId}) AS my_price_cents
 `;
 
+/** Members-only activities are left out unless the viewer is a member. */
+const audience = (isMember: boolean) => (isMember ? sql`TRUE` : sql`NOT a.members_only`);
+
 /** Upcoming (and the last week of) visible activities, soonest first. */
-export function getActivities(userId: string | null) {
+export function getActivities(userId: string | null, isMember: boolean) {
   return sql<Activity[]>`
     SELECT ${columns(userId)} FROM activities a JOIN committees c ON c.id = a.committee_id
-    WHERE a.is_visible AND a.starts_at > NOW() - INTERVAL '7 days'
+    WHERE a.is_visible AND ${audience(isMember)} AND a.starts_at > NOW() - INTERVAL '7 days'
     ORDER BY a.starts_at LIMIT 200
   `;
 }
@@ -62,32 +67,32 @@ export interface UpcomingActivity {
   committee_name: string;
 }
 
-/** The next visible activities that have not ended yet, for the public homepage. */
-export function getUpcomingActivities(limit: number) {
+/** The next visible activities that have not ended yet, for the homepage and sidebar. */
+export function getUpcomingActivities(limit: number, isMember: boolean) {
   return sql<UpcomingActivity[]>`
     SELECT a.id, a.name, a.location, a.starts_at, a.ends_at, c.name AS committee_name
     FROM activities a JOIN committees c ON c.id = a.committee_id
-    WHERE a.is_visible AND COALESCE(a.ends_at, a.starts_at + INTERVAL '3 hours') > NOW()
+    WHERE a.is_visible AND ${audience(isMember)} AND COALESCE(a.ends_at, a.starts_at + INTERVAL '3 hours') > NOW()
     ORDER BY a.starts_at LIMIT ${limit}
   `;
 }
 
-/** Visible activities from the last 60 days onwards, for the public calendar feed. */
+/** Public activities from the last 60 days onwards, for the public calendar feed (never members-only ones). */
 export function getCalendarActivities() {
   return sql<UpcomingActivity[]>`
     SELECT a.id, a.name, a.location, a.starts_at, a.ends_at, c.name AS committee_name
     FROM activities a JOIN committees c ON c.id = a.committee_id
-    WHERE a.is_visible AND a.starts_at > NOW() - INTERVAL '60 days'
+    WHERE a.is_visible AND NOT a.members_only AND a.starts_at > NOW() - INTERVAL '60 days'
     ORDER BY a.starts_at LIMIT 500
   `;
 }
 
-/** One visible activity in calendar form, or null when it does not exist or is hidden. */
-export async function getCalendarActivity(id: string): Promise<UpcomingActivity | null> {
+/** One activity in calendar form, or null when it does not exist, is hidden, or is members-only and the viewer is not a member. */
+export async function getCalendarActivity(id: string, isMember: boolean): Promise<UpcomingActivity | null> {
   const [row] = await sql<UpcomingActivity[]>`
     SELECT a.id, a.name, a.location, a.starts_at, a.ends_at, c.name AS committee_name
     FROM activities a JOIN committees c ON c.id = a.committee_id
-    WHERE a.id = ${id} AND a.is_visible
+    WHERE a.id = ${id} AND a.is_visible AND ${audience(isMember)}
   `;
   return row ?? null;
 }

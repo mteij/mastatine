@@ -1,5 +1,6 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
 const FIRST_RUN_DELAY_MS = 60 * 1000;
+const REMINDER_INTERVAL_MS = 15 * 60 * 1000;
 
 /** Logs (never throws) when a production deployment is configured in a way that weakens security. */
 function warnAboutUnsafeProductionConfig() {
@@ -12,7 +13,7 @@ function warnAboutUnsafeProductionConfig() {
   for (const problem of problems) console.warn(`[config] ${problem}`);
 }
 
-/** Runs once when the server starts: schedules the daily data-minimisation purge (single-instance deployment). */
+/** Runs once when the server starts: schedules the daily data-minimisation purge and the activity reminders (single-instance deployment). */
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs" || !process.env.DATABASE_URL) return;
 
@@ -30,4 +31,17 @@ export async function register() {
 
   setTimeout(run, FIRST_RUN_DELAY_MS).unref();
   setInterval(run, DAY_MS).unref();
+
+  // "Tomorrow" reminders for activities. Safe to repeat or overlap: each subscription is claimed before its email is sent.
+  const { sendDueReminders } = await import("@/lib/activity-emails");
+  const remind = async () => {
+    try {
+      const result = await sendDueReminders();
+      if (result.sent > 0 || result.failed > 0) console.info("[reminders]", result);
+    } catch (error) {
+      console.error("[reminders] failed", error);
+    }
+  };
+  setTimeout(remind, FIRST_RUN_DELAY_MS).unref();
+  setInterval(remind, REMINDER_INTERVAL_MS).unref();
 }

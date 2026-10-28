@@ -5,6 +5,7 @@ import AppFrame from "@/components/ui/AppFrame";
 import CalendarSubscribe from "@/components/CalendarSubscribe";
 import { formatParticipants, getActivities, subscribeState, type Activity } from "@/lib/activities";
 import { formatDateTime, formatDayMonth, formatDayNumber, formatMonthShort, formatTime } from "@/lib/datetime";
+import { getMembership } from "@/lib/membership";
 import { getSession } from "@/lib/session";
 import { parseSignupGroups, priceLabel } from "@/lib/signup-options";
 import { CheckIcon } from "@/components/ui/icons";
@@ -38,6 +39,10 @@ const CUE_CLASS: Record<JoinCue["tone"], string> = {
   quiet: "bg-soft text-muted",
 };
 
+function MembersBadge() {
+  return <span className="badge ml-2 align-middle">Members only</span>;
+}
+
 function CueBadge({ cue }: { cue: JoinCue }) {
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-extrabold ${CUE_CLASS[cue.tone]}`}>
@@ -49,7 +54,8 @@ function CueBadge({ cue }: { cue: JoinCue }) {
 
 export default async function ActivitiesPage() {
   const session = await getSession();
-  const activities = await getActivities(session?.user.id ?? null);
+  const { isMember } = await getMembership();
+  const activities = await getActivities(session?.user.id ?? null, isMember);
 
   return (
     <AppFrame title="Activities" actions={<CalendarSubscribe className="cal-btn--inline" />} tagline={session ? "Everything the committees organise. Join in!" : "Everything the committees organise. Sign in to join."}>
@@ -74,7 +80,7 @@ export default async function ActivitiesPage() {
                       </time>
                     )}
                     <div className="flex min-w-0 flex-1 flex-col">
-                      <h2 className="text-lg font-extrabold leading-tight">{a.name}</h2>
+                      <h2 className="text-lg font-extrabold leading-tight">{a.name}{a.members_only && <MembersBadge />}</h2>
                       <p className="mt-0.5 text-sm font-bold text-accent-text">{formatDayMonth(a.starts_at)} · {formatTime(a.starts_at)}</p>
                       <p className="text-sm text-muted">{price}{a.location ? ` · ${a.location}` : ""}</p>
                       <div className="mt-auto flex items-center justify-between gap-2 pt-2">
@@ -88,6 +94,7 @@ export default async function ActivitiesPage() {
                   <div className="hidden sm:block">
                     <div className="flex items-center justify-center gap-2 border-b border-line bg-soft px-4 py-3 text-center text-lg font-bold text-accent-text">
                       {a.name}
+                      {a.members_only && <MembersBadge />}
                       {a.subscribed && <span className="text-ink" title="You are subscribed"><CheckIcon /><span className="sr-only">You are subscribed</span></span>}
                     </div>
                     <dl className="divide-y divide-line text-center text-sm">

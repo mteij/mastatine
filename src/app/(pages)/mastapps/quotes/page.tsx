@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import AppFrame from "@/components/ui/AppFrame";
+import { membersOnlyGate } from "@/components/MembersOnly";
 import { getQuotes, getVoter, parseSort, type QuoteSort } from "@/lib/quotes";
 import { getSession } from "@/lib/session";
 import QuoteCard from "./QuoteCard";
@@ -17,13 +18,15 @@ const SORTS: { value: QuoteSort; label: string }[] = [
 ];
 
 export default async function QuotesPage(props: { searchParams: Promise<{ sort?: string }> }) {
+  const gate = await membersOnlyGate("Quotes", "/mastapps/quotes");
+  if (gate) return gate;
   const sort = parseSort((await props.searchParams).sort);
   const session = await getSession();
   const quotes = await getQuotes(sort, await getVoter());
   const isAdmin = session?.user.role === "admin";
 
   return (
-    <AppFrame title="Quotes" tagline="Things members said, graded from 1 to 10.">
+    <AppFrame title="Quotes" tagline="Things members said, graded from 1 to 10. Members only.">
       <nav aria-label="Sort quotes" className="tabs">
         <span className="tabs-label">Sort by</span>
         {SORTS.map((s) => (

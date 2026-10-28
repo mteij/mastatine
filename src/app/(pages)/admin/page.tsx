@@ -14,6 +14,7 @@ interface Stats {
   committees: number;
   upcoming: number;
   open_actions: number;
+  member_requests: number;
 }
 
 export default async function AdminOverview() {
@@ -29,7 +30,8 @@ export default async function AdminOverview() {
         (SELECT COUNT(*) FROM newsletter_subscribers WHERE status = 'pending')::int AS pending,
         (SELECT COUNT(*) FROM committees)::int AS committees,
         (SELECT COUNT(*) FROM activities WHERE starts_at > NOW())::int AS upcoming,
-        (SELECT COUNT(*) FROM action_points WHERE NOT is_done)::int AS open_actions
+        (SELECT COUNT(*) FROM action_points WHERE NOT is_done)::int AS open_actions,
+        (SELECT COUNT(*) FROM "user" WHERE member_status = 'pending')::int AS member_requests
     `,
     sql<{ week: Date; n: number }[]>`
       SELECT w.week, COUNT(u.id)::int AS n
@@ -52,7 +54,14 @@ export default async function AdminOverview() {
   ]);
 
   const cards = [
-    { label: "Users", value: stats.users, href: "/admin/users", note: `${weekly[weekly.length - 1]?.n ?? 0} new this week` },
+    {
+      label: "Users",
+      value: stats.users,
+      href: stats.member_requests > 0 ? "/admin/users?filter=requests" : "/admin/users",
+      note: stats.member_requests > 0
+        ? `${stats.member_requests} membership ${stats.member_requests === 1 ? "request" : "requests"} to review`
+        : `${weekly[weekly.length - 1]?.n ?? 0} new this week`,
+    },
     { label: "Newsletter", value: stats.confirmed, href: "/admin/newsletter", note: `${stats.pending} awaiting confirmation` },
     { label: "Upcoming activities", value: stats.upcoming, href: "/mastapps/activities/mine" },
     { label: "Open action points", value: stats.open_actions, href: "/mastapps/minutes/actions" },

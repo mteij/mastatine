@@ -1,20 +1,17 @@
-import { cookies } from "next/headers";
 import sql from "@/lib/db";
 import { getSession } from "@/lib/session";
 
-/** Who is looking: a signed-in member, an anonymous visitor with a voter cookie, or a first-time visitor. */
+/** Who is looking. Quotes are members-only, so this is always a signed-in member (or nobody, for aggregate views). */
 export interface Voter {
   userId: string | null;
   anonId: string | null;
 }
 
-export const VOTER_COOKIE = "quote_voter";
 export const NO_VOTER: Voter = { userId: null, anonId: null };
 
 export async function getVoter(): Promise<Voter> {
   const session = await getSession();
-  if (session) return { userId: session.user.id, anonId: null };
-  return { userId: null, anonId: (await cookies()).get(VOTER_COOKIE)?.value ?? null };
+  return session ? { userId: session.user.id, anonId: null } : NO_VOTER;
 }
 
 export type QuoteSort = "rating" | "date";

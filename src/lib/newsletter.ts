@@ -3,6 +3,7 @@ import sql from "@/lib/db";
 import { requireEnv, siteUrl } from "@/lib/env";
 import { sendMail } from "@/lib/mailer";
 import { confirmSubscriptionEmail, newsletterEmail } from "@/lib/email-templates";
+import { countAudience, materialiseAudience, parseAudience, recipientFilter, type Audience } from "@/lib/newsletter-audience";
 
 const CONFIRM_TTL_HOURS = 48;
 const RESEND_COOLDOWN_MINUTES = 10;
@@ -80,7 +81,11 @@ export async function rememberSignupChoice(rawEmail: string, newsletter: boolean
 export async function applySignupChoice(rawEmail: string): Promise<void> {
   const email = normaliseEmail(rawEmail);
   const [choice] = await sql<{ newsletter: boolean }[]>`DELETE FROM signup_preferences WHERE lower(email) = ${email} RETURNING newsletter`;
-  if (choice && !choice.newsletter) return;
+  if (choice && !choice.newsletter) {
+    // Remember the refusal, so a later "everyone" or "members" issue does not mail someone who said no.
+    await sql`INSERT INTO newsletter_subscribers (email, status, unsubscribed_at) VALUES (${email}, 'unsubscribed', NOW()) ON CONFLICT ((lower(email))) DO NOTHING`;
+    return;
+  }
   await sql`
     INSERT INTO newsletter_subscribers (email, status, confirmed_at) VALUES (${email}, 'confirmed', NOW())
     ON CONFLICT ((lower(email))) DO UPDATE SET
@@ -132,14 +137,15 @@ export interface IssueStats {
 }
 
 export async function issueStats(issueId: string): Promise<IssueStats> {
-  const [row] = await sql<{ recipients: number; sent: number; failed: number }[]>`
+  const [issue] = await sql<{ audience: string }[]>`SELECT audience FROM newsletters WHERE id = ${issueId}`;
+  const [row] = await sql<{ sent: number; failed: number }[]>`
     SELECT
-      (SELECT COUNT(*) FROM newsletter_subscribers WHERE status = 'confirmed')::int AS recipients,
       COUNT(*) FILTER (WHERE status = 'sent')::int AS sent,
       COUNT(*) FILTER (WHERE status = 'failed')::int AS failed
     FROM newsletter_sends WHERE newsletter_id = ${issueId}
   `;
-  return { ...row, pending: Math.max(0, row.recipients - row.sent - row.failed) };
+  const recipients = await countAudience(parseAudience(issue?.audience));
+  return { recipients, ...row, pending: Math.max(0, recipients - row.sent - row.failed) };
 }
 
 function isFatalMailError(error: unknown): boolean {
@@ -148,20 +154,20 @@ function isFatalMailError(error: unknown): boolean {
 }
 
 /** Sends one rendered issue to a single address. Used by both the real send and the admin test send. */
-async function deliver(issue: { subject: string; body: string }, to: string, subscriberId: string | null): Promise<void> {
+async function deliver(issue: { subject: string; body: string; audience: Audience }, to: string, subscriberId: string | null): Promise<void> {
   const pageUrl = subscriberId ? unsubscribePageUrl(subscriberId) : `${siteUrl()}/newsletter`;
   const headers: Record<string, string> = { Precedence: "bulk" };
   if (subscriberId) {
     headers["List-Unsubscribe"] = `<${unsubscribeOneClickUrl(subscriberId)}>`;
     headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
   }
-  await sendMail({ to, headers, ...newsletterEmail(issue.subject, issue.body, pageUrl) });
+  await sendMail({ to, headers, ...newsletterEmail(issue.subject, issue.body, pageUrl, issue.audience) });
 }
 
 export async function sendTestIssue(issueId: string, to: string): Promise<void> {
-  const [issue] = await sql<{ subject: string; body: string }[]>`SELECT subject, body FROM newsletters WHERE id = ${issueId}`;
+  const [issue] = await sql<{ subject: string; body: string; audience: string }[]>`SELECT subject, body, audience FROM newsletters WHERE id = ${issueId}`;
   if (!issue) throw new Error("Issue not found");
-  await deliver({ ...issue, subject: `[TEST] ${issue.subject}` }, to, null);
+  await deliver({ ...issue, audience: parseAudience(issue.audience), subject: `[TEST] ${issue.subject}` }, to, null);
 }
 
 /**
@@ -178,14 +184,16 @@ export async function sendIssue(issueId: string): Promise<void> {
       WHERE id = ${issueId} AND status IN ('draft', 'sending') RETURNING id
     `;
     if (claimed.length === 0) return;
-    const [issue] = await sql<{ subject: string; body: string }[]>`SELECT subject, body FROM newsletters WHERE id = ${issueId}`;
+    const [row] = await sql<{ subject: string; body: string; audience: string }[]>`SELECT subject, body, audience FROM newsletters WHERE id = ${issueId}`;
+    const issue = { ...row, audience: parseAudience(row.audience) };
+    await materialiseAudience(issue.audience);
 
     const failedThisRun: string[] = [];
     for (;;) {
       const batch = await sql<{ id: string; email: string }[]>`
         SELECT s.id, s.email FROM newsletter_subscribers s
         LEFT JOIN newsletter_sends n ON n.subscriber_id = s.id AND n.newsletter_id = ${issueId}
-        WHERE s.status = 'confirmed' AND (n.status IS NULL OR n.status <> 'sent')
+        WHERE s.status = 'confirmed' AND ${recipientFilter(issue.audience)} AND (n.status IS NULL OR n.status <> 'sent')
           AND s.id <> ALL(${failedThisRun}::uuid[])
         ORDER BY s.created_at LIMIT ${SEND_BATCH}
       `;

@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import MembershipRequest from "@/components/MembershipRequest";
 import PageHeader from "@/components/ui/PageHeader";
 import { FAQ, MEMBERSHIP_PERKS } from "@/content/site";
+import { getMembership } from "@/lib/membership";
 
 export const metadata: Metadata = {
   title: "Membership",
   description: "Membership of S.A. Mastatine is free and optional. Here is what you get.",
 };
 
-export default function MembershipPage() {
+export const dynamic = "force-dynamic";
+
+export default async function MembershipPage() {
+  const membership = await getMembership();
   return (
     <>
       <PageHeader
@@ -24,10 +29,9 @@ export default function MembershipPage() {
             </li>
           ))}
         </ul>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/login" className="btn btn-primary">
-            Create a free account
-          </Link>
+        <p className="mt-6 text-muted">Membership is free. You ask for it with your account, and an admin approves each request.</p>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <MembershipRequest membership={membership} next="/membership" />
           <Link href="/newsletter" className="btn btn-secondary">
             Subscribe to the newsletter
           </Link>

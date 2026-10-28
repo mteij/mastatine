@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createIssue } from "../../actions";
+import AudienceField from "@/components/admin/AudienceField";
 import { requireAdmin } from "@/lib/session";
 
 export default async function NewIssuePage() {
@@ -19,6 +20,7 @@ export default async function NewIssuePage() {
           <textarea id="body" name="body" className="input min-h-72 font-mono" required maxLength={20000} />
           <p className="hint">Plain text. Blank lines start a new paragraph and web addresses become links. The unsubscribe link and the parody notice are added automatically.</p>
         </div>
+        <AudienceField />
         <button type="submit" className="btn btn-primary">Save as draft</button>
       </form>
     </div>

@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import AppFrame from "@/components/ui/AppFrame";
+import { membersOnlyGate } from "@/components/MembersOnly";
 import { formatGrade, formatQuoteDate, getAuthorStats, getQuoteStats, getTopQuotes, NO_VOTER } from "@/lib/quotes";
 
 export const metadata: Metadata = { title: "Quote statistics" };
 export const dynamic = "force-dynamic";
 
 export default async function QuoteStatisticsPage() {
+  const gate = await membersOnlyGate("Quote statistics", "/mastapps/quotes/statistics");
+  if (gate) return gate;
   const [stats, authors, top] = await Promise.all([getQuoteStats(), getAuthorStats(), getTopQuotes(NO_VOTER)]);
   const tiles = [
     { label: "Quotes", value: stats.quotes },

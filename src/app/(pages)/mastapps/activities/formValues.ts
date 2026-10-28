@@ -24,6 +24,7 @@ export function emptyActivityValues(committeeId?: string): ActivityFormValues {
     invite_flitcie: false,
     flitcie_note: "",
     is_visible: true,
+    members_only: false,
     signup_options: [],
     poster_url: null,
   };
@@ -51,6 +52,7 @@ export function activityToValues(a: Activity): ActivityFormValues {
     invite_flitcie: a.invite_flitcie,
     flitcie_note: a.flitcie_note,
     is_visible: a.is_visible,
+    members_only: a.members_only,
     signup_options: parseSignupGroups(a.signup_options),
     poster_url: a.poster_url,
   };

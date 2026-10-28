@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import AccountPanel from "@/components/AccountPanel";
+import MembershipRequest from "@/components/MembershipRequest";
 import { getApps } from "@/content/apps";
+import { getMembership } from "@/lib/membership";
 import sql from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import { getShopUrl } from "@/lib/shop";
@@ -21,6 +23,7 @@ export default async function AccountPage() {
     SELECT status FROM newsletter_subscribers WHERE lower(email) = ${user.email.toLowerCase()}
   `;
   const apps = getApps(getShopUrl());
+  const membership = await getMembership();
 
   return (
     <div className="container-prose py-10 sm:py-16">
@@ -31,6 +34,14 @@ export default async function AccountPage() {
         )}
       </div>
       <p className="mt-1 break-all text-muted">{user.email}</p>
+
+      {!membership.isMember && (
+        <section id="membership" aria-labelledby="membership-title" className="card mt-6 p-4">
+          <h2 id="membership-title" className="font-extrabold">Become a member</h2>
+          <p className="mb-3 mt-1 text-sm text-muted">Members get access to the Quotes app and to members-only activities. It is free; an admin approves each request.</p>
+          <MembershipRequest membership={membership} next="/account" />
+        </section>
+      )}
 
       <section aria-labelledby="quick-links" className="mt-6">
         <h2 id="quick-links" className="mb-3 text-sm font-bold uppercase tracking-wide text-muted">MastApps</h2>

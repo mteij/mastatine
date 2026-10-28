@@ -1,6 +1,7 @@
 import Link from "next/link";
 import sql from "@/lib/db";
 import ConfirmButton from "@/components/admin/ConfirmButton";
+import { AUDIENCE_LABEL, parseAudience } from "@/lib/newsletter-audience";
 import { removeSubscriber } from "../actions";
 import { requireAdmin } from "@/lib/session";
 
@@ -8,6 +9,7 @@ interface Issue {
   id: string;
   subject: string;
   status: "draft" | "sending" | "sent";
+  audience: string;
   created_at: Date;
   sent_at: Date | null;
   sent: number;
@@ -31,7 +33,7 @@ export default async function AdminNewsletter() {
   await requireAdmin();
   const [issues, subscribers, counts] = await Promise.all([
     sql<Issue[]>`
-      SELECT n.id, n.subject, n.status, n.created_at, n.sent_at,
+      SELECT n.id, n.subject, n.status, n.audience, n.created_at, n.sent_at,
         (SELECT COUNT(*) FROM newsletter_sends s WHERE s.newsletter_id = n.id AND s.status = 'sent')::int AS sent
       FROM newsletters n ORDER BY n.created_at DESC LIMIT 50
     `,
@@ -49,17 +51,18 @@ export default async function AdminNewsletter() {
         </div>
         <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>Subject</th><th>Status</th><th className="text-right">Delivered</th><th>Created</th></tr></thead>
+            <thead><tr><th>Subject</th><th>To</th><th>Status</th><th className="text-right">Delivered</th><th>Created</th></tr></thead>
             <tbody>
               {issues.map((issue) => (
                 <tr key={issue.id}>
                   <td><Link href={`/admin/newsletter/${issue.id}`} className="font-medium hover:text-accent-text">{issue.subject}</Link></td>
+                  <td className="whitespace-nowrap text-sm text-muted">{AUDIENCE_LABEL[parseAudience(issue.audience)]}</td>
                   <td><span className={issue.status === "draft" ? "text-muted" : "badge"}>{issue.status}</span></td>
                   <td className="text-right tabular-nums">{issue.sent}</td>
                   <td className="whitespace-nowrap text-muted">{new Date(issue.created_at).toLocaleDateString("en-GB")}</td>
                 </tr>
               ))}
-              {issues.length === 0 && <tr><td colSpan={4} className="py-10 text-center text-muted">No issues yet.</td></tr>}
+              {issues.length === 0 && <tr><td colSpan={5} className="py-10 text-center text-muted">No issues yet.</td></tr>}
             </tbody>
           </table>
         </div>

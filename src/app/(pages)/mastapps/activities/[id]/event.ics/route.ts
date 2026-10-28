@@ -1,5 +1,6 @@
 import { getCalendarActivity } from "@/lib/activities";
 import { SITE_NAME, siteUrl } from "@/lib/env";
+import { getMembership } from "@/lib/membership";
 import { buildCalendar } from "@/lib/ical";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +11,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   if (!/^[0-9a-f-]{36}$/i.test(id)) return new Response("Not found", { status: 404 });
 
   try {
-    const activity = await getCalendarActivity(id);
+    const { isMember } = await getMembership();
+    const activity = await getCalendarActivity(id, isMember);
     if (!activity) return new Response("Not found", { status: 404 });
     const body = buildCalendar([activity], { name: SITE_NAME, siteUrl: siteUrl() });
     return new Response(body, {

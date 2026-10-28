@@ -2,9 +2,12 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { z } from "zod";
 import sql from "@/lib/db";
+import { sendSubscriptionConfirmation } from "@/lib/activity-emails";
 import { notifyInvitedCommittees } from "@/lib/activity-invites";
+import { getMembership } from "@/lib/membership";
 import { isCommitteeMember } from "@/lib/committees";
 import { fromLocalInput } from "@/lib/datetime";
 import { storePoster } from "@/lib/poster";
@@ -71,6 +74,7 @@ const activitySchema = z.object({
   invite_flitcie: checkbox,
   flitcie_note: z.string().trim().max(2000),
   is_visible: checkbox,
+  members_only: checkbox,
   signup_options: z.string().max(20000).optional(),
 });
 
@@ -134,6 +138,7 @@ export async function saveActivity(_prev: ActivityFormState, formData: FormData)
     invite_flitcie: d.invite_flitcie,
     flitcie_note: d.flitcie_note,
     is_visible: d.is_visible,
+    members_only: d.members_only,
     signup_options: sql.json(signupOptions.data),
     poster_url: posterUrl,
   };
@@ -169,25 +174,28 @@ export async function subscribe(formData: FormData) {
   const id = activityId.parse(formData.get("id"));
   if (!subscribeLimiter.allow(`user:${session.user.id}`)) throw new Error("Slow down a little.");
 
-  const [activity] = await sql<{ cost_cents: number | null; signup_options: unknown }[]>`
-    SELECT cost_cents, signup_options FROM activities WHERE id = ${id} AND is_visible
+  const { isMember } = await getMembership();
+  const [activity] = await sql<{ cost_cents: number | null; signup_options: unknown; members_only: boolean }[]>`
+    SELECT cost_cents, signup_options, members_only FROM activities WHERE id = ${id} AND is_visible
   `;
-  if (!activity) return;
+  if (!activity || (activity.members_only && !isMember)) return;
   const groups = parseSignupGroups(activity.signup_options);
   const selection = Object.fromEntries(groups.map((g) => [g.id, String(formData.get(`opt_${g.id}`) ?? "")]));
   const quote = quoteSignup(activity.cost_cents, groups, selection);
   if ("error" in quote) throw new Error(quote.error);
 
-  // One statement so the limit holds under concurrent sign-ups.
-  await sql`
+  // One statement so the limit holds under concurrent sign-ups. It returns a row only when this call created the subscription.
+  const created = await sql`
     INSERT INTO activity_subscriptions (activity_id, user_id, choices, price_cents)
     SELECT a.id, ${session.user.id}, ${sql.json(quote.picks)}, ${quote.price_cents} FROM activities a
-    WHERE a.id = ${id} AND a.is_visible
+    WHERE a.id = ${id} AND a.is_visible AND (${isMember} OR NOT a.members_only)
       AND (a.subscription_opens_at IS NULL OR a.subscription_opens_at <= NOW())
       AND COALESCE(a.subscription_closes_at, a.starts_at) > NOW()
       AND (a.subscription_limit IS NULL OR (SELECT COUNT(*) FROM activity_subscriptions s WHERE s.activity_id = a.id) < a.subscription_limit)
     ON CONFLICT DO NOTHING
+    RETURNING activity_id
   `;
+  if (created.length > 0) after(() => sendSubscriptionConfirmation(id, session.user.id));
   refresh(id);
 }
 

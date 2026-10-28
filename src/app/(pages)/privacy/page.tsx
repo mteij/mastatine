@@ -52,15 +52,16 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Quotes.</strong> The quote, the name of the person who said it, the date, and (if you were signed in) which account
-            added it. The name of the person quoted is shown publicly, and may not be the person who submitted it. If you were quoted and
+            added it. Quotes are only visible to members. The name of the person quoted is shown to them, and may not be the person who submitted it. If you were quoted and
             want it removed or changed, tell us and we will do so.
           </li>
           <li>
-            <strong>Quote ratings.</strong> Your score and either your account or a random identifier stored in a cookie (see below).
+            <strong>Quote ratings.</strong> Your score and your account.
           </li>
           <li>
             <strong>Accounts.</strong> Your email address, an optional display name, and session records (created when you open a sign-in
             link; each includes your IP address and browser type, for security).
+            Whether you asked to become a member, when, and whether an administrator approved it.
             If an administrator adds you to a committee, your display name (never your email address) is shown on the public committees page.
           </li>
           <li>
@@ -81,10 +82,6 @@ export default function PrivacyPage() {
         <ul>
           <li>
             <strong>Session cookie.</strong> Set when you sign in, to keep you signed in. Removed when you sign out or it expires.
-          </li>
-          <li>
-            <strong><code>quote_voter</code> cookie.</strong> Set the first time you rate a quote without being signed in, so one browser
-            counts once per quote. Random identifier, valid for one year.
           </li>
           <li>
             <strong><code>mastatine_voter_id</code> (local storage).</strong> Same purpose for votes on masts. Stays until you clear it.

@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 import sql from "@/lib/db";
 import AutoRefresh from "@/components/admin/AutoRefresh";
+import AudienceField from "@/components/admin/AudienceField";
 import ConfirmButton from "@/components/admin/ConfirmButton";
 import { PARODY_NOTICE, textToHtml } from "@/lib/email-templates";
+import { AUDIENCE_LABEL, AUDIENCE_REASON, parseAudience } from "@/lib/newsletter-audience";
 import { issueStats } from "@/lib/newsletter";
 import { deleteIssue, saveIssue, sendTest, startSending } from "../../actions";
 import { requireAdmin } from "@/lib/session";
@@ -14,6 +16,7 @@ interface Issue {
   subject: string;
   body: string;
   status: "draft" | "sending" | "sent";
+  audience: string;
   sent_at: Date | null;
 }
 
@@ -22,7 +25,7 @@ const NOTICES: Record<string, { text: string; tone: "ok" | "bad" }> = {
   "test-sent": { text: "Test email sent to your address.", tone: "ok" },
   "test-failed": { text: "The test email could not be sent. Check the SMTP settings.", tone: "bad" },
   sending: { text: "Sending started. This page updates as emails go out.", tone: "ok" },
-  "no-recipients": { text: "There are no confirmed subscribers to send to.", tone: "bad" },
+  "no-recipients": { text: "There is nobody to send this to.", tone: "bad" },
 };
 
 export default async function IssuePage(props: { params: Promise<{ id: string }>; searchParams: Promise<{ notice?: string }> }) {
@@ -31,12 +34,13 @@ export default async function IssuePage(props: { params: Promise<{ id: string }>
   const { id } = await props.params;
   const { notice } = await props.searchParams;
   if (!z.string().uuid().safeParse(id).success) notFound();
-  const [issue] = await sql<Issue[]>`SELECT id, subject, body, status, sent_at FROM newsletters WHERE id = ${id}`;
+  const [issue] = await sql<Issue[]>`SELECT id, subject, body, status, audience, sent_at FROM newsletters WHERE id = ${id}`;
   if (!issue) notFound();
 
   const stats = await issueStats(id);
   const message = notice ? NOTICES[notice] : undefined;
   const isDraft = issue.status === "draft";
+  const audience = parseAudience(issue.audience);
 
   return (
     <div className="grid gap-10 @3xl:grid-cols-2">
@@ -55,6 +59,7 @@ export default async function IssuePage(props: { params: Promise<{ id: string }>
         <div className="card mt-6 p-5">
           <p className="text-sm text-muted">Status</p>
           <p className="mt-1 text-lg font-bold capitalize">{issue.status}</p>
+          <p className="mt-1 text-sm text-muted">To: <strong className="text-ink">{AUDIENCE_LABEL[audience]}</strong></p>
           <dl className="mt-4 grid grid-cols-3 gap-4 text-sm">
             <div><dt className="text-muted">Delivered</dt><dd className="text-2xl font-bold tabular-nums">{stats.sent}</dd></div>
             <div><dt className="text-muted">Failed</dt><dd className="text-2xl font-bold tabular-nums">{stats.failed}</dd></div>
@@ -73,6 +78,7 @@ export default async function IssuePage(props: { params: Promise<{ id: string }>
               <label className="label" htmlFor="body">Message</label>
               <textarea id="body" name="body" className="input min-h-64 font-mono" defaultValue={issue.body} required maxLength={20000} />
             </div>
+            <AudienceField defaultValue={audience} />
             <button type="submit" className="btn btn-secondary">Save draft</button>
           </form>
         ) : (
@@ -89,9 +95,9 @@ export default async function IssuePage(props: { params: Promise<{ id: string }>
               <input type="hidden" name="id" value={issue.id} />
               <ConfirmButton
                 className="btn btn-primary"
-                message={`Send “${issue.subject}” to ${stats.recipients} confirmed subscriber${stats.recipients === 1 ? "" : "s"}? This cannot be undone.`}
+                message={`Send “${issue.subject}” to ${stats.recipients} ${AUDIENCE_LABEL[audience].toLowerCase()} (${stats.recipients === 1 ? "1 person" : `${stats.recipients} people`})? This cannot be undone.`}
               >
-                {isDraft ? `Send to ${stats.recipients} subscribers` : "Resume sending"}
+                {isDraft ? `Send to ${stats.recipients} ${stats.recipients === 1 ? "person" : "people"}` : "Resume sending"}
               </ConfirmButton>
             </form>
           )}
@@ -114,7 +120,7 @@ export default async function IssuePage(props: { params: Promise<{ id: string }>
             <div dangerouslySetInnerHTML={{ __html: textToHtml(issue.body) }} />
           </div>
           <div className="bg-[#f9fafb] px-6 py-4 text-xs text-[#5b6676]">
-            You receive this because you subscribed to the S.A. Mastatine newsletter. <u>Unsubscribe</u>.
+            {AUDIENCE_REASON[audience]} <u>Unsubscribe</u>.
             <br />
             {PARODY_NOTICE}
           </div>

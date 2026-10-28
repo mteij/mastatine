@@ -7,6 +7,7 @@ import { formatParticipants, getActivity, getParticipants, subscribeState } from
 import { isCommitteeMember } from "@/lib/committees";
 import { displayName } from "@/lib/committees";
 import { formatDateTime, formatDayMonth, formatTime, zonedDay } from "@/lib/datetime";
+import { getMembership } from "@/lib/membership";
 import { getSession } from "@/lib/session";
 import { formatAdjustment, formatEuro, parseSignupGroups, priceLabel, tallyPicks } from "@/lib/signup-options";
 import { subscribe, unsubscribe } from "../actions";
@@ -29,7 +30,8 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
   const { id } = await props.params;
   const activity = /^[0-9a-f-]{36}$/i.test(id) ? await getActivity(id, user?.id ?? null) : null;
   const canManage = activity && user ? await isCommitteeMember(user, activity.committee_id) : false;
-  if (!activity || (!activity.is_visible && !canManage)) notFound();
+  const { isMember } = await getMembership();
+  if (!activity || (!activity.is_visible && !canManage) || (activity.members_only && !isMember)) notFound();
 
   const groups = parseSignupGroups(activity.signup_options);
   const state = subscribeState(activity);
@@ -70,6 +72,7 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
             <p className="text-sm font-extrabold uppercase tracking-wide text-accent-text">{activity.committee_name}</p>
             <p className="mt-1 text-2xl font-extrabold leading-tight sm:text-3xl">{when}</p>
             <ul className="mt-4 flex flex-wrap gap-2">
+              {activity.members_only && <li className={`${CHIP} !bg-navy !text-white`}>Members only</li>}
               {activity.location && <li className={CHIP}>{activity.location}</li>}
               <li className={CHIP}>{priceLabel(activity.cost_cents, groups)}</li>
               <li className={CHIP}>

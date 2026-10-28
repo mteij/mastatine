@@ -12,6 +12,9 @@ import { getAuth } from "@/lib/auth";
 import { requireAdmin } from "@/lib/session";
 import { UPLOAD_DIR, UPLOAD_FILENAME_RE } from "@/lib/uploads";
 import { sendIssue, sendTestIssue } from "@/lib/newsletter";
+import { AUDIENCES, countAudience, parseAudience } from "@/lib/newsletter-audience";
+import { membershipApprovedEmail } from "@/lib/email-templates";
+import { sendMail } from "@/lib/mailer";
 
 // Server actions are public HTTP endpoints: every one re-checks the admin role itself.
 
@@ -84,6 +87,36 @@ export async function unbanUser(formData: FormData) {
   revalidatePath("/admin/users");
 }
 
+/** Approves a membership request (or admits someone who never asked) and tells them. Declining sends nothing. */
+export async function approveMember(formData: FormData) {
+  await requireAdmin();
+  const [approved] = await sql<{ email: string; name: string }[]>`
+    UPDATE "user" SET member_status = 'approved'
+    WHERE id = ${userId.parse(formData.get("userId"))} AND member_status <> 'approved'
+    RETURNING email, name
+  `;
+  if (approved) {
+    after(() =>
+      sendMail({ to: approved.email, ...membershipApprovedEmail(approved.name || null) }).catch((error) =>
+        console.error("Failed to send the membership approval email:", (error as Error).message),
+      ),
+    );
+  }
+  refreshMembership();
+}
+
+/** Declines a request or ends a membership; the person can ask again. */
+export async function revokeMember(formData: FormData) {
+  await requireAdmin();
+  await sql`UPDATE "user" SET member_status = 'none', member_requested_at = NULL WHERE id = ${userId.parse(formData.get("userId"))}`;
+  refreshMembership();
+}
+
+function refreshMembership() {
+  revalidatePath("/admin/users");
+  revalidatePath("/admin");
+}
+
 export async function removeUser(formData: FormData) {
   const target = await requireOtherUser(formData);
   await getAuth().api.removeUser({ body: { userId: target }, headers: await headers() });
@@ -95,13 +128,14 @@ export async function removeUser(formData: FormData) {
 const issueSchema = z.object({
   subject: z.string().trim().min(1).max(150),
   body: z.string().trim().min(1).max(20000),
+  audience: z.enum(AUDIENCES),
 });
 
 export async function createIssue(formData: FormData) {
   const session = await requireAdmin();
   const data = issueSchema.parse(Object.fromEntries(formData));
   const [issue] = await sql<{ id: string }[]>`
-    INSERT INTO newsletters (subject, body, created_by) VALUES (${data.subject}, ${data.body}, ${session.user.id}) RETURNING id
+    INSERT INTO newsletters (subject, body, audience, created_by) VALUES (${data.subject}, ${data.body}, ${data.audience}, ${session.user.id}) RETURNING id
   `;
   redirect(`/admin/newsletter/${issue.id}`);
 }
@@ -110,7 +144,7 @@ export async function saveIssue(formData: FormData) {
   await requireAdmin();
   const issueId = id.parse(formData.get("id"));
   const data = issueSchema.parse(Object.fromEntries(formData));
-  await sql`UPDATE newsletters SET subject = ${data.subject}, body = ${data.body} WHERE id = ${issueId} AND status = 'draft'`;
+  await sql`UPDATE newsletters SET subject = ${data.subject}, body = ${data.body}, audience = ${data.audience} WHERE id = ${issueId} AND status = 'draft'`;
   redirect(`/admin/newsletter/${issueId}?notice=saved`);
 }
 
@@ -136,8 +170,8 @@ export async function sendTest(formData: FormData) {
 export async function startSending(formData: FormData) {
   await requireAdmin();
   const issueId = id.parse(formData.get("id"));
-  const [recipients] = await sql<{ n: number }[]>`SELECT COUNT(*)::int AS n FROM newsletter_subscribers WHERE status = 'confirmed'`;
-  if (recipients.n === 0) redirect(`/admin/newsletter/${issueId}?notice=no-recipients`);
+  const [issue] = await sql<{ audience: string }[]>`SELECT audience FROM newsletters WHERE id = ${issueId}`;
+  if ((await countAudience(parseAudience(issue?.audience))) === 0) redirect(`/admin/newsletter/${issueId}?notice=no-recipients`);
   after(() => sendIssue(issueId));
   redirect(`/admin/newsletter/${issueId}?notice=sending`);
 }

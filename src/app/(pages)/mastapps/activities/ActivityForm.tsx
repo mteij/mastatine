@@ -26,6 +26,7 @@ export interface ActivityFormValues {
   invite_flitcie: boolean;
   flitcie_note: string;
   is_visible: boolean;
+  members_only: boolean;
   signup_options: SignupGroup[];
   poster_url: string | null;
 }
@@ -137,7 +138,11 @@ export default function ActivityForm({ values: v, committees }: ActivityFormProp
         <textarea name="flitcie_note" aria-label="Notes for the PhotoCie" className="input min-h-24" maxLength={2000} defaultValue={v.flitcie_note} />
       </div>
 
-      <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="is_visible" defaultChecked={v.is_visible} /> Show activity</label>
+      <div className="space-y-2">
+        <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="is_visible" defaultChecked={v.is_visible} /> Show activity</label>
+        <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="members_only" defaultChecked={v.members_only} /> Members only</label>
+        <p className="text-sm text-muted">Members-only activities are hidden from everyone who is not a member, and left out of the public calendar.</p>
+      </div>
 
       <Field id="poster" label="Poster">
         {/* eslint-disable-next-line @next/next/no-img-element */}
