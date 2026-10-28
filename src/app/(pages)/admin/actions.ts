@@ -195,3 +195,10 @@ export async function toggleCommitteeChair(formData: FormData) {
   `;
   refreshCommittees();
 }
+
+export async function updateCommittee(formData: FormData) {
+  await requireAdmin();
+  const data = committeeSchema.parse(Object.fromEntries(formData));
+  await sql`UPDATE committees SET name = ${data.name}, description = ${data.description || null} WHERE id = ${id.parse(formData.get("id"))}`;
+  refreshCommittees();
+}

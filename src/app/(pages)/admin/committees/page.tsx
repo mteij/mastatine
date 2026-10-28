@@ -1,7 +1,7 @@
 import sql from "@/lib/db";
 import ConfirmButton from "@/components/admin/ConfirmButton";
 import { displayName } from "@/lib/committees";
-import { addCommitteeMember, createCommittee, deleteCommittee, removeCommitteeMember, toggleCommitteeChair } from "../actions";
+import { addCommitteeMember, createCommittee, deleteCommittee, removeCommitteeMember, toggleCommitteeChair, updateCommittee } from "../actions";
 
 interface CommitteeRow {
   id: string;
@@ -57,6 +57,16 @@ export default async function AdminCommittees() {
                   <ConfirmButton message={`Delete ${c.name}? Its activities, meetings and action points are deleted too.`} className="btn btn-danger btn-sm">Delete</ConfirmButton>
                 </form>
               </div>
+
+              <details className="mt-3">
+                <summary className="cursor-pointer text-sm font-bold text-accent-text">Edit name and description</summary>
+                <form action={updateCommittee} className="mt-3 space-y-3">
+                  <input type="hidden" name="id" value={c.id} />
+                  <input name="name" aria-label="Name" className="input" required maxLength={80} defaultValue={c.name} />
+                  <textarea name="description" aria-label="Description" className="input min-h-20" maxLength={200} defaultValue={c.description ?? ""} />
+                  <button className="btn btn-primary btn-sm" type="submit">Save</button>
+                </form>
+              </details>
 
               <ul className="mt-4 divide-y divide-line">
                 {own.map((m) => (
