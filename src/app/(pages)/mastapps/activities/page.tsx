@@ -1,20 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import AppFrame from "@/components/ui/AppFrame";
-import { formatCost, formatParticipants, getActivities } from "@/lib/activities";
+import { formatParticipants, getActivities } from "@/lib/activities";
 import { formatDateTime } from "@/lib/datetime";
-import { requireUser } from "@/lib/session";
+import { getSession } from "@/lib/session";
+import { parseSignupGroups, priceLabel } from "@/lib/signup-options";
 import { CheckIcon } from "@/components/ui/icons";
 
 export const metadata: Metadata = { title: "Activities", description: "Everything the committees organise." };
 export const dynamic = "force-dynamic";
 
 export default async function ActivitiesPage() {
-  const { user } = await requireUser();
-  const activities = await getActivities(user.id);
+  const session = await getSession();
+  const activities = await getActivities(session?.user.id ?? null);
 
   return (
-    <AppFrame title="Activities" tagline="Everything the committees organise. Subscribe and show up.">
+    <AppFrame title="Activities" tagline={session ? "Everything the committees organise. Subscribe and show up." : "Everything the committees organise. Sign in to subscribe."}>
       {activities.length === 0 ? (
         <p className="py-10 text-center text-muted">No activities yet.</p>
       ) : (
@@ -28,7 +29,7 @@ export default async function ActivitiesPage() {
                 </div>
                 <dl className="divide-y divide-line text-center text-sm">
                   <div className="px-4 py-2 text-muted">{formatDateTime(a.starts_at)}</div>
-                  <div className="px-4 py-2">{formatCost(a.cost_cents)}</div>
+                  <div className="px-4 py-2">{priceLabel(a.cost_cents, parseSignupGroups(a.signup_options))}</div>
                   <div className="px-4 py-2">Participants: {formatParticipants(a)}</div>
                 </dl>
                 {a.poster_url && (

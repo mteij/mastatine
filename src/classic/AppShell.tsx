@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import FullScreenApp from "./FullScreenApp";
+import NewsletterBand from "./NewsletterBand";
 import { isFullScreenAppPath } from "@/lib/paths";
 
 interface AppShellProps {
@@ -35,6 +36,7 @@ export default function AppShell({ shopUrl, sidebar, colophon, announcement, chi
           <div style={{ clear: "both" }} />
         </div>
       </div>
+      <NewsletterBand />
       {colophon}
     </div>
   );

@@ -9,6 +9,7 @@ import { fromLocalInput } from "@/lib/datetime";
 import { storePoster } from "@/lib/poster";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { getSession } from "@/lib/session";
+import { lowestTotalIsValid, parseSignupGroups, quoteSignup, signupGroupsSchema } from "@/lib/signup-options";
 
 const BASE = "/mastapps/activities";
 const saveLimiter = createRateLimiter(30, 60 * 60 * 1000);
@@ -69,6 +70,7 @@ const activitySchema = z.object({
   invite_flitcie: checkbox,
   flitcie_note: z.string().trim().max(2000),
   is_visible: checkbox,
+  signup_options: z.string().max(20000).optional(),
 });
 
 export async function saveActivity(_prev: ActivityFormState, formData: FormData): Promise<ActivityFormState> {
@@ -83,6 +85,12 @@ export async function saveActivity(_prev: ActivityFormState, formData: FormData)
     return { error: "The subscription must close after it opens." };
   }
   if (!(await isCommitteeMember(session.user, d.committee_id))) return { error: "You are not a member of that committee." };
+
+  const signupOptions = signupGroupsSchema.safeParse(parseJson(d.signup_options || "[]"));
+  if (!signupOptions.success) return { error: "Check the signup options: every choice and option needs a name and a valid price." };
+  if (!lowestTotalIsValid(d.cost === null ? null : Math.round(d.cost * 100), signupOptions.data)) {
+    return { error: "The cheapest combination of options would cost less than nothing. Lower the discounts or raise the base cost." };
+  }
 
   const id = d.id || null;
   let existingPoster: string | null = null;
@@ -121,6 +129,7 @@ export async function saveActivity(_prev: ActivityFormState, formData: FormData)
     invite_flitcie: d.invite_flitcie,
     flitcie_note: d.flitcie_note,
     is_visible: d.is_visible,
+    signup_options: sql.json(signupOptions.data),
     poster_url: posterUrl,
   };
 
@@ -136,15 +145,32 @@ export async function saveActivity(_prev: ActivityFormState, formData: FormData)
 
 const activityId = z.uuid();
 
+function parseJson(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 export async function subscribe(formData: FormData) {
   const session = await requireSignedIn();
   const id = activityId.parse(formData.get("id"));
   if (!subscribeLimiter.allow(`user:${session.user.id}`)) throw new Error("Slow down a little.");
 
+  const [activity] = await sql<{ cost_cents: number | null; signup_options: unknown }[]>`
+    SELECT cost_cents, signup_options FROM activities WHERE id = ${id} AND is_visible
+  `;
+  if (!activity) return;
+  const groups = parseSignupGroups(activity.signup_options);
+  const selection = Object.fromEntries(groups.map((g) => [g.id, String(formData.get(`opt_${g.id}`) ?? "")]));
+  const quote = quoteSignup(activity.cost_cents, groups, selection);
+  if ("error" in quote) throw new Error(quote.error);
+
   // One statement so the limit holds under concurrent sign-ups.
   await sql`
-    INSERT INTO activity_subscriptions (activity_id, user_id)
-    SELECT a.id, ${session.user.id} FROM activities a
+    INSERT INTO activity_subscriptions (activity_id, user_id, choices, price_cents)
+    SELECT a.id, ${session.user.id}, ${sql.json(quote.picks)}, ${quote.price_cents} FROM activities a
     WHERE a.id = ${id} AND a.is_visible
       AND (a.subscription_opens_at IS NULL OR a.subscription_opens_at <= NOW())
       AND COALESCE(a.subscription_closes_at, a.starts_at) > NOW()

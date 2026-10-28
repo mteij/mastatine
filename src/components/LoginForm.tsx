@@ -61,7 +61,7 @@ export default function LoginForm({ next }: { next: string }) {
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
       <div>
         <label htmlFor={`${id}-email`} className="label">Email address</label>
-        <input id={`${id}-email`} type="email" required autoComplete="email" autoFocus maxLength={254} value={email} onChange={(e) => setEmail(e.target.value)} className="input" placeholder="you@example.com" />
+        <input id={`${id}-email`} type="email" required autoComplete="email" inputMode="email" autoCapitalize="none" spellCheck={false} maxLength={254} value={email} onChange={(e) => setEmail(e.target.value)} className="input" placeholder="you@example.com" />
       </div>
       {!returning && (
         <label className="flex items-start gap-3 text-sm">

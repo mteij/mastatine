@@ -1,4 +1,5 @@
 import sql from "@/lib/db";
+import type { SignupGroup, SignupPick } from "@/lib/signup-options";
 
 export interface Activity {
   id: string;
@@ -24,20 +25,27 @@ export interface Activity {
   is_visible: boolean;
   poster_url: string | null;
   created_by: string | null;
+  signup_options: SignupGroup[];
   participants: number;
   subscribed: boolean;
+  /** What the viewer picked and agreed to pay when subscribing (null when not subscribed). */
+  my_choices: SignupPick[] | null;
+  my_price_cents: number | null;
 }
 
 type Viewer = { id: string; role?: string | null };
 
-const columns = (userId: string) => sql`
+/** `userId` is null for visitors who are not signed in: nothing is flagged as subscribed. */
+const columns = (userId: string | null) => sql`
   a.*, c.name AS committee_name,
   (SELECT COUNT(*) FROM activity_subscriptions s WHERE s.activity_id = a.id)::int AS participants,
-  EXISTS (SELECT 1 FROM activity_subscriptions s WHERE s.activity_id = a.id AND s.user_id = ${userId}) AS subscribed
+  EXISTS (SELECT 1 FROM activity_subscriptions s WHERE s.activity_id = a.id AND s.user_id = ${userId}) AS subscribed,
+  (SELECT s.choices FROM activity_subscriptions s WHERE s.activity_id = a.id AND s.user_id = ${userId}) AS my_choices,
+  (SELECT s.price_cents FROM activity_subscriptions s WHERE s.activity_id = a.id AND s.user_id = ${userId}) AS my_price_cents
 `;
 
 /** Upcoming (and the last week of) visible activities, soonest first. */
-export function getActivities(userId: string) {
+export function getActivities(userId: string | null) {
   return sql<Activity[]>`
     SELECT ${columns(userId)} FROM activities a JOIN committees c ON c.id = a.committee_id
     WHERE a.is_visible AND a.starts_at > NOW() - INTERVAL '7 days'
@@ -64,7 +72,7 @@ export function getUpcomingActivities(limit: number) {
   `;
 }
 
-export async function getActivity(id: string, userId: string): Promise<Activity | null> {
+export async function getActivity(id: string, userId: string | null): Promise<Activity | null> {
   const [row] = await sql<Activity[]>`
     SELECT ${columns(userId)} FROM activities a JOIN committees c ON c.id = a.committee_id WHERE a.id = ${id}
   `;
@@ -81,8 +89,8 @@ export function getManagedActivities(user: Viewer) {
 }
 
 export function getParticipants(activityId: string) {
-  return sql<{ id: string; name: string; email: string }[]>`
-    SELECT u.id, u.name, u.email FROM activity_subscriptions s JOIN "user" u ON u.id = s.user_id
+  return sql<{ id: string; name: string; email: string; choices: SignupPick[]; price_cents: number | null }[]>`
+    SELECT u.id, u.name, u.email, s.choices, s.price_cents FROM activity_subscriptions s JOIN "user" u ON u.id = s.user_id
     WHERE s.activity_id = ${activityId} ORDER BY s.created_at
   `;
 }

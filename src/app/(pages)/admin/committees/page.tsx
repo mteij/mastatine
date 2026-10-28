@@ -44,7 +44,7 @@ export default async function AdminCommittees() {
         <button className="btn btn-primary" type="submit">Add committee</button>
       </form>
 
-      <ul className="grid gap-5 lg:grid-cols-2">
+      <ul className="grid gap-5 @3xl:grid-cols-2">
         {committees.map((c) => {
           const own = members.filter((m) => m.committee_id === c.id);
           const candidates = users.filter((u) => !own.some((m) => m.user_id === u.id));

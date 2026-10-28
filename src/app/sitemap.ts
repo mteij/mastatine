@@ -4,7 +4,7 @@ import { siteUrl } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
-const PAGES = ["/", "/about", "/board", "/committees", "/history", "/membership", "/news", "/mastapps", "/mastapps/quotes", "/newsletter", "/contact", "/privacy", "/terms"];
+const PAGES = ["/", "/about", "/board", "/committees", "/history", "/membership", "/news", "/mastapps", "/mastapps/activities", "/mastapps/quotes", "/newsletter", "/contact", "/privacy", "/terms"];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = siteUrl();

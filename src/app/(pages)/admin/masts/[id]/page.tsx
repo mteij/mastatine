@@ -28,7 +28,7 @@ export default async function EditMastPage(props: { params: Promise<{ id: string
           <label className="label" htmlFor="title">Title</label>
           <input id="title" name="title" className="input" defaultValue={mast.title} required maxLength={120} />
         </div>
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-5 @xl:grid-cols-2">
           <div>
             <label className="label" htmlFor="submitter_name">Submitted by</label>
             <input id="submitter_name" name="submitter_name" className="input" defaultValue={mast.submitter_name} required maxLength={80} />

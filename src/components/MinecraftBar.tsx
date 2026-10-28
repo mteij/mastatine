@@ -14,7 +14,7 @@ export default async function MinecraftBar() {
         {label}
       </span>
       <code className="mc__ip">{MINECRAFT_HOST}</code>
-      <CopyButton value={MINECRAFT_HOST} label="Copy" />
+      <CopyButton value={MINECRAFT_HOST} label="Copy IP" />
       <a href={MINECRAFT_MAP_URL} className="mc__map" target="_blank" rel="noopener noreferrer">
         Map<span aria-hidden> &#8599;</span>
         <span className="sr-only"> (opens in a new tab)</span>

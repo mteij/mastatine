@@ -1,7 +1,9 @@
 "use client";
 
 import { useActionState } from "react";
+import type { SignupGroup } from "@/lib/signup-options";
 import { saveActivity, type ActivityFormState } from "./actions";
+import SignupOptionsEditor from "./SignupOptionsEditor";
 
 export interface ActivityFormValues {
   id?: string;
@@ -24,6 +26,7 @@ export interface ActivityFormValues {
   invite_flitcie: boolean;
   flitcie_note: string;
   is_visible: boolean;
+  signup_options: SignupGroup[];
   poster_url: string | null;
 }
 
@@ -80,7 +83,7 @@ export default function ActivityForm({ values: v, committees }: ActivityFormProp
         <Field id="location" label="Location">
           <input id="location" name="location" className="input" maxLength={200} defaultValue={v.location} />
         </Field>
-        <Field id="cost" label="Cost (€, empty is free)">
+        <Field id="cost" label="Base cost (€, empty is free)">
           <input id="cost" name="cost" className="input" inputMode="decimal" pattern="[0-9]+([.,][0-9]{1,2})?" defaultValue={v.cost} />
         </Field>
         <Field id="subscription_limit" label="Subscription limit">
@@ -108,6 +111,8 @@ export default function ActivityForm({ values: v, committees }: ActivityFormProp
           <input id="subscription_closes_at" name="subscription_closes_at" type="datetime-local" className="input" defaultValue={v.subscription_closes_at} />
         </Field>
       </div>
+
+      <SignupOptionsEditor initial={v.signup_options} />
 
       <label className="flex items-center gap-2"><input type="checkbox" name="allow_unsubscribe" defaultChecked={v.allow_unsubscribe} /> Allow unsubscribe</label>
 

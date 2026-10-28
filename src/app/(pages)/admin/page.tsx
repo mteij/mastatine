@@ -63,10 +63,10 @@ export default async function AdminOverview() {
 
   return (
     <div className="space-y-8">
-      <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid gap-5 @xl:grid-cols-2 @3xl:grid-cols-3">
         {cards.map((card) => (
           <li key={card.label}>
-            <Link href={card.href} className="card block p-6 hover:border-accent">
+            <Link href={card.href} className="card block h-full p-6 hover:border-accent">
               <p className="text-sm text-muted">{card.label}</p>
               <p className="mt-1 font-display text-4xl font-bold tabular-nums">{card.value.toLocaleString("en-US")}</p>
               {card.note && <p className="mt-1 text-sm text-muted">{card.note}</p>}
@@ -75,7 +75,7 @@ export default async function AdminOverview() {
         ))}
       </ul>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-5 @3xl:grid-cols-2">
         <section className="card p-6">
           <h2 className="text-lg font-extrabold">New users per week</h2>
           <ol className="mt-4 flex h-40 items-end gap-2" aria-label="New users per week, oldest first">
@@ -129,7 +129,7 @@ export default async function AdminOverview() {
           </ul>
         </section>
 
-        <section className="card p-6 lg:col-span-2">
+        <section className="card p-6 @3xl:col-span-2">
           <h2 className="text-lg font-extrabold">Top masts</h2>
           <ol className="mt-3 divide-y divide-line">
             {topMasts.map((m, i) => (

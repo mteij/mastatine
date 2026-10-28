@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { Tower } from "@/lib/types";
 import type { VoteDirection } from "@/lib/vote";
@@ -30,7 +31,8 @@ export default function TowerDetailModal({ tower, voteDirection, onClose, onVote
     }
   }
 
-  return (
+  // Rendered on <body>: inside the page, the entrance animation of #main traps the z-index below the menu.
+  return createPortal(
     <div className="tm-backdrop" onClick={onClose}>
       <div className="tm-box" onClick={(e) => e.stopPropagation()}>
 
@@ -112,6 +114,7 @@ export default function TowerDetailModal({ tower, voteDirection, onClose, onVote
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

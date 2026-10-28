@@ -14,7 +14,7 @@ export default function FullScreenApp({ shopUrl, children }: { shopUrl: string |
 
   return (
     <div className="dash">
-      <aside className="dash-rail">
+      <header className="dash-bar">
         <Link href={app?.href ?? "/mastapps"} className="dash-brand" aria-label={app ? `${app.name} home` : "MastApps"}>
           <span className="dash-brand__icon">{app?.icon ?? Icons.dashboard}</span>
           <span>{app?.name ?? "MastApps"}</span>
@@ -42,7 +42,7 @@ export default function FullScreenApp({ shopUrl, children }: { shopUrl: string |
           </Link>
           <SidebarAccount />
         </div>
-      </aside>
+      </header>
 
       <main id="main" className="dash-main">
         {children}

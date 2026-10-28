@@ -18,9 +18,9 @@ export default async function LoginPage(props: { searchParams: Promise<{ next?: 
   if (await getSession()) redirect(target);
 
   return (
-    <div className="container-prose flex justify-center py-16 sm:py-24">
+    <div className="container-prose flex justify-center pb-10 pt-20 sm:py-24">
       <div className="w-full max-w-md">
-        <h1 className="mt-3 text-4xl font-extrabold">Welcome back</h1>
+        <h1 className="mt-3 text-3xl font-extrabold sm:text-4xl">Welcome back</h1>
         <p className="mt-3 text-muted">We email you a single-use link. No password to remember, or to leak.</p>
         {error && (
           <p role="alert" className="mt-6 rounded-xl bg-danger/10 px-4 py-3 text-sm text-danger">

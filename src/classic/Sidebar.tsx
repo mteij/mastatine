@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import MastatineLogo from "./MastatineLogo";
 import SidebarAccount from "./SidebarAccount";
-import NewsletterForm from "@/components/NewsletterForm";
+import MobileAccountButton from "./MobileAccountButton";
 
 interface NavItem {
   label: string;
@@ -29,6 +29,7 @@ function buildNav(shopUrl: string | null): NavItem[] {
       { label: "Membership", href: "/membership" },
     ],
   },
+  { label: "Activities", href: "/mastapps/activities" },
   { label: "MastApps", href: "/mastapps" },
   ...(shopUrl ? [{ label: "Merch shop", href: shopUrl, external: true }] : []),
   { label: "Contact", href: "/contact" },
@@ -180,6 +181,12 @@ export default function Sidebar({ shopUrl }: { shopUrl: string | null }) {
     const aside = sidebarRef.current;
     if (!slider || !aside) return;
 
+    // The open mobile drawer is fixed to the viewport: a sticky offset would push it off screen.
+    if (mobileOpen) {
+      aside.style.top = "0px";
+      return;
+    }
+
     function setTop() {
       // Absolute distance from the page top to the slider's bottom edge.
       // Using this as a negative sticky top means the sidebar scrolls freely
@@ -193,26 +200,44 @@ export default function Sidebar({ shopUrl }: { shopUrl: string | null }) {
     setTop();
     window.addEventListener("resize", setTop);
     return () => window.removeEventListener("resize", setTop);
-  }, []);
+  }, [mobileOpen]);
+
+  // While the drawer is open: freeze the page behind it and let Escape close it.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [mobileOpen]);
 
   return (
     <>
       {/* Mobile hamburger */}
-      <button
-        className="lg:hidden fixed top-3 left-3 z-50 bg-white shadow rounded p-2 text-xl leading-none"
+      {!mobileOpen && <button
+        className="lg:hidden fixed top-3 left-3 z-50 flex h-11 w-11 items-center justify-center bg-white shadow rounded text-xl leading-none"
         onClick={() => setMobileOpen(true)}
         aria-label="Open menu"
         id="nav-toggle"
         style={{ color: "#0a0a0a" }}
       >
         ☰
-      </button>
+      </button>}
+
+      {!mobileOpen && <MobileAccountButton />}
 
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/40 z-40"
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
           onClick={() => setMobileOpen(false)}
+          aria-hidden
         />
       )}
 
@@ -223,13 +248,13 @@ export default function Sidebar({ shopUrl }: { shopUrl: string | null }) {
         className={[
           "flex flex-col",
           mobileOpen
-            ? "fixed inset-y-0 left-0 z-50 overflow-y-auto"
+            ? "mobile-drawer fixed inset-y-0 left-0 z-50 overflow-y-auto overscroll-contain"
             : "hidden lg:flex",
         ].join(" ")}
       >
         {/* Mobile close */}
         <button
-          className="lg:hidden absolute top-3 right-3 text-2xl leading-none"
+          className="lg:hidden absolute top-1 right-1 h-11 w-11 text-2xl leading-none"
           style={{ color: "#555", background: "none", border: "none", cursor: "pointer" }}
           onClick={() => setMobileOpen(false)}
           aria-label="Close menu"
@@ -242,7 +267,7 @@ export default function Sidebar({ shopUrl }: { shopUrl: string | null }) {
         <header id="header">
           {/* ── BRANDING ── */}
           <div id="branding" role="banner">
-            <div className="identity">
+            <div className="identity hidden lg:block">
               <Link id="logo" href="/" title="S.A. Mastatine" rel="home">
                 <MastatineLogo size={80} />
               </Link>
@@ -272,74 +297,9 @@ export default function Sidebar({ shopUrl }: { shopUrl: string | null }) {
             {/* ── spacer ── */}
             <div style={{ flex: 1 }} />
 
-            {/* ── NEWSLETTER CARD + ACCOUNT ── */}
-            <section className="loop-card" aria-labelledby="loop-title">
-              <span className="loop-card__icon" aria-hidden>
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 6h16v12H4zM4 7l8 6 8-6" />
-                </svg>
-              </span>
-              <h3 id="loop-title" className="loop-card__title">Stay in the loop</h3>
-              <p className="loop-card__text">The best masts and news, four times a year.</p>
-              <NewsletterForm layout="stacked" compact />
-            </section>
+            {/* ── ACCOUNT ── */}
             <div className="loop-account">
               <SidebarAccount />
-            </div>
-
-            {/* ── SEARCH WIDGET (mobile only — desktop search lives in the sort row) ── */}
-            <div className="lg:hidden" style={{ borderTop: "1px solid #eee", paddingTop: "1em", marginTop: "1em" }}>
-              <form
-                role="search"
-                method="get"
-                action="/#towers"
-                className="searchform"
-                style={{ 
-                  display: "flex", 
-                  border: "1px solid #ddd", 
-                  borderRadius: "25px", 
-                  overflow: "hidden",
-                  background: "#fff",
-                  boxShadow: "inset 0 1px 3px rgba(0,0,0,0.05)"
-                }}
-              >
-                <input
-                  type="search"
-                  name="s"
-                  placeholder="Search"
-                  style={{
-                    flex: 1,
-                    padding: "0.6em 1.2em",
-                    fontSize: "0.95em",
-                    color: "#333",
-                    outline: "none",
-                    border: "none",
-                    background: "transparent",
-                  }}
-                />
-                <button
-                  type="submit"
-                  aria-label="Search"
-                  style={{
-                    padding: "0 1.2em",
-                    background: "transparent",
-                    color: "var(--navy)",
-                    border: "none",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    transition: "color 0.2s"
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = "var(--orange)"}
-                  onMouseLeave={(e) => e.currentTarget.style.color = "var(--navy)"}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                  </svg>
-                </button>
-              </form>
             </div>
 
             {/* ── FOOTER ── */}

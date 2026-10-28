@@ -1,5 +1,6 @@
 import type { Activity } from "@/lib/activities";
 import { toLocalInput } from "@/lib/datetime";
+import { parseSignupGroups } from "@/lib/signup-options";
 import type { ActivityFormValues } from "./ActivityForm";
 
 export function emptyActivityValues(committeeId?: string): ActivityFormValues {
@@ -23,6 +24,7 @@ export function emptyActivityValues(committeeId?: string): ActivityFormValues {
     invite_flitcie: false,
     flitcie_note: "",
     is_visible: true,
+    signup_options: [],
     poster_url: null,
   };
 }
@@ -49,6 +51,7 @@ export function activityToValues(a: Activity): ActivityFormValues {
     invite_flitcie: a.invite_flitcie,
     flitcie_note: a.flitcie_note,
     is_visible: a.is_visible,
+    signup_options: parseSignupGroups(a.signup_options),
     poster_url: a.poster_url,
   };
 }

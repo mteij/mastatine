@@ -39,7 +39,7 @@ export default async function IssuePage(props: { params: Promise<{ id: string }>
   const isDraft = issue.status === "draft";
 
   return (
-    <div className="grid gap-10 lg:grid-cols-2">
+    <div className="grid gap-10 @3xl:grid-cols-2">
       {issue.status === "sending" && <AutoRefresh />}
 
       <div>
