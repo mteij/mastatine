@@ -8,7 +8,7 @@ import TowerDetailModal from "./TowerDetailModal";
 import { submitVote, type VoteDirection } from "@/lib/vote";
 
 /** `overlay` floats in the top-right corner of the image (the server status chip). */
-export default function HeroCarousel({ masts, overlay }: { masts: MastSlide[]; overlay?: ReactNode }) {
+export default function HeroCarousel({ masts, overlay, highlight }: { masts: MastSlide[]; overlay?: ReactNode; highlight?: ReactNode }) {
   const mast = masts[0] ?? null;
   const [showModal, setShowModal] = useState(false);
   const [voteDelta, setVoteDelta] = useState(0);
@@ -79,7 +79,7 @@ export default function HeroCarousel({ masts, overlay }: { masts: MastSlide[]; o
               Mast of the Month
             </div>
             {/* caption */}
-            <div className="absolute bottom-0 left-0 right-0 z-10 pb-6 flex flex-col items-center gap-0.5 px-4">
+            <div className={`absolute bottom-0 left-0 right-0 z-10 flex flex-col items-center gap-0.5 px-4 ${highlight ? "pb-[7.5rem]" : "pb-6"}`}>
               <span
                 className="text-white font-bold text-center"
                 style={{ fontSize: "1.4em", textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}
@@ -115,8 +115,14 @@ export default function HeroCarousel({ masts, overlay }: { masts: MastSlide[]; o
               className="text-[1.1em] font-normal text-center px-4 py-1.5"
               style={{ background: "rgba(0,0,0,0.8)" }}
             >
-              No masts submitted yet — be the first!
+              No masts submitted yet. Be the first!
             </span>
+          </div>
+        )}
+        {highlight && (
+          // The band is click-through (the whole hero opens the mast popup); only the link inside takes clicks.
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center bg-gradient-to-t from-black/85 via-black/45 to-transparent px-4 pb-4 pt-16 [&>*]:pointer-events-auto" onClick={(e) => e.stopPropagation()}>
+            {highlight}
           </div>
         )}
         {overlay && (

@@ -15,7 +15,6 @@ export default async function UpcomingActivities() {
 
   return (
     <Link href={`/mastapps/activities/${next.id}`} className="nx" title={`${next.name} · ${when}`}>
-      <span className="nx__label">Next</span>
       <span className="nx__name">{next.name}</span>
       <span className="nx__when">
         <ActivityCountdown startsAt={next.starts_at.toISOString()} endsAt={next.ends_at?.toISOString() ?? null} fallback={when} />

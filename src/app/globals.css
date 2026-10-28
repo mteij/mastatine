@@ -1256,12 +1256,12 @@ blockquote::before, blockquote::after { content: ""; content: none; }
 .mc__map { background: #f57f20; }
 .mc__map:hover { background: #d96a10; }
 @media (max-width: 650px) { .mc__ip { font-size: 0.8rem; } .mc { border-radius: 14px; } }
-.nx { display: inline-flex; align-items: center; gap: 0.5rem; max-width: 100%; padding: 0.3rem 0.8rem; border-radius: 999px; background: rgb(15 34 84 / 0.6); color: #fff; font-size: 0.85rem; text-decoration: none; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: background-color 0.15s; }
-.nx:hover { background: rgb(15 34 84 / 0.8); }
-.nx__label { flex: none; padding: 0.05rem 0.5rem; border-radius: 999px; background: #f57f20; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; }
-.nx__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 800; }
-.nx__when { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; opacity: 0.95; white-space: nowrap; }
-@media (max-width: 650px) { .nx { font-size: 0.78rem; } }
+.nx { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; max-width: 100%; padding: 0.3rem 0.5rem; color: #fff; font-size: 1.15rem; text-decoration: none; text-shadow: 0 1px 3px rgb(0 0 0 / 0.8), 0 2px 14px rgb(0 0 0 / 0.65); transition: transform 0.15s; }
+.nx:hover { transform: translateY(-1px); }
+.nx::before { content: ""; width: 3.5rem; height: 2px; margin-bottom: 0.55rem; background: #f57f20; box-shadow: 0 0 12px rgb(245 127 32 / 0.9); }
+.nx__name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.32em; padding-left: 0.32em; opacity: 0.92; }
+.nx__when { flex: none; margin-top: 0.15rem; font-size: 3.4rem; line-height: 1.05; font-weight: 800; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; color: #fff; white-space: nowrap; text-shadow: 0 0 28px rgb(245 127 32 / 0.75), 0 2px 8px rgb(0 0 0 / 0.7); }
+@media (max-width: 650px) { .nx__name { font-size: 0.72rem; letter-spacing: 0.22em; } .nx__when { font-size: 2.2rem; } }
 
 /* ── Announcement bar (latest news; sticky at the very top of every site page, dismissible) ── */
 .announce { position: sticky; top: 0; z-index: 35; background: linear-gradient(90deg, #f57f20 0%, #ff9a3c 100%); color: #fff; box-shadow: 0 2px 8px rgb(15 34 84 / 0.2); }
