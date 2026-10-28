@@ -64,7 +64,7 @@ export function getApps(shopUrl: string | null): MastApp[] {
       icon: Icons.activities,
       nav: [
         { label: "Activities", href: "/mastapps/activities", icon: <ListIcon /> },
-        { label: "Create activity", href: "/mastapps/activities/new", icon: <PlusIcon /> },
+        { label: "New activity", href: "/mastapps/activities/new", icon: <PlusIcon /> },
         { label: "Your activities", href: "/mastapps/activities/mine", icon: <CheckIcon /> },
       ],
     },

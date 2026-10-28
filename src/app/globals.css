@@ -1237,7 +1237,10 @@ blockquote::before, blockquote::after { content: ""; content: none; }
     .dash-bar { gap: 0 0.5rem; padding: 0 0.75rem; }
     .dash-foot { order: 2; }
     .dash-foot a span { display: none; }
-    .dash-nav { order: 3; width: 100%; padding-bottom: 0.5rem; overflow-x: auto; }
+    /* Page links: one even row of text tabs (icons dropped) instead of a cramped scroller. */
+    .dash-nav { order: 3; width: 100%; gap: 0.25rem; padding-bottom: 0.6rem; overflow-x: auto; }
+    .dash-nav a { flex: 1 1 0; min-width: max-content; justify-content: center; padding: 0.5rem 0.6rem; font-size: 0.85rem; }
+    .dash-nav svg { display: none; }
     .dash-page { padding: 1.5rem 1.1rem 3rem; }
   }
 

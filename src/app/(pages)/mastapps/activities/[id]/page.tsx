@@ -6,7 +6,7 @@ import AppFrame from "@/components/ui/AppFrame";
 import { formatParticipants, getActivity, getParticipants, subscribeState } from "@/lib/activities";
 import { isCommitteeMember } from "@/lib/committees";
 import { displayName } from "@/lib/committees";
-import { formatDateTime } from "@/lib/datetime";
+import { formatDateTime, formatDayMonth, formatTime, zonedDay } from "@/lib/datetime";
 import { getSession } from "@/lib/session";
 import { formatAdjustment, formatEuro, parseSignupGroups, priceLabel, tallyPicks } from "@/lib/signup-options";
 import { subscribe, unsubscribe } from "../actions";
@@ -19,6 +19,8 @@ const NOT_SUBSCRIBABLE: Record<string, string> = {
   "not-yet": "Subscription has not opened yet",
   closed: "Subscription is closed",
 };
+
+const CHIP = "rounded-full bg-soft px-3 py-1 text-sm font-bold";
 
 export default async function ActivityPage(props: { params: Promise<{ id: string }> }) {
   // Public: anyone can read an activity, only subscribing (and the member list) needs an account.
@@ -35,55 +37,49 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
   const tally = tallyPicks(participants.map((p) => p.choices));
   const canUnsubscribe = activity.allow_unsubscribe && activity.starts_at > new Date();
 
-  const rows: [string, React.ReactNode][] = [
-    ["Committee", activity.committee_name],
-    ["Date", formatDateTime(activity.starts_at)],
-    ...(activity.ends_at ? ([["Ends", formatDateTime(activity.ends_at)]] as [string, string][]) : []),
-    ...(activity.location ? ([["Location", activity.location]] as [string, string][]) : []),
-    ["Cost", priceLabel(activity.cost_cents, groups)],
+  const spotsLeft = activity.subscription_limit === null ? null : Math.max(0, activity.subscription_limit - activity.participants);
+  const endsSameDay = activity.ends_at !== null && zonedDay(activity.ends_at) === zonedDay(activity.starts_at);
+  const when =
+    `${formatDayMonth(activity.starts_at)} · ${formatTime(activity.starts_at)}` +
+    (activity.ends_at ? ` to ${endsSameDay ? formatTime(activity.ends_at) : formatDateTime(activity.ends_at)}` : "");
+
+  // The facts that matter at a glance are in the summary card; the rest is secondary.
+  const details: [string, string][] = [
     ["Subscribing", `${activity.subscription_opens_at ? formatDateTime(activity.subscription_opens_at) : "now"} to ${formatDateTime(activity.subscription_closes_at ?? activity.starts_at)}`],
     ["Unsubscribe allowed", activity.allow_unsubscribe ? "Yes" : "No"],
-    ["Participants", formatParticipants(activity)],
   ];
+
+  const poster = activity.poster_url && (
+    <Image
+      src={activity.poster_url}
+      alt={`Poster for ${activity.name}`}
+      width={800}
+      height={1000}
+      sizes="(max-width: 1024px) 100vw, 352px"
+      className="h-auto w-full rounded-xl"
+    />
+  );
 
   return (
     <AppFrame title={activity.name}>
       {!activity.is_visible && <p className="mb-4 rounded-xl bg-soft px-4 py-3 text-sm">This activity is hidden from the activity list.</p>}
-      <div className="grid gap-8 lg:grid-cols-[1fr_22rem]">
-        <div className="space-y-6">
-          <dl className="card grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 p-6">
-            {rows.map(([label, value]) => (
-              <div key={label} className="contents">
-                <dt className="text-right font-bold">{label}</dt>
-                <dd>{value}</dd>
-              </div>
-            ))}
-          </dl>
-          {activity.description && <p className="card whitespace-pre-line p-6">{activity.description}</p>}
+      <div className="grid gap-6 lg:grid-cols-[1fr_22rem] lg:gap-8">
+        <div className="space-y-5">
+          {/* 1. What and when */}
+          <section className="card p-5 sm:p-6">
+            <p className="text-sm font-extrabold uppercase tracking-wide text-accent-text">{activity.committee_name}</p>
+            <p className="mt-1 text-2xl font-extrabold leading-tight sm:text-3xl">{when}</p>
+            <ul className="mt-4 flex flex-wrap gap-2">
+              {activity.location && <li className={CHIP}>{activity.location}</li>}
+              <li className={CHIP}>{priceLabel(activity.cost_cents, groups)}</li>
+              <li className={CHIP}>
+                {formatParticipants(activity)} going{spotsLeft !== null && spotsLeft > 0 && spotsLeft <= 5 ? ` · ${spotsLeft} left` : ""}
+              </li>
+            </ul>
+          </section>
 
-          {user && (
-            <details className="card p-4">
-              <summary className="cursor-pointer font-bold">Show subscribed members ({participants.length})</summary>
-              {canManage && tally.length > 0 && (
-                <ul className="mt-3 flex flex-wrap gap-2 text-sm">
-                  {tally.map((t) => <li key={t.key} className="rounded-full bg-soft px-3 py-1 font-bold">{t.key} ({t.count})</li>)}
-                </ul>
-              )}
-              <ul className="mt-3 space-y-1">
-                {participants.map((p) => (
-                  <li key={p.id}>
-                    {displayName(p)}
-                    {canManage && p.choices.length > 0 && (
-                      <span className="text-sm text-muted"> ({p.choices.map((c) => c.choice).join(", ")}{p.price_cents !== null ? `, ${formatEuro(p.price_cents)}` : ""})</span>
-                    )}
-                  </li>
-                ))}
-                {participants.length === 0 && <li className="text-muted">Nobody yet.</li>}
-              </ul>
-            </details>
-          )}
-
-          <div className="space-y-3">
+          {/* 2. Join: straight after the facts, so nobody has to scroll to find it */}
+          <section id="join" aria-label="Join this activity" className="scroll-mt-4 space-y-3">
             {activity.subscribed && activity.my_price_cents !== null && (
               <p className="rounded-xl bg-soft px-4 py-3 text-sm">
                 {(activity.my_choices ?? []).length > 0 && <>Your choices: <strong>{(activity.my_choices ?? []).map((c) => c.choice).join(", ")}</strong>. </>}
@@ -94,10 +90,10 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
               canUnsubscribe ? (
                 <form action={unsubscribe}>
                   <input type="hidden" name="id" value={activity.id} />
-                  <button className="btn btn-secondary w-full" type="submit">You are subscribed. Unsubscribe</button>
+                  <button className="btn btn-secondary w-full" type="submit">You are going. Unsubscribe</button>
                 </form>
               ) : (
-                <button className="btn btn-secondary w-full" type="button" disabled>You are subscribed, and not able to unsubscribe</button>
+                <button className="btn btn-secondary w-full" type="button" disabled>You are going, and not able to unsubscribe</button>
               )
             ) : state === "open" && !user ? (
               <>
@@ -114,8 +110,8 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
                   </ul>
                 </div>
               )}
-              <Link href={`/login?next=${encodeURIComponent(`/mastapps/activities/${activity.id}`)}`} className="btn btn-primary w-full">
-                Sign in to subscribe
+              <Link href={`/login?next=${encodeURIComponent(`/mastapps/activities/${activity.id}`)}`} className="btn btn-primary w-full py-3 text-base">
+                Sign in to join
               </Link>
               </>
             ) : state === "open" ? (
@@ -136,7 +132,7 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
                     ))}
                   </fieldset>
                 ))}
-                <button className="btn btn-primary w-full" type="submit">Subscribe</button>
+                <button className="btn btn-primary w-full py-3 text-base" type="submit">Join this activity</button>
               </form>
             ) : (
               <button className="btn btn-secondary w-full" type="button" disabled>{NOT_SUBSCRIBABLE[state]}</button>
@@ -145,27 +141,56 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
               By subscribing you are expected at the activity. If you are unable to join, please contact the organising committee or the board.
               If you do not cancel in time, you may still be invoiced the participants&apos; fee or a fine.
             </p>
-            <div className="flex flex-wrap gap-3">
-              <Link href="/mastapps/activities" className="btn btn-secondary">Go back</Link>
-              {activity.is_visible && (
-                <a href={`/mastapps/activities/${activity.id}/event.ics`} download className="btn btn-secondary">Add to calendar</a>
+          </section>
+
+          {/* 3. About it */}
+          {activity.description && <p className="card whitespace-pre-line p-5 sm:p-6">{activity.description}</p>}
+
+          {/* The poster sits in the side column on large screens, and inline here on phones */}
+          {poster && <div className="lg:hidden">{poster}</div>}
+
+          {/* 4. The small print */}
+          <dl className="card grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 p-5 text-sm sm:p-6">
+            {details.map(([label, value]) => (
+              <div key={label} className="contents">
+                <dt className="font-bold text-muted">{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+
+          {user && (
+            <details className="card p-4">
+              <summary className="cursor-pointer font-bold">Who is going ({participants.length})</summary>
+              {canManage && tally.length > 0 && (
+                <ul className="mt-3 flex flex-wrap gap-2 text-sm">
+                  {tally.map((t) => <li key={t.key} className="rounded-full bg-soft px-3 py-1 font-bold">{t.key} ({t.count})</li>)}
+                </ul>
               )}
-              {canManage && <Link href={`/mastapps/activities/${activity.id}/edit`} className="btn btn-secondary">Edit</Link>}
-            </div>
+              <ul className="mt-3 space-y-1">
+                {participants.map((p) => (
+                  <li key={p.id}>
+                    {displayName(p)}
+                    {canManage && p.choices.length > 0 && (
+                      <span className="text-sm text-muted"> ({p.choices.map((c) => c.choice).join(", ")}{p.price_cents !== null ? `, ${formatEuro(p.price_cents)}` : ""})</span>
+                    )}
+                  </li>
+                ))}
+                {participants.length === 0 && <li className="text-muted">Nobody yet.</li>}
+              </ul>
+            </details>
+          )}
+
+          <div className="flex flex-wrap gap-3">
+            <Link href="/mastapps/activities" className="btn btn-secondary">All activities</Link>
+            {activity.is_visible && (
+              <a href={`/mastapps/activities/${activity.id}/event.ics`} download className="btn btn-secondary">Add to calendar</a>
+            )}
+            {canManage && <Link href={`/mastapps/activities/${activity.id}/edit`} className="btn btn-secondary">Edit</Link>}
           </div>
         </div>
 
-        {activity.poster_url && (
-          <Image
-            src={activity.poster_url}
-            alt={`Poster for ${activity.name}`}
-            width={800}
-            height={1000}
-            sizes="(max-width: 1024px) 100vw, 352px"
-            priority
-            className="h-auto w-full rounded-xl"
-          />
-        )}
+        {poster && <div className="hidden lg:block">{poster}</div>}
       </div>
     </AppFrame>
   );
