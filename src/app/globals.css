@@ -1157,7 +1157,7 @@ blockquote::before, blockquote::after { content: ""; content: none; }
   .tm-box { overflow: hidden; border-radius: 18px; box-shadow: 0 30px 80px -20px rgb(0 0 0 / 0.5); }
 
   /* MastApps tiles: icon, name, one line. Nothing else. */
-  .app-tile { position: relative; display: flex; height: 100%; flex-direction: column; padding: 1.75rem; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s; }
+  .app-tile { position: relative; display: flex; height: 100%; flex-direction: column; padding: 1.75rem; color: var(--ink); background: #fff; border: 2px solid #b8bcc4; border-radius: var(--radius); box-shadow: var(--shadow-sm); transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s; }
   .app-tile:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: var(--shadow-md); color: var(--ink); }
   .app-tile__icon { display: grid; width: 3.5rem; height: 3.5rem; place-items: center; border-radius: 16px; background: var(--accent-soft); color: var(--accent-text); transition: background-color 0.2s, color 0.2s; }
   .app-tile:hover .app-tile__icon { background: var(--accent); color: #fff; }
@@ -1178,6 +1178,8 @@ blockquote::before, blockquote::after { content: ""; content: none; }
 
   /* Homepage news card: latest announcement only, with a way to the full list */
   .news-card { display: flex; flex-direction: column; padding: 1.4rem 1.5rem 1.5rem; }
+  .verbosa-magazine-two #content-masonry article.hentry.news-card,
+  article.hentry.news-card { border: 2px solid #b8bcc4; }
   .news-card__top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.9rem; }
   .news-card .entry-content { overflow-y: auto; overscroll-behavior: contain; padding-right: 0.25rem; }
   .news-card .continue-reading-link { flex-shrink: 0; width: 100%; }

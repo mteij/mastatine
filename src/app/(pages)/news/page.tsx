@@ -13,7 +13,7 @@ export default function NewsPage() {
     <>
       <PageHeader title="Announcements" intro="What the board has been up to, reported with appropriate gravity." />
       <div className="container-prose">
-        <ul className="divide-y divide-line border-y border-line">
+        <ul className="divide-y-2 divide-[#b8bcc4] border-y-2 border-[#b8bcc4]">
           {NEWS.map((post) => (
             <li key={post.slug}>
               <Link href={`/news/${post.slug}`} className="group block py-7">
