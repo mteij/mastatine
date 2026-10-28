@@ -4,6 +4,7 @@ import "./globals.css";
 import Sidebar from "@/classic/Sidebar";
 import Colophon from "@/classic/Colophon";
 import AppShell from "@/classic/AppShell";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import { siteUrl } from "@/lib/env";
 import { getShopUrl } from "@/lib/shop";
 
@@ -46,7 +47,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         >
           Skip to content
         </a>
-        <AppShell shopUrl={getShopUrl()} sidebar={<Sidebar shopUrl={getShopUrl()} />} colophon={<Colophon />}>
+        <AppShell shopUrl={getShopUrl()} sidebar={<Sidebar shopUrl={getShopUrl()} />} colophon={<Colophon />} announcement={<AnnouncementBar />}>
           {children}
         </AppShell>
       </body>

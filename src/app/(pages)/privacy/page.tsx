@@ -61,6 +61,7 @@ export default function PrivacyPage() {
           <li>
             <strong>Accounts.</strong> Your email address, an optional display name, and session records (created when you open a sign-in
             link; each includes your IP address and browser type, for security).
+            If an administrator adds you to a committee, your display name (never your email address) is shown on the public committees page.
           </li>
           <li>
             <strong>Newsletter.</strong> Your email address, when you asked for it and when you confirmed it. If you unsubscribe we keep

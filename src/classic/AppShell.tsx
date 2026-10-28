@@ -10,11 +10,13 @@ interface AppShellProps {
   /** The regular site chrome, rendered on the server and passed in. */
   sidebar: ReactNode;
   colophon: ReactNode;
+  /** Announcement strip shown above the site chrome (not in full-screen MastApps). */
+  announcement?: ReactNode;
   children: ReactNode;
 }
 
 /** MastApps open full screen as a dashboard; every other page keeps the site layout (sidebar + footer). */
-export default function AppShell({ shopUrl, sidebar, colophon, children }: AppShellProps) {
+export default function AppShell({ shopUrl, sidebar, colophon, announcement, children }: AppShellProps) {
   const pathname = usePathname();
 
   if (isFullScreenAppPath(pathname)) {
@@ -23,6 +25,7 @@ export default function AppShell({ shopUrl, sidebar, colophon, children }: AppSh
 
   return (
     <div id="site-wrapper">
+      {announcement}
       <div id="content" className="cryout">
         <div id="container" className="two-columns-left">
           {sidebar}

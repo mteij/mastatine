@@ -36,4 +36,29 @@ export function getCommitteePeople(committeeId: string) {
   `;
 }
 
+export interface PublicCommittee {
+  id: string;
+  name: string;
+  description: string | null;
+  /** Display names only (never email addresses), chairs first. */
+  members: { name: string; is_chair: boolean }[];
+}
+
+/** Every committee with its members, for the public committees page. */
+export async function getPublicCommittees(): Promise<PublicCommittee[]> {
+  const [committees, members] = await Promise.all([
+    sql<{ id: string; name: string; description: string | null }[]>`SELECT id, name, description FROM committees ORDER BY name`,
+    sql<{ committee_id: string; name: string; is_chair: boolean }[]>`
+      SELECT m.committee_id, COALESCE(NULLIF(trim(u.name), ''), 'Member') AS name, m.is_chair
+      FROM committee_members m JOIN "user" u ON u.id = m.user_id
+      WHERE NOT u.banned
+      ORDER BY m.is_chair DESC, lower(u.name)
+    `,
+  ]);
+  return committees.map((c) => ({
+    ...c,
+    members: members.filter((m) => m.committee_id === c.id).map(({ name, is_chair }) => ({ name, is_chair })),
+  }));
+}
+
 export const displayName = (u: { name: string | null; email: string }): string => u.name?.trim() || u.email;

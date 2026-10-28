@@ -7,6 +7,8 @@ import HeroCarousel from "@/classic/HeroCarousel";
 import TowerGrid from "@/classic/TowerGrid";
 import SubmitModal from "@/classic/SubmitModal";
 import { NEWS, formatDate } from "@/content/site";
+import MinecraftBar from "@/components/MinecraftBar";
+import UpcomingActivities from "@/components/UpcomingActivities";
 
 async function getFirstPage(q: string): Promise<TowerPage> {
   try {
@@ -57,6 +59,9 @@ export default async function HomePage(
 
   return (
     <>
+      <MinecraftBar />
+      <UpcomingActivities />
+
       {/* ── lp-text: intro paragraph ── */}
       <section className="lp-text" id="lp-text-one">
         <div className="lp-text-inside">
