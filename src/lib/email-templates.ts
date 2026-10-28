@@ -118,6 +118,45 @@ export function newsletterEmail(subject: string, body: string, unsubscribeUrl: s
   return { subject, text: `${body}\n\n${textFooter}`, html };
 }
 
+export interface ActivityInviteDetails {
+  committeeName: string;
+  activityName: string;
+  organiser: string;
+  startsAt: string;
+  location: string;
+  note: string;
+  url: string;
+}
+
+/** Sent to the members of a service committee (bar, photo) when an activity invites it. */
+export function activityInviteEmail(d: ActivityInviteDetails): EmailContent {
+  const subject = `${d.committeeName} invited to ${d.activityName}`;
+  const details = [
+    `Activity: ${d.activityName}`,
+    `Organised by: ${d.organiser}`,
+    `When: ${d.startsAt}`,
+    ...(d.location ? [`Where: ${d.location}`] : []),
+    ...(d.note ? ["", `Note from the organisers: ${d.note}`] : []),
+  ];
+  const text = [
+    `${d.organiser} has invited the ${d.committeeName} to an activity.`,
+    "",
+    ...details,
+    "",
+    `All the details: ${d.url}`,
+    "",
+    PARODY_NOTICE,
+  ].join("\n");
+  const html = layout(
+    `<h1 style="margin:0 0 12px;font-size:20px">${escapeHtml(d.committeeName)} invited</h1>
+     <p style="margin:0 0 16px;line-height:1.6">${escapeHtml(d.organiser)} has invited the ${escapeHtml(d.committeeName)} to an activity.</p>
+     ${textToHtml(details.join("\n"))}
+     ${button(d.url, "View the activity")}`,
+    transactionalFooter,
+  );
+  return { subject, text, html };
+}
+
 export function absoluteUrl(path: string): string {
   return `${siteUrl()}${path}`;
 }

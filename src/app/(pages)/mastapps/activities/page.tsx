@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import AppFrame from "@/components/ui/AppFrame";
 import CalendarSubscribe from "@/components/CalendarSubscribe";
@@ -35,8 +36,14 @@ export default async function ActivitiesPage() {
                   <div className="px-4 py-2">Participants: {formatParticipants(a)}</div>
                 </dl>
                 {a.poster_url && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={a.poster_url} alt={`Poster for ${a.name}`} className="w-full" loading="lazy" />
+                  <Image
+                    src={a.poster_url}
+                    alt={`Poster for ${a.name}`}
+                    width={800}
+                    height={1000}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 400px"
+                    className="h-auto w-full"
+                  />
                 )}
               </Link>
             </li>

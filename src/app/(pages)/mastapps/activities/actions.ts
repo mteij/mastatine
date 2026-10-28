@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import sql from "@/lib/db";
+import { notifyInvitedCommittees } from "@/lib/activity-invites";
 import { isCommitteeMember } from "@/lib/committees";
 import { fromLocalInput } from "@/lib/datetime";
 import { storePoster } from "@/lib/poster";
@@ -94,10 +95,14 @@ export async function saveActivity(_prev: ActivityFormState, formData: FormData)
 
   const id = d.id || null;
   let existingPoster: string | null = null;
+  let alreadyInvited = { bar: false, photo: false };
   if (id) {
-    const [existing] = await sql<{ committee_id: string; poster_url: string | null }[]>`SELECT committee_id, poster_url FROM activities WHERE id = ${id}`;
+    const [existing] = await sql<{ committee_id: string; poster_url: string | null; invite_boss: boolean; invite_flitcie: boolean }[]>`
+      SELECT committee_id, poster_url, invite_boss, invite_flitcie FROM activities WHERE id = ${id}
+    `;
     if (!existing || !(await isCommitteeMember(session.user, existing.committee_id))) return { error: "You cannot edit this activity." };
     existingPoster = existing.poster_url;
+    alreadyInvited = { bar: existing.invite_boss, photo: existing.invite_flitcie };
   }
 
   let posterUrl = existingPoster;
@@ -133,12 +138,18 @@ export async function saveActivity(_prev: ActivityFormState, formData: FormData)
     poster_url: posterUrl,
   };
 
+  // Only newly invited committees are emailed, so editing an activity does not re-send.
+  const newInvites = { bar: d.invite_boss && !alreadyInvited.bar, photo: d.invite_flitcie && !alreadyInvited.photo };
+  const summary = { name: d.name, committee_id: d.committee_id, starts_at: d.starts_at, location: d.location, boss_note: d.boss_note, flitcie_note: d.flitcie_note };
+
   if (id) {
     await sql`UPDATE activities SET ${sql(values)} WHERE id = ${id}`;
+    await notifyInvitedCommittees({ id, ...summary }, newInvites);
     refresh(id);
     redirect(`${BASE}/${id}`);
   }
   const [created] = await sql<{ id: string }[]>`INSERT INTO activities ${sql({ ...values, created_by: session.user.id })} RETURNING id`;
+  await notifyInvitedCommittees({ id: created.id, ...summary }, newInvites);
   refresh();
   redirect(`${BASE}/${created.id}`);
 }

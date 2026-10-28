@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AppFrame from "@/components/ui/AppFrame";
@@ -155,8 +156,15 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
         </div>
 
         {activity.poster_url && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={activity.poster_url} alt={`Poster for ${activity.name}`} className="w-full rounded-xl" />
+          <Image
+            src={activity.poster_url}
+            alt={`Poster for ${activity.name}`}
+            width={800}
+            height={1000}
+            sizes="(max-width: 1024px) 100vw, 352px"
+            priority
+            className="h-auto w-full rounded-xl"
+          />
         )}
       </div>
     </AppFrame>
