@@ -9,12 +9,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   await requireAdmin();
 
   return (
-    <div className="container-page @container py-10">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-3xl font-extrabold">Admin</h1>
+    <div className="container-page admin-compact @container py-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-extrabold">Admin</h1>
         <AdminTabs />
       </div>
-      <div className="mt-8">{children}</div>
+      <div className="mt-5">{children}</div>
     </div>
   );
 }

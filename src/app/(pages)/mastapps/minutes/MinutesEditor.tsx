@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AUTOSAVE_MS, HEARTBEAT_MS, POLL_MS, itemLabels } from "@/lib/minutes-live";
-import { formatDeadline, type LiveItem, type MeetingStatus } from "@/lib/meetings";
+import { formatDeadline, type MeetingStatus } from "@/lib/minutes-format";
+import type { LiveItem } from "@/lib/meetings";
 import { acquireItemLock, addAction, releaseItemLock, saveItemNotes, setMeetingStatus } from "./actions";
 
 interface MinutesEditorProps {

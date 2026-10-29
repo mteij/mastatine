@@ -1,5 +1,5 @@
 import ConfirmButton from "@/components/admin/ConfirmButton";
-import { STATUS_LABEL, type MeetingStatus } from "@/lib/meetings";
+import { STATUS_LABEL, type MeetingStatus } from "@/lib/minutes-format";
 import { setMeetingStatus } from "./actions";
 
 const BADGE: Record<MeetingStatus, string> = {

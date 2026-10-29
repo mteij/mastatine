@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import sql from "@/lib/db";
 import ConfirmButton from "@/components/admin/ConfirmButton";
+import SortHeader, { parseSort } from "@/components/admin/SortHeader";
 import { deleteMast } from "../actions";
 import { requireAdmin } from "@/lib/session";
 
@@ -17,10 +18,20 @@ interface Row {
   created_at: Date;
 }
 
-export default async function AdminMasts(props: { searchParams: Promise<{ q?: string; page?: string }> }) {
+const SORT_COLUMNS = ["added", "title", "submitter", "votes"] as const;
+
+export default async function AdminMasts(props: { searchParams: Promise<{ q?: string; page?: string; sort?: string; dir?: string }> }) {
   // Layouts do not re-run on client navigation, so each admin page checks the role itself.
   await requireAdmin();
-  const { q = "", page = "1" } = await props.searchParams;
+  const { q = "", page = "1", ...sortParams } = await props.searchParams;
+  const sort = parseSort(sortParams, SORT_COLUMNS, { column: "added", dir: "desc" });
+  const direction = sort.dir === "asc" ? sql`ASC` : sql`DESC`;
+  const sortExpression = {
+    added: sql`created_at`,
+    title: sql`LOWER(title)`,
+    submitter: sql`LOWER(submitter_name)`,
+    votes: sql`vote_count`,
+  }[sort.column];
   const pageNumber = Math.max(1, Math.min(Number(page) || 1, 10_000));
   const query = q.trim().slice(0, 100);
   const pattern = `%${query.replace(/[\\%_]/g, "\\$&")}%`;
@@ -28,15 +39,18 @@ export default async function AdminMasts(props: { searchParams: Promise<{ q?: st
 
   const rows = await sql<Row[]>`
     SELECT id, title, submitter_name, image_url, vote_count, height, created_at
-    FROM towers ${where} ORDER BY created_at DESC LIMIT ${PAGE_SIZE + 1} OFFSET ${(pageNumber - 1) * PAGE_SIZE}
+    FROM towers ${where} ORDER BY ${sortExpression} ${direction}, created_at DESC LIMIT ${PAGE_SIZE + 1} OFFSET ${(pageNumber - 1) * PAGE_SIZE}
   `;
   const hasMore = rows.length > PAGE_SIZE;
   const masts = rows.slice(0, PAGE_SIZE);
-  const link = (p: number) => `/admin/masts?${new URLSearchParams({ ...(query && { q: query }), page: String(p) })}`;
+  const link = (p: number) => `/admin/masts?${new URLSearchParams({ ...(query && { q: query }), sort: sort.column, dir: sort.dir, page: String(p) })}`;
+  const sortProps = { active: sort, basePath: "/admin/masts", keep: query ? { q: query } : ({} as Record<string, string>) };
 
   return (
     <>
       <form className="mb-6 flex gap-3" role="search">
+        <input type="hidden" name="sort" value={sort.column} />
+        <input type="hidden" name="dir" value={sort.dir} />
         <label className="sr-only" htmlFor="admin-mast-search">Search masts</label>
         <input id="admin-mast-search" name="q" defaultValue={query} placeholder="Search title or submitter" className="input max-w-sm" />
         <button className="btn btn-secondary" type="submit">Search</button>
@@ -45,7 +59,13 @@ export default async function AdminMasts(props: { searchParams: Promise<{ q?: st
       <div className="table-wrap">
         <table className="table">
           <thead>
-            <tr><th>Mast</th><th>Submitted by</th><th className="text-right">Votes</th><th>Added</th><th><span className="sr-only">Actions</span></th></tr>
+            <tr>
+              <SortHeader label="Mast" column="title" {...sortProps} />
+              <SortHeader label="Submitted by" column="submitter" {...sortProps} />
+              <SortHeader label="Votes" column="votes" defaultDir="desc" className="text-right" {...sortProps} />
+              <SortHeader label="Added" column="added" defaultDir="desc" {...sortProps} />
+              <th><span className="sr-only">Actions</span></th>
+            </tr>
           </thead>
           <tbody>
             {masts.map((mast) => (

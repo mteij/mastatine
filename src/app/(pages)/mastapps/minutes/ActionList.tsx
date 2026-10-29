@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ConfirmButton from "@/components/admin/ConfirmButton";
-import { formatDeadline, isOverdue, type ActionPoint } from "@/lib/meetings";
+import { formatDeadline, isOverdue } from "@/lib/minutes-format";
+import type { ActionPoint } from "@/lib/meetings";
 import { deleteAction, toggleAction } from "./actions";
 
 interface ActionListProps {

@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/session";
 import Link from "next/link";
 import type { MemberStatus } from "@/lib/membership";
 import MembershipEndForm from "@/components/admin/MembershipEndForm";
+import SortHeader, { parseSort, SortLink } from "@/components/admin/SortHeader";
 import { addCommitteeMember, approveMember, banUser, declineMember, removeCommitteeMember, removeUser, revokeMember, setUserRole, unbanUser } from "../actions";
 
 const PAGE_SIZE = 100;
@@ -24,9 +25,20 @@ interface UserRow {
   committees: { id: string; name: string }[];
 }
 
-export default async function AdminUsers(props: { searchParams: Promise<{ q?: string; filter?: string }> }) {
+const SORT_COLUMNS = ["joined", "name", "email", "membership", "role"] as const;
+
+export default async function AdminUsers(props: { searchParams: Promise<{ q?: string; filter?: string; sort?: string; dir?: string }> }) {
   const { user: me } = await requireAdmin();
   const params = await props.searchParams;
+  const sort = parseSort(params, SORT_COLUMNS, { column: "joined", dir: "desc" });
+  const direction = sort.dir === "asc" ? sql`ASC` : sql`DESC`;
+  const sortExpression = {
+    joined: sql`u."createdAt"`,
+    name: sql`LOWER(NULLIF(u.name, ''))`,
+    email: sql`LOWER(u.email)`,
+    membership: sql`u.member_status`,
+    role: sql`u.role`,
+  }[sort.column];
   const query = (params.q ?? "").trim().slice(0, 100);
   const requestsOnly = params.filter === "requests";
   const pattern = `%${query.replace(/[\\%_]/g, "\\$&")}%`;
@@ -47,7 +59,7 @@ export default async function AdminUsers(props: { searchParams: Promise<{ q?: st
       LEFT JOIN committees c ON c.id = m.committee_id
       LEFT JOIN "user" d ON d.id = u.member_decided_by
       ${where}
-      GROUP BY u.id, d.name ORDER BY u."createdAt" DESC LIMIT ${PAGE_SIZE}
+      GROUP BY u.id, d.name ORDER BY ${sortExpression} ${direction} NULLS LAST, u."createdAt" DESC LIMIT ${PAGE_SIZE}
     `,
     sql<{ id: string; name: string }[]>`SELECT id, name FROM committees ORDER BY name`,
     sql<{ id: string; name: string; email: string; requested_at: Date | null }[]>`
@@ -56,6 +68,11 @@ export default async function AdminUsers(props: { searchParams: Promise<{ q?: st
     `,
   ]);
   const pendingCount = pending.length;
+  const sortProps = {
+    active: sort,
+    basePath: "/admin/users",
+    keep: { ...(query && { q: query }), ...(requestsOnly && { filter: "requests" }) },
+  };
 
   return (
     <>
@@ -96,6 +113,8 @@ export default async function AdminUsers(props: { searchParams: Promise<{ q?: st
 
       <form className="mb-6 flex gap-3" role="search">
         {requestsOnly && <input type="hidden" name="filter" value="requests" />}
+        <input type="hidden" name="sort" value={sort.column} />
+        <input type="hidden" name="dir" value={sort.dir} />
         <label className="sr-only" htmlFor="user-search">Search users</label>
         <input id="user-search" name="q" defaultValue={query} placeholder="Search name or email" className="input max-w-sm" />
         <button className="btn btn-secondary" type="submit">Search</button>
@@ -104,7 +123,19 @@ export default async function AdminUsers(props: { searchParams: Promise<{ q?: st
       <div className="table-wrap">
         <table className="table">
           <thead>
-            <tr><th>User</th><th>Membership</th><th>Committees</th><th>Role</th><th><span className="sr-only">Actions</span></th></tr>
+            <tr>
+              <th>
+                <span className="inline-flex gap-3">
+                  <SortLink label="Name" column="name" {...sortProps} />
+                  <SortLink label="Email" column="email" {...sortProps} />
+                  <SortLink label="Joined" column="joined" defaultDir="desc" {...sortProps} />
+                </span>
+              </th>
+              <SortHeader label="Membership" column="membership" {...sortProps} />
+              <th>Committees</th>
+              <SortHeader label="Role" column="role" {...sortProps} />
+              <th><span className="sr-only">Actions</span></th>
+            </tr>
           </thead>
           <tbody>
             {users.map((u) => {
@@ -113,9 +144,8 @@ export default async function AdminUsers(props: { searchParams: Promise<{ q?: st
               return (
                 <tr key={u.id}>
                   <td>
-                    <p className="font-medium">{u.name || "No name"}{isMe && <span className="badge ml-2">You</span>}</p>
-                    <p className="text-sm text-muted">{u.email}</p>
-                    <p className="text-xs text-muted">Joined {new Date(u.createdAt).toLocaleDateString("en-GB")}</p>
+                    <p className="font-medium leading-tight">{u.name || "No name"}{isMe && <span className="badge ml-2">You</span>}</p>
+                    <p className="text-xs text-muted">{u.email} · joined {new Date(u.createdAt).toLocaleDateString("en-GB")}</p>
                   </td>
                   <td>
                     {u.member_status === "approved" && !u.lapsed && <span className="badge">Member</span>}
@@ -132,7 +162,7 @@ export default async function AdminUsers(props: { searchParams: Promise<{ q?: st
                       </p>
                     )}
                     {u.lapsed && <p className="mt-1 text-xs text-muted">No sign-in for 5 years.</p>}
-                    <div className="mt-2 flex flex-col gap-2">
+                    <div className="mt-1 flex flex-col gap-1">
                       {(u.member_status !== "approved" || u.lapsed) && (
                         <form action={approveMember}>
                           <input type="hidden" name="userId" value={u.id} />
@@ -158,7 +188,7 @@ export default async function AdminUsers(props: { searchParams: Promise<{ q?: st
                       ))}
                     </div>
                     {open.length > 0 && (
-                      <form action={addCommitteeMember} className="mt-2 flex gap-2">
+                      <form action={addCommitteeMember} className="mt-1 flex gap-1">
                         <input type="hidden" name="userId" value={u.id} />
                         <select name="committeeId" aria-label={`Add ${u.email} to a committee`} className="input !py-1.5" required defaultValue="">
                           <option value="" disabled>Add to committee…</option>
@@ -167,7 +197,6 @@ export default async function AdminUsers(props: { searchParams: Promise<{ q?: st
                         <button className="btn btn-secondary btn-sm" type="submit">Add</button>
                       </form>
                     )}
-                    {open.length > 0 && <p className="mt-1 text-xs text-muted">Committee members count as members too.</p>}
                   </td>
                   <td>
                     <span className={u.role === "admin" ? "badge" : "text-muted"}>{u.role}</span>
@@ -175,7 +204,7 @@ export default async function AdminUsers(props: { searchParams: Promise<{ q?: st
                   </td>
                   <td>
                     {!isMe && (
-                      <div className="flex flex-wrap justify-end gap-2">
+                      <div className="flex flex-wrap justify-end gap-1">
                         <form action={setUserRole}>
                           <input type="hidden" name="userId" value={u.id} />
                           <input type="hidden" name="role" value={u.role === "admin" ? "user" : "admin"} />

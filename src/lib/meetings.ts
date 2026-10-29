@@ -1,8 +1,9 @@
 import sql from "@/lib/db";
 import { LOCK_SECONDS } from "@/lib/minutes-live";
 
-/** Open: being worked on. Done: held and finished. Locked: read-only; only an admin can reopen it. */
-export type MeetingStatus = "open" | "done" | "locked";
+import type { MeetingStatus } from "@/lib/minutes-format";
+
+export type { MeetingStatus };
 
 export interface Meeting {
   id: string;
@@ -180,11 +181,5 @@ export function parseAgenda(text: string): { level: 0 | 1; title: string }[] {
     .filter((item) => item.title.length > 0);
 }
 
-export const STATUS_LABEL: Record<MeetingStatus, string> = { open: "open", done: "done", locked: "locked" };
-
-export function formatDeadline(deadline: string | null): string {
-  if (!deadline) return "Next meeting";
-  return new Date(`${deadline}T00:00:00Z`).toLocaleDateString("en-GB", { day: "2-digit", month: "long", timeZone: "UTC" });
-}
-
-export const isOverdue = (deadline: string | null): boolean => !!deadline && deadline < new Date().toISOString().slice(0, 10);
+// Client components import these from "@/lib/minutes-format": this file reaches the database.
+export { STATUS_LABEL, formatDeadline, isOverdue } from "@/lib/minutes-format";

@@ -1378,6 +1378,13 @@ blockquote::before, blockquote::after { content: ""; content: none; }
   .btn-danger:hover { border-color: var(--danger); }
   .btn:disabled { box-shadow: none; }
 
+  /* ── Admin: denser rows, smaller controls ── */
+  .admin-compact .btn-sm { min-height: 1.875rem; padding: 0.2rem 0.7rem; font-size: 0.8125rem; }
+  .admin-compact .input { min-height: 0; padding-block: 0.3rem; font-size: 0.875rem; }
+  .admin-compact .table th { padding: 0.5rem 0.75rem; }
+  .admin-compact .table td { padding: 0.4rem 0.75rem; }
+  .admin-compact .badge { font-size: 0.75rem; padding-block: 0; }
+  .admin-compact .card { padding: 1rem; }
 }
 
 /* ── Minecraft chip (floats over the hero image) and upcoming activities ── */

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatDateTime } from "@/lib/datetime";
-import { STATUS_LABEL, type Meeting } from "@/lib/meetings";
+import { STATUS_LABEL } from "@/lib/minutes-format";
+import type { Meeting } from "@/lib/meetings";
 
 /** One meeting in a list: title, time and place, minutes status and the three ways into it. */
 export default function MeetingRow({ meeting }: { meeting: Meeting }) {
