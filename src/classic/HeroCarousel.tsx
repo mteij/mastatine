@@ -61,6 +61,7 @@ export default function HeroCarousel({ masts, overlay, highlight }: { masts: Mas
             />
             {/* badge */}
             <div
+              className="hero-carousel__badge"
               style={{
                 position: "absolute",
                 top: 16,
@@ -79,7 +80,7 @@ export default function HeroCarousel({ masts, overlay, highlight }: { masts: Mas
               Mast of the Month
             </div>
             {/* caption */}
-            <div className={`absolute bottom-0 left-0 right-0 z-10 flex flex-col items-center gap-0.5 px-4 ${highlight ? "pb-[7.5rem]" : "pb-6"}`}>
+            <div className={`hero-carousel__caption absolute bottom-0 left-0 right-0 z-10 flex flex-col items-center gap-0.5 px-4 ${highlight ? "pb-[7.5rem]" : "pb-6"}`}>
               <span
                 className="text-white font-bold text-center"
                 style={{ fontSize: "1.4em", textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}

@@ -112,11 +112,18 @@ export function lowestTotalIsValid(baseCents: number | null, groups: SignupGroup
   return priceRange(baseCents, groups).min >= 0;
 }
 
-/** Counts picks per "Group: Choice", for the organisers' overview. */
-export function tallyPicks(allPicks: SignupPick[][]): { key: string; count: number }[] {
-  const counts = new Map<string, number>();
+/** What was picked per question, with how many chose each answer, for the organisers' overview. */
+export function tallyByGroup(allPicks: SignupPick[][]): { group: string; choices: { choice: string; count: number }[] }[] {
+  const groups = new Map<string, Map<string, number>>();
   for (const picks of allPicks) {
-    for (const p of picks) counts.set(`${p.group}: ${p.choice}`, (counts.get(`${p.group}: ${p.choice}`) ?? 0) + 1);
+    for (const p of picks) {
+      const counts = groups.get(p.group) ?? new Map<string, number>();
+      counts.set(p.choice, (counts.get(p.choice) ?? 0) + 1);
+      groups.set(p.group, counts);
+    }
   }
-  return [...counts].map(([key, count]) => ({ key, count })).sort((a, b) => a.key.localeCompare(b.key));
+  return [...groups].map(([group, counts]) => ({
+    group,
+    choices: [...counts].map(([choice, count]) => ({ choice, count })).sort((a, b) => b.count - a.count || a.choice.localeCompare(b.choice)),
+  }));
 }

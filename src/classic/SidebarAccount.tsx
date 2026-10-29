@@ -24,23 +24,23 @@ export default function SidebarAccount() {
 
   if (!session) {
     return (
-      <Link href="/login">
+      <Link href="/login" aria-label="Sign in">
         <UserIcon />
-        Sign in
+        <span>Sign in</span>
       </Link>
     );
   }
 
   return (
     <>
-      <Link href="/account">
+      <Link href="/account" aria-label="Your account">
         <UserIcon />
-        Your account
+        <span>Your account</span>
       </Link>
       {session.user.role === "admin" && (
-        <Link href="/admin">
+        <Link href="/admin" aria-label="Admin">
           <ShieldIcon />
-          Admin
+          <span>Admin</span>
         </Link>
       )}
     </>

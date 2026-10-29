@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import TowerCard from "./TowerCard";
 import TowerDetailModal from "./TowerDetailModal";
 import { Tower } from "@/lib/types";
@@ -39,6 +40,12 @@ export default function TowerGrid({ initialPage, initialQuery, children }: Tower
   const [sortKey, setSortKey] = useState<SortKey>("rating");
   const [searchValue, setSearchValue] = useState(initialQuery);
 
+  const [gridInView, setGridInView] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [floatTarget, setFloatTarget] = useState<HTMLElement | null>(null);
+
+  const gridRef = useRef<HTMLDivElement>(null);
+  const controlsRef = useRef<HTMLDivElement>(null);
   const requestId = useRef(0);
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const sentinel = useRef<HTMLDivElement>(null);
@@ -73,6 +80,36 @@ export default function TowerGrid({ initialPage, initialQuery, children }: Tower
   }
 
   useEffect(() => () => clearTimeout(searchTimer.current), []);
+
+  useEffect(() => {
+    const phone = window.matchMedia("(max-width: 650px)");
+    const sync = () => setFloatTarget(phone.matches ? document.body : null);
+    sync();
+    phone.addEventListener("change", sync);
+    return () => phone.removeEventListener("change", sync);
+  }, []);
+
+  // A tap anywhere outside the open panel closes it.
+  useEffect(() => {
+    if (!panelOpen) return;
+    const close = (event: PointerEvent) => {
+      if (!controlsRef.current?.contains(event.target as Node)) setPanelOpen(false);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [panelOpen]);
+
+  // Phones show the sort/search button only while the grid is on screen; it closes when the grid leaves.
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      setGridInView(entry.isIntersecting);
+      if (!entry.isIntersecting) setPanelOpen(false);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // A new mast was submitted: reload from the top so it shows up.
   const currentSort = useRef(sortKey);
@@ -129,28 +166,43 @@ export default function TowerGrid({ initialPage, initialQuery, children }: Tower
 
   const query = searchValue.trim();
 
+  const controls = (
+      <div ref={controlsRef} className="grid-controls" data-visible={gridInView} data-open={panelOpen}>
+        <button type="button" className="grid-fab" aria-label="Sort and search masts" aria-expanded={panelOpen} onClick={() => setPanelOpen((open) => !open)}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden>
+            <path d="M4 7h10M18 7h2M4 17h2M10 17h10" />
+            <circle cx="16" cy="7" r="2" />
+            <circle cx="8" cy="17" r="2" />
+          </svg>
+        </button>
+
+        <div className="grid-panel">
+          <div className="seg" role="group" aria-label="Sort masts">
+            {(Object.keys(SORT_LABELS) as SortKey[]).map((key) => (
+              <button key={key} type="button" aria-pressed={sortKey === key} onClick={() => changeSort(key)}>
+                {SORT_LABELS[key]}
+              </button>
+            ))}
+          </div>
+
+          <label className="searchbox">
+            <span className="sr-only">Search masts</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden>
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            <input type="search" placeholder="Search masts" value={searchValue} maxLength={100} onChange={(e) => changeSearch(e.target.value)} />
+          </label>
+        </div>
+      </div>
+  );
+
   return (
     <>
-      <div className="grid-controls">
-        <div className="seg" role="group" aria-label="Sort masts">
-          {(Object.keys(SORT_LABELS) as SortKey[]).map((key) => (
-            <button key={key} type="button" aria-pressed={sortKey === key} onClick={() => changeSort(key)}>
-              {SORT_LABELS[key]}
-            </button>
-          ))}
-        </div>
+      {/* On phones the controls float over the page; rendering them in <body> keeps position: fixed true to the screen. */}
+      {floatTarget ? createPortal(controls, floatTarget) : controls}
 
-        <label className="searchbox">
-          <span className="sr-only">Search masts</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden>
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.5-3.5" />
-          </svg>
-          <input type="search" placeholder="Search masts" value={searchValue} maxLength={100} onChange={(e) => changeSearch(e.target.value)} />
-        </label>
-      </div>
-
-      <div className={`content-masonry${loading ? " is-loading" : ""}`}>
+      <div ref={gridRef} className={`content-masonry${loading ? " is-loading" : ""}`}>
         {children}
         {towers.map((tower) => (
           <TowerCard

@@ -235,7 +235,7 @@ export default function Sidebar({ shopUrl, agenda }: { shopUrl: string | null; /
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          className="drawer-overlay lg:hidden fixed inset-0 bg-black/50 z-40"
           onClick={() => setMobileOpen(false)}
           aria-hidden
         />

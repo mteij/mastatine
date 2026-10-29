@@ -10,7 +10,7 @@ import { formatDateTime, formatDayMonth, formatTime, zonedDay } from "@/lib/date
 import { getMembership } from "@/lib/membership";
 import { hasDisplayName } from "@/lib/profile";
 import { getSession } from "@/lib/session";
-import { formatAdjustment, formatEuro, parseSignupGroups, priceLabel, tallyPicks } from "@/lib/signup-options";
+import { formatAdjustment, formatEuro, parseSignupGroups, priceLabel, tallyByGroup } from "@/lib/signup-options";
 import { subscribe, unsubscribe } from "../actions";
 
 export const metadata: Metadata = { title: "Activity" };
@@ -38,7 +38,8 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
   const groups = parseSignupGroups(activity.signup_options);
   const state = subscribeState(activity);
   const participants = user ? await getParticipants(activity.id) : [];
-  const tally = tallyPicks(participants.map((p) => p.choices));
+  const tally = tallyByGroup(participants.map((p) => p.choices));
+  const columns = tally.map((t) => t.group);
   const canUnsubscribe = activity.allow_unsubscribe && activity.starts_at > new Date();
 
   const spotsLeft = activity.subscription_limit === null ? null : Math.max(0, activity.subscription_limit - activity.participants);
@@ -172,21 +173,50 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
             <details className="card p-4">
               <summary className="cursor-pointer font-bold">Who is going ({participants.length})</summary>
               {canManage && tally.length > 0 && (
-                <ul className="mt-3 flex flex-wrap gap-2 text-sm">
-                  {tally.map((t) => <li key={t.key} className="rounded-full bg-soft px-3 py-1 font-bold">{t.key} ({t.count})</li>)}
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {tally.map((t) => (
+                    <section key={t.group} className="rounded-xl bg-soft p-3">
+                      <h3 className="text-sm font-bold text-muted">{t.group}</h3>
+                      <ul className="mt-1.5 space-y-1 text-sm">
+                        {t.choices.map((c) => (
+                          <li key={c.choice} className="flex items-baseline justify-between gap-3">
+                            <span>{c.choice}</span>
+                            <span className="font-extrabold tabular-nums">{c.count}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  ))}
+                </div>
+              )}
+              {participants.length === 0 ? (
+                <p className="mt-3 text-muted">Nobody yet.</p>
+              ) : canManage && columns.length > 0 ? (
+                <div className="table-wrap mt-4">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        {columns.map((group) => <th key={group}>{group}</th>)}
+                        <th className="text-right">Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {participants.map((p) => (
+                        <tr key={p.id}>
+                          <td className="font-medium">{displayName(p)}</td>
+                          {columns.map((group) => <td key={group}>{p.choices.find((c) => c.group === group)?.choice ?? "–"}</td>)}
+                          <td className="text-right tabular-nums">{p.price_cents !== null ? formatEuro(p.price_cents) : "–"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <ul className="mt-3 columns-2 gap-6 sm:columns-3">
+                  {participants.map((p) => <li key={p.id} className="break-inside-avoid py-0.5">{displayName(p)}</li>)}
                 </ul>
               )}
-              <ul className="mt-3 space-y-1">
-                {participants.map((p) => (
-                  <li key={p.id}>
-                    {displayName(p)}
-                    {canManage && p.choices.length > 0 && (
-                      <span className="text-sm text-muted"> ({p.choices.map((c) => c.choice).join(", ")}{p.price_cents !== null ? `, ${formatEuro(p.price_cents)}` : ""})</span>
-                    )}
-                  </li>
-                ))}
-                {participants.length === 0 && <li className="text-muted">Nobody yet.</li>}
-              </ul>
             </details>
           )}
 
