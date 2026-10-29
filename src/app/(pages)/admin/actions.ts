@@ -13,7 +13,8 @@ import { requireAdmin } from "@/lib/session";
 import { UPLOAD_DIR, UPLOAD_FILENAME_RE } from "@/lib/uploads";
 import { sendIssue, sendTestIssue } from "@/lib/newsletter";
 import { AUDIENCES, countAudience, parseAudience } from "@/lib/newsletter-audience";
-import { membershipApprovedEmail } from "@/lib/email-templates";
+import { membershipApprovedEmail, membershipEndedEmail } from "@/lib/email-templates";
+import { REREQUEST_COOLDOWN_DAYS } from "@/lib/membership";
 import { sendMail } from "@/lib/mailer";
 
 // Server actions are public HTTP endpoints: every one re-checks the admin role itself.
@@ -87,12 +88,16 @@ export async function unbanUser(formData: FormData) {
   revalidatePath("/admin/users");
 }
 
-/** Approves a membership request (or admits someone who never asked) and tells them. Declining sends nothing. */
+const reason = z.string().trim().max(300);
+
+/** Approves a membership request (or admits someone who never asked, or whose membership lapsed) and tells them. Records who did it. */
 export async function approveMember(formData: FormData) {
-  await requireAdmin();
+  const { user: admin } = await requireAdmin();
+  // Approving counts as activity: someone admitted after years away would otherwise lapse again at once.
   const [approved] = await sql<{ email: string; name: string }[]>`
-    UPDATE "user" SET member_status = 'approved'
-    WHERE id = ${userId.parse(formData.get("userId"))} AND member_status <> 'approved'
+    UPDATE "user" SET member_status = 'approved', member_decided_at = NOW(), member_decided_by = ${admin.id},
+      member_decision_reason = NULL, last_active_at = NOW()
+    WHERE id = ${userId.parse(formData.get("userId"))} AND (member_status <> 'approved' OR NOT is_member(id))
     RETURNING email, name
   `;
   if (approved) {
@@ -105,11 +110,46 @@ export async function approveMember(formData: FormData) {
   refreshMembership();
 }
 
-/** Declines a request or ends a membership; the person can ask again. */
-export async function revokeMember(formData: FormData) {
-  await requireAdmin();
-  await sql`UPDATE "user" SET member_status = 'none', member_requested_at = NULL WHERE id = ${userId.parse(formData.get("userId"))}`;
+/** Declines a pending request, with an optional reason that is emailed. The person may ask again after the cooldown. */
+export async function declineMember(formData: FormData) {
+  const { user: admin } = await requireAdmin();
+  const why = reason.parse(formData.get("reason") ?? "") || null;
+  const [declined] = await sql<{ email: string; name: string }[]>`
+    UPDATE "user" SET member_status = 'declined', member_decided_at = NOW(), member_decided_by = ${admin.id}, member_decision_reason = ${why}
+    WHERE id = ${userId.parse(formData.get("userId"))} AND member_status = 'pending'
+    RETURNING email, name
+  `;
+  if (declined) mailMembershipEnded(declined, "declined", why);
   refreshMembership();
+}
+
+/** Ends an approved membership, with an optional reason that is emailed. Differs from declining: the person was a member. */
+export async function revokeMember(formData: FormData) {
+  const { user: admin } = await requireAdmin();
+  const why = reason.parse(formData.get("reason") ?? "") || null;
+  const target = userId.parse(formData.get("userId"));
+  const [revoked] = await sql<{ email: string; name: string }[]>`
+    UPDATE "user" SET member_status = 'revoked', member_decided_at = NOW(), member_decided_by = ${admin.id}, member_decision_reason = ${why}
+    WHERE id = ${target} AND member_status = 'approved'
+    RETURNING email, name
+  `;
+  if (!revoked) return;
+  // Someone who is no longer a member (committee members and admins still are) cannot keep a seat at upcoming members-only activities.
+  await sql`
+    DELETE FROM activity_subscriptions s USING activities a
+    WHERE s.user_id = ${target} AND a.id = s.activity_id AND a.members_only AND a.starts_at > NOW() AND NOT is_member(s.user_id)
+  `;
+  mailMembershipEnded(revoked, "revoked", why);
+  refreshMembership();
+  revalidatePath("/mastapps/activities");
+}
+
+function mailMembershipEnded(person: { email: string; name: string }, kind: "declined" | "revoked", why: string | null) {
+  after(() =>
+    sendMail({ to: person.email, ...membershipEndedEmail(person.name.trim() || null, kind, why, REREQUEST_COOLDOWN_DAYS) }).catch((error) =>
+      console.error("Failed to send the membership email:", (error as Error).message),
+    ),
+  );
 }
 
 function refreshMembership() {

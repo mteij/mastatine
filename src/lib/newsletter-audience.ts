@@ -27,7 +27,7 @@ export const AUDIENCE_REASON: Record<Audience, string> = {
 };
 
 // Fragments are built per call: sql`` must not run at import time (`next build` has no DATABASE_URL).
-const memberAccount = () => sql`(u.role = 'admin' OR u.member_status = 'approved' OR EXISTS (SELECT 1 FROM committee_members m WHERE m.user_id = u.id))`;
+const memberAccount = () => sql`is_member(u.id)`;
 
 /** Narrows newsletter_subscribers (alias s) to the audience. Everyone on the list qualifies for "subscribers" and "everyone". */
 export function recipientFilter(audience: Audience) {

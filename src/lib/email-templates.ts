@@ -247,6 +247,32 @@ export function membershipApprovedEmail(name: string | null): EmailContent {
   });
 }
 
+/** Sent when an admin declines a request or ends a membership. The reason is optional and written by the admin. */
+export function membershipEndedEmail(name: string | null, kind: "declined" | "revoked", reason: string | null, retryDays: number): EmailContent {
+  const declined = kind === "declined";
+  return compose(declined ? `Your ${SITE_NAME} membership request` : `Your ${SITE_NAME} membership has ended`, {
+    preheader: declined ? "An admin declined your membership request." : "An admin ended your membership.",
+    heading: declined ? "Membership request declined" : "Membership ended",
+    intro: `${name ? `Hi ${name}, an` : "An"} admin ${declined ? "declined your membership request" : "ended your membership"}. You can ask again after ${retryDays} days.`,
+    details: reason ? [{ label: "Reason", value: reason }] : undefined,
+    action: { url: absoluteUrl("/membership"), label: "Membership" },
+  });
+}
+
+/** Sent to the admins when someone asks for membership, so requests do not wait unseen. */
+export function membershipRequestedEmail(person: { name: string | null; email: string }): EmailContent {
+  return compose("New membership request", {
+    preheader: `${person.name || person.email} asked to become a member.`,
+    heading: "New membership request",
+    intro: "Someone asked to become a member. Approve or decline the request in the admin area.",
+    details: [
+      { label: "Name", value: person.name || "No name yet" },
+      { label: "Email", value: person.email },
+    ],
+    action: { url: absoluteUrl("/admin/users?filter=requests"), label: "Review requests" },
+  });
+}
+
 export function absoluteUrl(path: string): string {
   return `${siteUrl()}${path}`;
 }

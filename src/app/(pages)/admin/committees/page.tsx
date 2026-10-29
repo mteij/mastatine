@@ -100,6 +100,7 @@ export default async function AdminCommittees() {
                 </select>
                 <button className="btn btn-secondary" type="submit">Add</button>
               </form>
+              <p className="mt-1 text-xs text-muted">Committee members also count as members: they get quotes and members-only activities without a membership request.</p>
             </li>
           );
         })}

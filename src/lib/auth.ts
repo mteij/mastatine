@@ -62,7 +62,8 @@ function createAuth() {
         create: {
           // Addresses added to ADMIN_EMAILS later are promoted at their next sign-in (the link proves the address is theirs).
           after: async (session) => {
-            const [row] = await sql<{ email: string; role: string }[]>`SELECT email, role FROM "user" WHERE id = ${session.userId}`;
+            // Signing in is what keeps a membership from lapsing (see is_member).
+            const [row] = await sql<{ email: string; role: string }[]>`UPDATE "user" SET last_active_at = NOW() WHERE id = ${session.userId} RETURNING email, role`;
             if (row && row.role !== "admin" && adminEmails().has(row.email.toLowerCase())) {
               await sql`UPDATE "user" SET role = 'admin' WHERE id = ${session.userId}`;
             }

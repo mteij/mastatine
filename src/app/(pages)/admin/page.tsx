@@ -72,6 +72,15 @@ export default async function AdminOverview() {
 
   return (
     <div className="space-y-8">
+      {stats.member_requests > 0 && (
+        <Link href="/admin/users?filter=requests" className="card flex flex-wrap items-center justify-between gap-3 border-accent p-5 hover:bg-accent-soft">
+          <span className="font-extrabold">
+            {stats.member_requests} membership {stats.member_requests === 1 ? "request is" : "requests are"} waiting for you
+          </span>
+          <span className="btn btn-primary btn-sm">Review</span>
+        </Link>
+      )}
+
       <ul className="grid gap-5 @xl:grid-cols-2 @3xl:grid-cols-3">
         {cards.map((card) => (
           <li key={card.label}>

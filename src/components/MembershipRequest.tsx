@@ -24,9 +24,25 @@ export default function MembershipRequest({ membership, next }: MembershipReques
     return <p className="rounded-xl bg-soft px-4 py-3 text-sm">Your request is waiting for an admin to approve it. You will have access as soon as they do.</p>;
   }
 
+  const waitFor = membership.retryAfter?.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  const explanation = membership.lapsed
+    ? "Your membership lapsed after five years without signing in. You can ask again."
+    : membership.status === "declined"
+      ? "Your request was declined."
+      : membership.status === "revoked"
+        ? "Your membership was ended by an admin."
+        : null;
+
+  if (waitFor) {
+    return <p className="rounded-xl bg-soft px-4 py-3 text-sm">{explanation} You can ask again after {waitFor}.</p>;
+  }
+
   return (
-    <form action={requestMembership}>
-      <button type="submit" className="btn btn-primary">Request membership</button>
-    </form>
+    <div className="space-y-3">
+      {explanation && <p className="rounded-xl bg-soft px-4 py-3 text-sm">{explanation}</p>}
+      <form action={requestMembership}>
+        <button type="submit" className="btn btn-primary">Request membership</button>
+      </form>
+    </div>
   );
 }

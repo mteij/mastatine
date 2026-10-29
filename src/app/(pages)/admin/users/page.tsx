@@ -2,7 +2,9 @@ import sql from "@/lib/db";
 import ConfirmButton from "@/components/admin/ConfirmButton";
 import { requireAdmin } from "@/lib/session";
 import Link from "next/link";
-import { addCommitteeMember, approveMember, banUser, removeCommitteeMember, removeUser, revokeMember, setUserRole, unbanUser } from "../actions";
+import type { MemberStatus } from "@/lib/membership";
+import MembershipEndForm from "@/components/admin/MembershipEndForm";
+import { addCommitteeMember, approveMember, banUser, declineMember, removeCommitteeMember, removeUser, revokeMember, setUserRole, unbanUser } from "../actions";
 
 const PAGE_SIZE = 100;
 
@@ -12,7 +14,12 @@ interface UserRow {
   email: string;
   role: string;
   banned: boolean;
-  member_status: "none" | "pending" | "approved";
+  member_status: MemberStatus;
+  member_decided_at: Date | null;
+  decided_by_name: string | null;
+  member_decision_reason: string | null;
+  /** Approved, but no sign-in for 5 years: no longer a member. */
+  lapsed: boolean;
   createdAt: Date;
   committees: { id: string; name: string }[];
 }
@@ -31,13 +38,16 @@ export default async function AdminUsers(props: { searchParams: Promise<{ q?: st
 
   const [users, committees, pending] = await Promise.all([
     sql<UserRow[]>`
-      SELECT u.id, u.name, u.email, u.role, u.banned, u.member_status, u."createdAt",
+      SELECT u.id, u.name, u.email, u.role, u.banned, u.member_status, u.member_decided_at, u.member_decision_reason, u."createdAt",
+        d.name AS decided_by_name,
+        (u.member_status = 'approved' AND u.last_active_at <= NOW() - INTERVAL '5 years') AS lapsed,
         COALESCE(json_agg(json_build_object('id', c.id, 'name', c.name) ORDER BY c.name) FILTER (WHERE c.id IS NOT NULL), '[]') AS committees
       FROM "user" u
       LEFT JOIN committee_members m ON m.user_id = u.id
       LEFT JOIN committees c ON c.id = m.committee_id
+      LEFT JOIN "user" d ON d.id = u.member_decided_by
       ${where}
-      GROUP BY u.id ORDER BY u."createdAt" DESC LIMIT ${PAGE_SIZE}
+      GROUP BY u.id, d.name ORDER BY u."createdAt" DESC LIMIT ${PAGE_SIZE}
     `,
     sql<{ id: string; name: string }[]>`SELECT id, name FROM committees ORDER BY name`,
     sql<{ id: string; name: string; email: string; requested_at: Date | null }[]>`
@@ -63,20 +73,17 @@ export default async function AdminUsers(props: { searchParams: Promise<{ q?: st
                     {p.email}{p.requested_at && ` · asked ${new Date(p.requested_at).toLocaleDateString("en-GB")}`}
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
                   <form action={approveMember}>
                     <input type="hidden" name="userId" value={p.id} />
                     <button className="btn btn-primary btn-sm" type="submit">Approve</button>
                   </form>
-                  <form action={revokeMember}>
-                    <input type="hidden" name="userId" value={p.id} />
-                    <ConfirmButton message={`Decline the request from ${p.email}?`} className="btn btn-secondary btn-sm">Decline</ConfirmButton>
-                  </form>
+                  <MembershipEndForm action={declineMember} userId={p.id} label="Decline" confirm={`Decline the request from ${p.email}?`} />
                 </div>
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-xs text-muted">Approving emails the person that they are now a member. Declining sends nothing, and they can ask again.</p>
+          <p className="mt-3 text-xs text-muted">Approving and declining both email the person; a reason is optional. After a decline they can ask again in 30 days.</p>
         </section>
       )}
 
@@ -111,23 +118,32 @@ export default async function AdminUsers(props: { searchParams: Promise<{ q?: st
                     <p className="text-xs text-muted">Joined {new Date(u.createdAt).toLocaleDateString("en-GB")}</p>
                   </td>
                   <td>
-                    {u.member_status === "approved" && <span className="badge">Member</span>}
+                    {u.member_status === "approved" && !u.lapsed && <span className="badge">Member</span>}
+                    {u.lapsed && <span className="badge !bg-soft !text-muted">Lapsed</span>}
                     {u.member_status === "pending" && <span className="badge !bg-navy !text-white">Requested</span>}
+                    {u.member_status === "declined" && <span className="badge !bg-soft !text-muted">Declined</span>}
+                    {u.member_status === "revoked" && <span className="badge !bg-soft !text-muted">Removed</span>}
                     {u.member_status === "none" && <span className="text-sm text-muted">Not a member</span>}
-                    <div className="mt-2 flex gap-2">
-                      {u.member_status !== "approved" && (
+                    {u.member_decided_at && (
+                      <p className="mt-1 text-xs text-muted">
+                        {{ approved: "Approved", declined: "Declined", revoked: "Removed", none: "", pending: "" }[u.member_status]}
+                        {u.decided_by_name ? ` by ${u.decided_by_name}` : ""} on {new Date(u.member_decided_at).toLocaleDateString("en-GB")}
+                        {u.member_decision_reason && <><br />&ldquo;{u.member_decision_reason}&rdquo;</>}
+                      </p>
+                    )}
+                    {u.lapsed && <p className="mt-1 text-xs text-muted">No sign-in for 5 years.</p>}
+                    <div className="mt-2 flex flex-col gap-2">
+                      {(u.member_status !== "approved" || u.lapsed) && (
                         <form action={approveMember}>
                           <input type="hidden" name="userId" value={u.id} />
                           <button className="btn btn-primary btn-sm" type="submit">Approve</button>
                         </form>
                       )}
-                      {u.member_status !== "none" && !isMe && (
-                        <form action={revokeMember}>
-                          <input type="hidden" name="userId" value={u.id} />
-                          <ConfirmButton message={u.member_status === "pending" ? "Decline this request?" : `End ${u.email}'s membership?`} className="btn btn-secondary btn-sm">
-                            {u.member_status === "pending" ? "Decline" : "Remove"}
-                          </ConfirmButton>
-                        </form>
+                      {u.member_status === "pending" && (
+                        <MembershipEndForm action={declineMember} userId={u.id} label="Decline" confirm={`Decline the request from ${u.email}?`} />
+                      )}
+                      {u.member_status === "approved" && !isMe && (
+                        <MembershipEndForm action={revokeMember} userId={u.id} label="Remove" confirm={`End ${u.email}'s membership?`} />
                       )}
                     </div>
                   </td>
@@ -151,6 +167,7 @@ export default async function AdminUsers(props: { searchParams: Promise<{ q?: st
                         <button className="btn btn-secondary btn-sm" type="submit">Add</button>
                       </form>
                     )}
+                    {open.length > 0 && <p className="mt-1 text-xs text-muted">Committee members count as members too.</p>}
                   </td>
                   <td>
                     <span className={u.role === "admin" ? "badge" : "text-muted"}>{u.role}</span>
