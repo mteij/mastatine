@@ -98,13 +98,23 @@ export async function saveAgenda(formData: FormData) {
   const agenda = parseAgenda(String(formData.get("agenda") ?? ""));
 
   await sql.begin(async (tx) => {
-    const existing = await tx<{ title: string; notes: string }[]>`SELECT title, notes FROM meeting_items WHERE meeting_id = ${id} ORDER BY position`;
+    const existing = await tx<{ id: string; title: string; notes: string }[]>`SELECT id, title, notes FROM meeting_items WHERE meeting_id = ${id} ORDER BY position`;
+    // Deleting the items would null these links, so remember them and re-attach them to the matching new item.
+    const linked = await tx<{ id: string; item_id: string }[]>`SELECT id, item_id FROM action_points WHERE meeting_id = ${id} AND item_id IS NOT NULL`;
     const pool = [...existing];
+    const newIdFor = new Map<string, string>();
     await tx`DELETE FROM meeting_items WHERE meeting_id = ${id}`;
     for (const [position, item] of agenda.entries()) {
       const at = pool.findIndex((e) => e.title.toLowerCase() === item.title.toLowerCase());
-      const notes = at >= 0 ? pool.splice(at, 1)[0].notes : "";
-      await tx`INSERT INTO meeting_items (meeting_id, position, level, title, notes) VALUES (${id}, ${position}, ${item.level}, ${item.title}, ${notes})`;
+      const match = at >= 0 ? pool.splice(at, 1)[0] : null;
+      const [created] = await tx<{ id: string }[]>`
+        INSERT INTO meeting_items (meeting_id, position, level, title, notes) VALUES (${id}, ${position}, ${item.level}, ${item.title}, ${match?.notes ?? ""}) RETURNING id
+      `;
+      if (match) newIdFor.set(match.id, created.id);
+    }
+    for (const point of linked) {
+      const itemId = newIdFor.get(point.item_id);
+      if (itemId) await tx`UPDATE action_points SET item_id = ${itemId} WHERE id = ${point.id}`;
     }
   });
   refresh(id);
@@ -183,20 +193,46 @@ const actionSchema = z.object({
   body: z.string().trim().min(1).max(500),
   assignee_id: z.string().max(64),
   deadline: z.union([z.iso.date(), z.literal("")]),
+  item_id: z.union([uuid, z.literal("")]).default(""),
 });
 
-export async function addAction(formData: FormData) {
-  const data = actionSchema.parse(Object.fromEntries(formData));
-  const { committeeId } = await requireEditableMeeting(data.id);
+/** Action points only go to members of the committee, and only to agenda items of the same meeting. */
+async function checkActionTargets(meetingId: string, committeeId: string, data: z.infer<typeof actionSchema>) {
   if (data.assignee_id) {
     const [member] = await sql`SELECT 1 FROM committee_members WHERE committee_id = ${committeeId} AND user_id = ${data.assignee_id}`;
     if (!member) throw new Error("Action points can only go to committee members.");
   }
+  if (data.item_id) {
+    const [item] = await sql`SELECT 1 FROM meeting_items WHERE id = ${data.item_id} AND meeting_id = ${meetingId}`;
+    if (!item) throw new Error("That agenda item is not part of this meeting.");
+  }
+}
+
+export async function addAction(formData: FormData) {
+  const data = actionSchema.parse(Object.fromEntries(formData));
+  const { committeeId } = await requireEditableMeeting(data.id);
+  await checkActionTargets(data.id, committeeId, data);
   await sql`
-    INSERT INTO action_points (meeting_id, committee_id, assignee_id, body, deadline)
-    VALUES (${data.id}, ${committeeId}, ${data.assignee_id || null}, ${data.body}, ${data.deadline || null})
+    INSERT INTO action_points (meeting_id, committee_id, assignee_id, body, deadline, item_id)
+    VALUES (${data.id}, ${committeeId}, ${data.assignee_id || null}, ${data.body}, ${data.deadline || null}, ${data.item_id || null})
   `;
   refresh(data.id);
+}
+
+/** Changes what an action point says, who has it, its deadline and the agenda item it belongs to. Committee members only. */
+export async function updateAction(formData: FormData) {
+  const data = actionSchema.parse(Object.fromEntries(formData));
+  const row = await requireActionAccess(data.id);
+  const session = await requireSignedIn();
+  if (!(await isCommitteeMember(session.user, row.committee_id))) redirect(BASE);
+  if (row.meeting_status === "locked") redirect(`${BASE}/meetings/${row.meeting_id}`);
+  await checkActionTargets(row.meeting_id, row.committee_id, data);
+  await sql`
+    UPDATE action_points SET body = ${data.body}, assignee_id = ${data.assignee_id || null}, deadline = ${data.deadline || null}, item_id = ${data.item_id || null}
+    WHERE id = ${data.id}
+  `;
+  refresh(row.meeting_id);
+  redirect(`${BASE}/meetings/${row.meeting_id}`);
 }
 
 async function requireActionAccess(actionId: string) {

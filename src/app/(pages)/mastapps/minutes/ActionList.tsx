@@ -8,18 +8,20 @@ interface ActionListProps {
   /** Show who each point belongs to (lists that are not already "mine"). */
   showAssignee?: boolean;
   canDelete?: boolean;
+  /** Offer the edit page (committee members of an unlocked meeting). */
+  canEdit?: boolean;
 }
 
 /** Action points with a tick box that marks them done. */
-export default function ActionList({ actions, showAssignee, canDelete }: ActionListProps) {
+export default function ActionList({ actions, showAssignee, canDelete, canEdit }: ActionListProps) {
   if (actions.length === 0) return <p className="text-muted">No action points.</p>;
   return (
     <ul className="divide-y divide-line">
       {actions.map((a) => (
         <li key={a.id} className="flex items-start gap-3 py-3">
-          <form action={toggleAction}>
+          <form action={toggleAction} className="shrink-0">
             <input type="hidden" name="id" value={a.id} />
-            <button type="submit" role="checkbox" aria-checked={a.is_done} aria-label={`${a.is_done ? "Reopen" : "Mark done"}: ${a.body}`} className={`mt-1 grid h-6 w-6 place-items-center rounded-md border-2 ${a.is_done ? "border-accent bg-accent text-white" : "border-line bg-surface"}`}>
+            <button type="submit" role="checkbox" aria-checked={a.is_done} aria-label={`${a.is_done ? "Reopen" : "Mark done"}: ${a.body}`} className={`mt-1 grid size-6 shrink-0 place-items-center rounded-md border-2 ${a.is_done ? "border-accent bg-accent text-white" : "border-line bg-surface"}`}>
               {a.is_done && "✓"}
             </button>
           </form>
@@ -29,7 +31,11 @@ export default function ActionList({ actions, showAssignee, canDelete }: ActionL
               Deadline: {formatDeadline(a.deadline)}
               {showAssignee && ` · ${a.assignee_name ?? "unassigned"}`}
             </p>
+            {a.item_title && <p className="text-xs text-muted">Raised under: {a.item_title}</p>}
           </div>
+          {canEdit && (
+            <Link href={`/mastapps/minutes/actions/${a.id}/edit`} className="text-sm font-bold text-muted hover:text-accent-text">Edit</Link>
+          )}
           {canDelete && (
             <form action={deleteAction}>
               <input type="hidden" name="id" value={a.id} />

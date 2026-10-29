@@ -77,8 +77,6 @@ export function getApps(shopUrl: string | null): MastApp[] {
       nav: [
         { label: "Dashboard", href: "/mastapps/minutes", icon: Icons.dashboard },
         { label: "Meetings", href: "/mastapps/minutes/meetings", icon: <ListIcon /> },
-        { label: "Actions", href: "/mastapps/minutes/actions", icon: <CheckIcon /> },
-        { label: "New meeting", href: "/mastapps/minutes/meetings/new", icon: <PlusIcon /> },
       ],
     },
     {

@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AUTOSAVE_MS, HEARTBEAT_MS, POLL_MS, itemLabels } from "@/lib/minutes-live";
-import type { LiveItem, MeetingStatus } from "@/lib/meetings";
-import { acquireItemLock, releaseItemLock, saveItemNotes, setMeetingStatus } from "./actions";
+import { formatDeadline, type LiveItem, type MeetingStatus } from "@/lib/meetings";
+import { acquireItemLock, addAction, releaseItemLock, saveItemNotes, setMeetingStatus } from "./actions";
 
 interface MinutesEditorProps {
   meetingId: string;
   initialItems: LiveItem[];
   initialStatus: MeetingStatus;
   isAdmin: boolean;
+  /** Committee members an action point can be given to. */
+  people: { id: string; name: string }[];
 }
 
 type SaveState = "saved" | "saving" | "rejected" | "error";
@@ -31,21 +33,20 @@ const SAVE_TEXT: Record<SaveState, string> = {
  * Minutes with autosave. Focusing an item takes a short lock that is renewed while you stay in it; colleagues see the item
  * disabled with your name. The server enforces the lock, so a stale tab can never overwrite someone else's text.
  */
-export default function MinutesEditor({ meetingId, initialItems, initialStatus, isAdmin }: MinutesEditorProps) {
+export default function MinutesEditor({ meetingId, initialItems, initialStatus, isAdmin, people }: MinutesEditorProps) {
   const [items, setItems] = useState(initialItems);
   const [status, setStatus] = useState(initialStatus);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [addingFor, setAddingFor] = useState<string | null>(null);
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
 
-  // Pull in colleagues' changes and lock states. Fields with unsaved local text keep showing it.
-  useEffect(() => {
-    const controller = new AbortController();
-    const poll = async () => {
-      if (document.visibilityState !== "visible") return;
+  // Pull in colleagues' changes, lock states and new action points. Fields with unsaved local text keep showing it.
+  const reload = useCallback(
+    async (signal?: AbortSignal) => {
       try {
-        const res = await fetch(`/api/minutes/${meetingId}/live`, { cache: "no-store", signal: controller.signal });
+        const res = await fetch(`/api/minutes/${meetingId}/live`, { cache: "no-store", signal });
         if (!res.ok) return;
         const data: { status: MeetingStatus; items: LiveItem[] } = await res.json();
         setItems(data.items);
@@ -53,13 +54,20 @@ export default function MinutesEditor({ meetingId, initialItems, initialStatus, 
       } catch {
         // Offline or navigating away: the next tick tries again.
       }
-    };
-    const timer = setInterval(poll, POLL_MS);
+    },
+    [meetingId],
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") void reload(controller.signal);
+    }, POLL_MS);
     return () => {
       clearInterval(timer);
       controller.abort();
     };
-  }, [meetingId]);
+  }, [reload]);
 
   // Keep the lock alive while the cursor is in an item.
   useEffect(() => {
@@ -110,6 +118,17 @@ export default function MinutesEditor({ meetingId, initialItems, initialStatus, 
     await releaseItemLock(id).catch(() => {});
   }
 
+  async function onAddAction(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    try {
+      await addAction(new FormData(event.currentTarget));
+      setAddingFor(null);
+      await reload();
+    } catch {
+      setSaveState("error");
+    }
+  }
+
   async function onStatus(next: MeetingStatus) {
     const previous = status;
     setStatus(next);
@@ -154,6 +173,37 @@ export default function MinutesEditor({ meetingId, initialItems, initialStatus, 
               onFocus={() => void onFocus(item.id)}
               onBlur={() => void onBlur(item.id, drafts[item.id])}
             />
+
+            {item.actions.length > 0 && (
+              <ul className="mt-3 space-y-1.5">
+                {item.actions.map((a) => (
+                  <li key={a.id} className={`rounded-lg bg-soft px-3 py-2 text-sm ${a.is_done ? "line-through opacity-60" : ""}`}>
+                    <strong>Action point · {a.assignee_name ?? "unassigned"}:</strong> {a.body} <span className="text-muted">({formatDeadline(a.deadline)})</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {!locked && (addingFor === item.id ? (
+              <form onSubmit={onAddAction} className="mt-3 space-y-2 rounded-xl border border-line p-3">
+                <input type="hidden" name="id" value={meetingId} />
+                <input type="hidden" name="item_id" value={item.id} />
+                <textarea name="body" aria-label="Action point" className="input" required maxLength={500} placeholder="What needs to happen?" autoFocus />
+                <div className="flex flex-wrap gap-2">
+                  <select name="assignee_id" aria-label="Assigned to" className="input !w-auto min-w-0 flex-1" defaultValue="">
+                    <option value="">Unassigned</option>
+                    {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                  <input name="deadline" type="date" aria-label="Deadline (empty: next meeting)" className="input !w-auto" />
+                </div>
+                <div className="flex gap-2">
+                  <button type="submit" className="btn btn-primary btn-sm">Add action point</button>
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => setAddingFor(null)}>Cancel</button>
+                </div>
+              </form>
+            ) : (
+              <button type="button" className="btn btn-ghost btn-sm mt-2" onClick={() => setAddingFor(item.id)}>+ Action point</button>
+            ))}
           </div>
         );
       })}

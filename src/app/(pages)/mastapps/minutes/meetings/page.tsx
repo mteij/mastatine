@@ -14,12 +14,12 @@ export default async function MeetingsPage() {
 
   return (
     <AppFrame title="Meetings" tagline="Every meeting of your committees, newest first.">
+      <Link href="/mastapps/minutes/meetings/new" className="btn btn-primary mb-6">New meeting</Link>
       {meetings.length === 0 ? (
         <p className="text-muted">No meetings found.</p>
       ) : (
         <ul className="card divide-y divide-line">{meetings.map((m) => <MeetingRow key={m.id} meeting={m} />)}</ul>
       )}
-      <Link href="/mastapps/minutes/meetings/new" className="btn btn-primary mt-6">New meeting</Link>
     </AppFrame>
   );
 }

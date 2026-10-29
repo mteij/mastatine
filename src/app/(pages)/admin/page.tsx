@@ -64,7 +64,7 @@ export default async function AdminOverview() {
     },
     { label: "Newsletter", value: stats.confirmed, href: "/admin/newsletter", note: `${stats.pending} awaiting confirmation` },
     { label: "Upcoming activities", value: stats.upcoming, href: "/mastapps/activities/mine" },
-    { label: "Open action points", value: stats.open_actions, href: "/mastapps/minutes/actions" },
+    { label: "Open action points", value: stats.open_actions, href: "/mastapps/minutes?actions=committee" },
     { label: "Masts", value: stats.masts, href: "/admin/masts", note: `${stats.votes.toLocaleString("en-US")} votes` },
     { label: "Committees", value: stats.committees, href: "/admin/committees" },
   ];
