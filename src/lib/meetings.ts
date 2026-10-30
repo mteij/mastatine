@@ -65,6 +65,68 @@ export function getMeetings(user: Viewer, limit = 100) {
   `;
 }
 
+export interface MeetingFilters {
+  q: string;
+  committeeId: string;
+  status: MeetingStatus | "";
+  /** YYYY-MM-DD, inclusive, in the association's time zone. */
+  from: string;
+  to: string;
+  when: "upcoming" | "past" | "";
+  openActions: boolean;
+  sort: "newest" | "oldest";
+}
+
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+const ID = /^[0-9a-f-]{36}$/i;
+
+/** Reads filter fields from a query string; anything unrecognised falls back to "no filter". */
+export function parseMeetingFilters(params: Record<string, string | undefined>): MeetingFilters {
+  const day = (value?: string) => (value && DAY.test(value) ? value : "");
+  return {
+    q: (params.q ?? "").trim().slice(0, 100),
+    committeeId: params.committee && ID.test(params.committee) ? params.committee : "",
+    status: params.status === "open" || params.status === "done" || params.status === "locked" ? params.status : "",
+    from: day(params.from),
+    to: day(params.to),
+    when: params.when === "upcoming" || params.when === "past" ? params.when : "",
+    openActions: params.actions === "open",
+    sort: params.sort === "oldest" ? "oldest" : "newest",
+  };
+}
+
+/** True when anything beyond the default list is asked for. */
+export const hasMeetingFilters = (f: MeetingFilters): boolean =>
+  Boolean(f.q || f.committeeId || f.status || f.from || f.to || f.when || f.openActions || f.sort !== "newest");
+
+const LOCAL_DAY = (column: ReturnType<typeof sql>) => sql`(${column} AT TIME ZONE 'Europe/Amsterdam')::date`;
+
+/** Meetings the user can see that match every filter. Search covers the title, place, committee, agenda and minutes text. */
+export function searchMeetings(user: Viewer, f: MeetingFilters, limit = 200) {
+  const pattern = `%${f.q.replace(/[\\%_]/g, "\\$&")}%`;
+  const startsDay = LOCAL_DAY(sql`m.starts_at`);
+  const conditions = [
+    meetingScope(user),
+    ...(f.q
+      ? [sql`(m.title ILIKE ${pattern} OR m.location ILIKE ${pattern} OR c.name ILIKE ${pattern}
+          OR EXISTS (SELECT 1 FROM meeting_items i WHERE i.meeting_id = m.id AND (i.title ILIKE ${pattern} OR i.notes ILIKE ${pattern})))`]
+      : []),
+    ...(f.committeeId ? [sql`m.committee_id = ${f.committeeId}`] : []),
+    ...(f.status ? [sql`m.minutes_status = ${f.status}`] : []),
+    ...(f.from ? [sql`${startsDay} >= ${f.from}::date`] : []),
+    ...(f.to ? [sql`${startsDay} <= ${f.to}::date`] : []),
+    ...(f.when === "upcoming" ? [sql`${startsDay} >= ${LOCAL_DAY(sql`NOW()`)}`] : []),
+    ...(f.when === "past" ? [sql`${startsDay} < ${LOCAL_DAY(sql`NOW()`)}`] : []),
+    ...(f.openActions ? [sql`EXISTS (SELECT 1 FROM action_points a WHERE a.meeting_id = m.id AND NOT a.is_done)`] : []),
+  ];
+  const where = conditions.reduce((all, condition) => sql`${all} AND ${condition}`);
+  const order = f.sort === "oldest" ? sql`m.starts_at ASC` : sql`m.starts_at DESC`;
+  return sql<Meeting[]>`
+    SELECT ${meetingColumns()} FROM meetings m JOIN committees c ON c.id = m.committee_id
+    WHERE ${where} ORDER BY ${order} LIMIT ${limit}
+  `;
+}
+
 export async function getMeeting(id: string, user: Viewer): Promise<Meeting | null> {
   const [row] = await sql<Meeting[]>`
     SELECT ${meetingColumns()} FROM meetings m JOIN committees c ON c.id = m.committee_id
@@ -145,18 +207,25 @@ export async function getAction(id: string, user: Viewer): Promise<(ActionPoint 
   return row ?? null;
 }
 
-/** Open action points assigned to the user. */
+/** Open points, plus done ones until the committee has held a meeting since they were ticked off. */
+const stillListed = () => sql`(
+  NOT a.is_done OR NOT EXISTS (
+    SELECT 1 FROM meetings later WHERE later.committee_id = a.committee_id AND later.starts_at > a.done_at AND later.starts_at <= NOW()
+  )
+)`;
+
+/** Action points assigned to the user: open ones first, then recently done ones (crossed out). */
 export function getMyActions(userId: string) {
   return sql<ActionPoint[]>`
     SELECT ${actionColumns()} FROM action_points a ${actionJoins()}
-    WHERE a.assignee_id = ${userId} AND NOT a.is_done
-    ORDER BY c.name, a.deadline NULLS LAST, a.created_at
+    WHERE a.assignee_id = ${userId} AND ${stillListed()}
+    ORDER BY a.is_done, c.name, a.deadline NULLS LAST, a.created_at
   `;
 }
 
 /** Action points of the committees the user can see, open ones first. */
 export function getCommitteeActions(user: Viewer, includeDone: boolean) {
-  const done = includeDone ? sql`TRUE` : sql`NOT a.is_done`;
+  const done = includeDone ? sql`TRUE` : stillListed();
   return sql<ActionPoint[]>`
     SELECT ${actionColumns()} FROM action_points a ${actionJoins()}
     WHERE ${actionScope(user)} AND ${done}

@@ -5,13 +5,32 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { NAME_MAX, validateDisplayName } from "@/lib/profile";
 
-export default function AccountPanel({ initialName }: { initialName: string }) {
+export default function AccountPanel({ initialName, email }: { initialName: string; email: string }) {
   const id = useId();
   const router = useRouter();
   const [name, setName] = useState(initialName);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailSent, setEmailSent] = useState(false);
+  const [changingEmail, setChangingEmail] = useState(false);
+
+  async function changeEmail(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError("");
+    setEmailSent(false);
+    const address = newEmail.trim().toLowerCase();
+    if (address === email.toLowerCase()) return setError("That is already your email address.");
+    setChangingEmail(true);
+    const { error: changeError } = await authClient.changeEmail({ newEmail: address, callbackURL: "/account?email=changed" });
+    setChangingEmail(false);
+    if (changeError) {
+      return setError(changeError.status === 429 ? "Too many attempts. Please try again later." : "Could not start the email change. Check the address and try again.");
+    }
+    setEmailSent(true);
+    setNewEmail("");
+  }
 
   async function saveName(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -55,6 +74,29 @@ export default function AccountPanel({ initialName }: { initialName: string }) {
           <button type="submit" className="btn btn-primary" disabled={!name.trim() || name.trim() === initialName}>Save</button>
         </div>
         {saved && <p role="status" className="mt-2 text-sm text-success">Saved</p>}
+      </form>
+
+      <form onSubmit={changeEmail} className="card p-4">
+        <label htmlFor={`${id}-email`} className="label">Email address</label>
+        <p className="mb-2 break-all text-sm text-muted">Now: {email}</p>
+        <div className="flex gap-2">
+          <input
+            id={`${id}-email`}
+            type="email"
+            className="input min-w-0 flex-1"
+            placeholder="New email address"
+            autoComplete="email"
+            maxLength={254}
+            value={newEmail}
+            onChange={(e) => { setNewEmail(e.target.value); setEmailSent(false); }}
+          />
+          <button type="submit" className="btn btn-secondary" disabled={!newEmail.trim() || changingEmail}>{changingEmail ? "Sending…" : "Change"}</button>
+        </div>
+        {emailSent && (
+          <p role="status" className="mt-2 text-sm text-success">
+            If that address can be used, we sent it a confirmation link. Your email changes once you open it.
+          </p>
+        )}
       </form>
 
       {error && <p role="alert" className="rounded-xl bg-danger/10 px-4 py-3 text-sm text-danger">{error}</p>}

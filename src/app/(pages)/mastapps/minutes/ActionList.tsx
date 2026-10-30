@@ -22,7 +22,7 @@ export default function ActionList({ actions, showAssignee, canDelete, canEdit }
         <li key={a.id} className="flex items-start gap-3 py-3">
           <form action={toggleAction} className="shrink-0">
             <input type="hidden" name="id" value={a.id} />
-            <button type="submit" role="checkbox" aria-checked={a.is_done} aria-label={`${a.is_done ? "Reopen" : "Mark done"}: ${a.body}`} className={`mt-1 grid size-6 shrink-0 place-items-center rounded-md border-2 ${a.is_done ? "border-accent bg-accent text-white" : "border-line bg-surface"}`}>
+            <button type="submit" role="checkbox" aria-checked={a.is_done} aria-label={`${a.is_done ? "Reopen" : "Mark done"}: ${a.body}`} className="check mt-1">
               {a.is_done && "✓"}
             </button>
           </form>

@@ -5,11 +5,12 @@ import { Pool } from "pg";
 import { requireEnv, siteUrl } from "@/lib/env";
 import sql from "@/lib/db";
 import { sendMail } from "@/lib/mailer";
-import { magicLinkEmail } from "@/lib/email-templates";
+import { changeEmailVerificationEmail, emailChangeNoticeEmail, magicLinkEmail } from "@/lib/email-templates";
 import { allowMagicLinkFor } from "@/lib/magic-link-limit";
 import { applySignupChoice, deleteSubscriberByEmail, rememberSignupChoice } from "@/lib/newsletter";
 
 const MAGIC_LINK_TTL_SECONDS = 10 * 60;
+const CHANGE_EMAIL_TTL_SECONDS = 60 * 60;
 
 declare global {
   var _authPool: Pool | undefined;
@@ -37,7 +38,20 @@ function createAuth() {
     trustedOrigins: [siteUrl()],
     database: pool,
     session: { expiresIn: 60 * 60 * 24 * 30, updateAge: 60 * 60 * 24 },
+    emailVerification: {
+      expiresIn: CHANGE_EMAIL_TTL_SECONDS,
+      // Only used by the email change: sign-in links already prove an address, so accounts start verified.
+      // Better Auth hands us the new address; the old one is still what the database holds at this point.
+      sendVerificationEmail: async ({ user, url }) => {
+        const [current] = await sql<{ email: string }[]>`SELECT email FROM "user" WHERE id = ${user.id}`;
+        await sendMail({ to: user.email, ...changeEmailVerificationEmail(url, CHANGE_EMAIL_TTL_SECONDS / 60) });
+        if (current && current.email.toLowerCase() !== user.email.toLowerCase()) {
+          await sendMail({ to: current.email, ...emailChangeNoticeEmail(user.email) });
+        }
+      },
+    },
     user: {
+      changeEmail: { enabled: true },
       deleteUser: {
         enabled: true, // requires a fresh session, so a stolen old cookie cannot erase an account
         afterDelete: async (user) => deleteSubscriberByEmail(user.email),
@@ -55,6 +69,7 @@ function createAuth() {
       customRules: {
         "/sign-in/magic-link": { window: 60, max: 3 },
         "/magic-link/verify": { window: 60, max: 10 },
+        "/change-email": { window: 3600, max: 5 },
       },
     },
     databaseHooks: {

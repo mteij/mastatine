@@ -22,8 +22,11 @@ async function purgeOrphanUploads(): Promise<number> {
   const candidates = files.filter((f) => UPLOAD_FILENAME_RE.test(f));
   if (candidates.length === 0) return 0;
 
+  // Pictures in minutes are referenced from inside the notes text (Markdown), so they are pulled out of it.
   const rows = await sql<{ url: string }[]>`
-    SELECT image_url AS url FROM towers UNION SELECT poster_url FROM activities WHERE poster_url IS NOT NULL
+    SELECT image_url AS url FROM towers
+    UNION SELECT poster_url FROM activities WHERE poster_url IS NOT NULL
+    UNION SELECT found[1] FROM meeting_items, regexp_matches(notes, '(/uploads/[a-z0-9-]+\\.(?:jpg|png|webp|gif))', 'g') AS found
   `;
   const used = new Set(rows.map((r) => r.url));
 

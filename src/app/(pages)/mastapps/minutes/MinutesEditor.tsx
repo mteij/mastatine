@@ -5,6 +5,7 @@ import { AUTOSAVE_MS, HEARTBEAT_MS, POLL_MS, itemLabels } from "@/lib/minutes-li
 import { formatDeadline, type MeetingStatus } from "@/lib/minutes-format";
 import type { LiveItem } from "@/lib/meetings";
 import { acquireItemLock, addAction, releaseItemLock, saveItemNotes, setMeetingStatus } from "./actions";
+import NotesField from "./NotesField";
 
 interface MinutesEditorProps {
   meetingId: string;
@@ -145,76 +146,77 @@ export default function MinutesEditor({ meetingId, initialItems, initialStatus, 
   const locked = status === "locked";
 
   return (
-    <div className="space-y-5">
-      {locked && (
-        <p role="status" className="rounded-xl bg-soft px-4 py-3 text-sm font-bold">
-          This meeting is locked. {isAdmin ? "You can reopen it below." : "Only an admin can reopen it."}
+    <div className="admin-compact space-y-2">
+      <div className="sticky top-2 z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-xl border border-line bg-surface/95 px-3 py-2 shadow-sm backdrop-blur">
+        <p role="status" aria-live="polite" className={`text-sm ${saveState === "saved" || saveState === "saving" ? "text-muted" : "font-bold text-danger"}`}>
+          {locked ? `Locked. ${isAdmin ? "You can reopen it." : "Only an admin can reopen it."}` : SAVE_TEXT[saveState]}
         </p>
-      )}
-      <p role="status" aria-live="polite" className={`text-sm ${saveState === "saved" || saveState === "saving" ? "text-muted" : "font-bold text-danger"}`}>
-        {SAVE_TEXT[saveState]}
-      </p>
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-bold" htmlFor="status">Status</label>
+          <select id="status" className="input !w-auto" value={status} disabled={locked && !isAdmin} onChange={(e) => void onStatus(e.target.value as MeetingStatus)}>
+            {STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+        </div>
+      </div>
 
       {items.map((item, i) => {
         const lockedByOther = item.locked_by_name !== null;
         const readOnly = lockedByOther || locked;
+        const heading = `${labels[i]} ${item.title}`;
         return (
-          <div key={item.id} className={`card p-5 ${item.level === 1 ? "ml-6 sm:ml-10" : ""}`}>
-            <label className="label font-bold text-accent-text" htmlFor={`notes-${item.id}`}>
-              {labels[i]} {item.title}
-              {lockedByOther && <span className="badge ml-2">{item.locked_by_name} is editing…</span>}
-            </label>
-            <textarea
+          <div key={item.id} className={`card p-3 ${item.level === 1 ? "ml-4 sm:ml-8" : ""}`}>
+            <div className="mb-1 flex items-start justify-between gap-2">
+              {readOnly ? (
+                <h3 className="text-sm font-bold text-accent-text">{heading}</h3>
+              ) : (
+                <label className="text-sm font-bold text-accent-text" htmlFor={`notes-${item.id}`}>{heading}</label>
+              )}
+              <div className="flex shrink-0 items-center gap-2">
+                {lockedByOther && <span className="badge">{item.locked_by_name} is editing…</span>}
+                {!locked && addingFor !== item.id && (
+                  <button type="button" className="text-xs font-bold text-muted hover:text-accent-text" onClick={() => setAddingFor(item.id)}>+ Action point</button>
+                )}
+              </div>
+            </div>
+            <NotesField
               id={`notes-${item.id}`}
-              className="input min-h-24"
-              maxLength={10000}
-              disabled={readOnly}
+              meetingId={meetingId}
               value={drafts[item.id] ?? item.notes}
-              onChange={(e) => onChange(item.id, e.target.value)}
+              readOnly={readOnly}
+              onChange={(text) => onChange(item.id, text)}
               onFocus={() => void onFocus(item.id)}
               onBlur={() => void onBlur(item.id, drafts[item.id])}
             />
 
             {item.actions.length > 0 && (
-              <ul className="mt-3 space-y-1.5">
+              <ul className="mt-2 space-y-1">
                 {item.actions.map((a) => (
-                  <li key={a.id} className={`rounded-lg bg-soft px-3 py-2 text-sm ${a.is_done ? "line-through opacity-60" : ""}`}>
+                  <li key={a.id} className={`rounded-md bg-soft px-2 py-1 text-xs ${a.is_done ? "line-through opacity-60" : ""}`}>
                     <strong>Action point · {a.assignee_name ?? "unassigned"}:</strong> {a.body} <span className="text-muted">({formatDeadline(a.deadline)})</span>
                   </li>
                 ))}
               </ul>
             )}
 
-            {!locked && (addingFor === item.id ? (
-              <form onSubmit={onAddAction} className="mt-3 space-y-2 rounded-xl border border-line p-3">
+            {!locked && addingFor === item.id && (
+              <form onSubmit={onAddAction} className="mt-2 space-y-2 rounded-lg border border-line p-2">
                 <input type="hidden" name="id" value={meetingId} />
                 <input type="hidden" name="item_id" value={item.id} />
-                <textarea name="body" aria-label="Action point" className="input" required maxLength={500} placeholder="What needs to happen?" autoFocus />
+                <input name="body" aria-label="Action point" className="input" required maxLength={500} placeholder="What needs to happen?" autoFocus />
                 <div className="flex flex-wrap gap-2">
                   <select name="assignee_id" aria-label="Assigned to" className="input !w-auto min-w-0 flex-1" defaultValue="">
                     <option value="">Unassigned</option>
                     {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                   <input name="deadline" type="date" aria-label="Deadline (empty: next meeting)" className="input !w-auto" />
-                </div>
-                <div className="flex gap-2">
-                  <button type="submit" className="btn btn-primary btn-sm">Add action point</button>
+                  <button type="submit" className="btn btn-primary btn-sm">Add</button>
                   <button type="button" className="btn btn-ghost btn-sm" onClick={() => setAddingFor(null)}>Cancel</button>
                 </div>
               </form>
-            ) : (
-              <button type="button" className="btn btn-ghost btn-sm mt-2" onClick={() => setAddingFor(item.id)}>+ Action point</button>
-            ))}
+            )}
           </div>
         );
       })}
-
-      <div className="card flex flex-wrap items-center gap-4 p-5">
-        <label className="font-bold" htmlFor="status">Meeting status</label>
-        <select id="status" className="input !w-auto" value={status} disabled={locked && !isAdmin} onChange={(e) => void onStatus(e.target.value as MeetingStatus)}>
-          {STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-        </select>
-      </div>
     </div>
   );
 }

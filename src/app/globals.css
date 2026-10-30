@@ -1423,3 +1423,22 @@ blockquote::before, blockquote::after { content: ""; content: none; }
 @media (max-width: 800px) { .announce__summary, .announce__more { display: none; } }
 /* Phones and tablets: no announcement bar (the news is on the homepage and /news). */
 @media (max-width: 1023px) { .announce { display: none; } }
+
+/* Tick box for action points. Outside any layer and more specific than the global button[type="submit"] pill style. */
+button.check[type="submit"] {
+  display: grid;
+  width: 1.5rem;
+  height: 1.5rem;
+  min-height: 0;
+  flex-shrink: 0;
+  padding: 0;
+  place-items: center;
+  border: 2px solid var(--line, #d5d9e0);
+  border-radius: 4px;
+  background: #fff;
+  color: #fff;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+button.check[type="submit"]:hover { border-color: var(--accent); background: #fff; }
+button.check[type="submit"][aria-checked="true"] { border-color: var(--accent); background: var(--accent); }

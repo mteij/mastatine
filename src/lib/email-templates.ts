@@ -136,6 +136,28 @@ export function magicLinkEmail(url: string, minutes: number): EmailContent {
   });
 }
 
+/** Sent to the new address: opening the link proves it is theirs and switches the account over. */
+export function changeEmailVerificationEmail(url: string, minutes: number): EmailContent {
+  return compose(`Confirm your new ${SITE_NAME} email address`, {
+    preheader: "Confirm this address to use it for your account.",
+    heading: "Confirm your new email address",
+    intro: `Use the button below to make this the email address of your ${SITE_NAME} account. The link works for ${minutes} minutes.`,
+    action: { url, label: "Confirm email address" },
+    notes: ["If you did not ask for this, you can ignore this email. Your account keeps its current address."],
+  });
+}
+
+/** Sent to the old address when a change is asked for, so a stolen session cannot move an account silently. */
+export function emailChangeNoticeEmail(newEmail: string): EmailContent {
+  return compose(`Email change requested on your ${SITE_NAME} account`, {
+    preheader: "Someone asked to move your account to another address.",
+    heading: "Email change requested",
+    intro: "A request was made to change the email address of your account. Nothing changes until the new address is confirmed.",
+    details: [{ label: "New address", value: newEmail }],
+    notes: ["If this was you, there is nothing to do. If it was not, sign out everywhere and contact us."],
+  });
+}
+
 export function confirmSubscriptionEmail(confirmUrl: string): EmailContent {
   return compose(`Confirm your ${SITE_NAME} newsletter subscription`, {
     preheader: "One more click and you will receive the newsletter.",

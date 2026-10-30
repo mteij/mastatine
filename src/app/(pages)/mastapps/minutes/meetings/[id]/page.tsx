@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import AppFrame from "@/components/ui/AppFrame";
+import Markdown from "@/components/Markdown";
 import { displayName, getCommitteePeople } from "@/lib/committees";
 import { formatDateTime } from "@/lib/datetime";
 import { formatDeadline, getItems, getMeetingActions, itemLabels } from "@/lib/meetings";
@@ -42,7 +43,7 @@ export default async function MeetingPage(props: { params: Promise<{ id: string 
             {items.map((item, i) => (
               <li key={item.id} className={item.level === 1 ? "ml-8" : ""}>
                 <h3 className={`font-bold text-accent-text ${item.level === 0 ? "text-lg" : "text-base"}`}>{labels[i]} {item.title}</h3>
-                {item.notes && <p className="mt-1 whitespace-pre-line">{item.notes}</p>}
+                {item.notes && <Markdown className="mt-1">{item.notes}</Markdown>}
                 {actions.filter((a) => a.item_id === item.id).map((a) => (
                   <p key={a.id} className={`mt-2 rounded-lg bg-soft px-3 py-2 text-sm ${a.is_done ? "line-through opacity-60" : ""}`}>
                     <strong>Action point · {a.assignee_name ?? "unassigned"}:</strong> {a.body} <span className="text-muted">({formatDeadline(a.deadline)})</span>

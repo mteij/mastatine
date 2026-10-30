@@ -250,7 +250,7 @@ async function requireActionAccess(actionId: string) {
 export async function toggleAction(formData: FormData) {
   const id = uuid.parse(formData.get("id"));
   const row = await requireActionAccess(id);
-  await sql`UPDATE action_points SET is_done = NOT is_done WHERE id = ${id}`;
+  await sql`UPDATE action_points SET is_done = NOT is_done, done_at = CASE WHEN is_done THEN NULL ELSE NOW() END WHERE id = ${id}`;
   refresh(row.meeting_id);
 }
 

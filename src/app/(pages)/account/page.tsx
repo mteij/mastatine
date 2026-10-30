@@ -17,8 +17,9 @@ const STATUS_TEXT: Record<string, string> = {
   unsubscribed: "Unsubscribed from the newsletter.",
 };
 
-export default async function AccountPage() {
+export default async function AccountPage(props: { searchParams: Promise<{ email?: string; error?: string }> }) {
   const { user } = await requireUser();
+  const { email: emailResult, error: linkError } = await props.searchParams;
   const [subscriber] = await sql<{ status: string }[]>`
     SELECT status FROM newsletter_subscribers WHERE lower(email) = ${user.email.toLowerCase()}
   `;
@@ -34,6 +35,8 @@ export default async function AccountPage() {
         )}
       </div>
       <p className="mt-1 break-all text-muted">{user.email}</p>
+      {emailResult === "changed" && !linkError && <p role="status" className="mt-3 rounded-xl bg-success/10 px-4 py-3 text-sm text-success">Your email address is now {user.email}. Use it to sign in from now on.</p>}
+      {linkError && <p role="alert" className="mt-3 rounded-xl bg-danger/10 px-4 py-3 text-sm text-danger">That confirmation link did not work. It may have expired or been used already; ask for a new one below.</p>}
 
       {!membership.isMember && (
         <section id="membership" aria-labelledby="membership-title" className="card mt-6 p-4">
@@ -74,7 +77,7 @@ export default async function AccountPage() {
       </p>
 
       <div className="mt-6">
-        <AccountPanel initialName={user.name ?? ""} />
+        <AccountPanel initialName={user.name ?? ""} email={user.email} />
       </div>
     </div>
   );
