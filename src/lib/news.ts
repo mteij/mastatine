@@ -11,12 +11,13 @@ export interface NewsPost {
   body: string;
 }
 
-const COLUMNS = sql`id, slug, title, summary, body, to_char(published_at, 'YYYY-MM-DD') AS date`;
+// A function, not a constant: building the fragment at import time would throw during `next build`, which has no database.
+const columns = () => sql`id, slug, title, summary, body, to_char(published_at, 'YYYY-MM-DD') AS date`;
 
 /** Newest first. Failing to reach the database must not take a whole page down, so reads return an empty list. */
 export async function getNews(limit = 100): Promise<NewsPost[]> {
   try {
-    return await sql<NewsPost[]>`SELECT ${COLUMNS} FROM news_posts ORDER BY published_at DESC, created_at DESC LIMIT ${limit}`;
+    return await sql<NewsPost[]>`SELECT ${columns()} FROM news_posts ORDER BY published_at DESC, created_at DESC LIMIT ${limit}`;
   } catch (error) {
     console.error("Failed to load the news:", (error as Error).message);
     return [];
@@ -28,7 +29,7 @@ export async function getLatestNews(): Promise<NewsPost | null> {
 }
 
 export async function findNews(slug: string): Promise<NewsPost | null> {
-  const [post] = await sql<NewsPost[]>`SELECT ${COLUMNS} FROM news_posts WHERE slug = ${slug}`;
+  const [post] = await sql<NewsPost[]>`SELECT ${columns()} FROM news_posts WHERE slug = ${slug}`;
   return post ?? null;
 }
 
