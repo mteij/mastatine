@@ -249,6 +249,48 @@ export async function unsubscribe(formData: FormData) {
   refresh(id);
 }
 
+/** Resolves the activity and checks the signed-in user may manage it (committee member or admin). */
+async function requireManager(id: string) {
+  const session = await requireSignedIn();
+  const [activity] = await sql<{ committee_id: string; cost_cents: number | null; signup_options: unknown }[]>`
+    SELECT committee_id, cost_cents, signup_options FROM activities WHERE id = ${id}
+  `;
+  if (!activity || !(await isCommitteeMember(session.user, activity.committee_id))) return null;
+  return activity;
+}
+
+/** Organisers and admins remove someone from an activity, whatever the activity's own unsubscribe setting says. */
+export async function removeParticipant(formData: FormData) {
+  const id = activityId.parse(formData.get("id"));
+  const userId = z.string().min(1).parse(formData.get("user_id"));
+  if (!(await requireManager(id))) return;
+  const removed = await sql`DELETE FROM activity_subscriptions WHERE activity_id = ${id} AND user_id = ${userId} RETURNING activity_id`;
+  if (removed.length > 0) {
+    after(async () => {
+      await logActivityEvent(id, "unsubscribed");
+      await notifyWaitlist(id);
+    });
+  }
+  refresh(id);
+}
+
+/** Organisers and admins change someone's choices. The price is recalculated; opening and closing dates do not apply. */
+export async function updateParticipantChoices(formData: FormData) {
+  const id = activityId.parse(formData.get("id"));
+  const userId = z.string().min(1).parse(formData.get("user_id"));
+  const activity = await requireManager(id);
+  if (!activity) return;
+  const groups = parseSignupGroups(activity.signup_options);
+  const selection = Object.fromEntries(groups.map((g) => [g.id, String(formData.get(`opt_${g.id}`) ?? "")]));
+  const quote = quoteSignup(activity.cost_cents, groups, selection);
+  if ("error" in quote) return;
+  await sql`
+    UPDATE activity_subscriptions SET choices = ${sql.json(quote.picks)}, price_cents = ${quote.price_cents}
+    WHERE activity_id = ${id} AND user_id = ${userId}
+  `;
+  refresh(id);
+}
+
 export async function deleteActivity(formData: FormData) {
   const session = await requireSignedIn();
   const id = activityId.parse(formData.get("id"));

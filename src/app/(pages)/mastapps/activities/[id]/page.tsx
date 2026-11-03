@@ -14,7 +14,7 @@ import { formatAdjustment, formatEuro, parseSignupGroups, priceLabel, tallyByGro
 import ConfirmButton from "@/components/admin/ConfirmButton";
 import { CheckIcon } from "@/components/ui/icons";
 import { getWaitlistInfo } from "@/lib/waitlist";
-import { joinWaitlist, leaveWaitlist, unsubscribe } from "../actions";
+import { joinWaitlist, leaveWaitlist, removeParticipant, unsubscribe, updateParticipantChoices } from "../actions";
 import MessageParticipantsForm from "../MessageParticipantsForm";
 import SubscribeForm from "../SubscribeForm";
 
@@ -204,7 +204,7 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
               )}
               {participants.length === 0 ? (
                 <p className="mt-3 text-muted">Nobody yet.</p>
-              ) : canManage && columns.length > 0 ? (
+              ) : canManage ? (
                 <div className="table-wrap mt-4">
                   <table className="table table-stack">
                     <thead>
@@ -212,6 +212,7 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
                         <th>Name</th>
                         {columns.map((group) => <th key={group}>{group}</th>)}
                         <th className="text-right">Price</th>
+                        <th>Manage</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -220,6 +221,34 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
                           <td data-primary className="font-medium">{displayName(p)}</td>
                           {columns.map((group) => <td key={group} data-label={group}>{p.choices.find((c) => c.group === group)?.choice ?? "–"}</td>)}
                           <td data-label="Price" className="text-right tabular-nums">{p.price_cents !== null ? formatEuro(p.price_cents) : "–"}</td>
+                          <td data-label="Manage">
+                            <div className="space-y-2">
+                              {groups.length > 0 && (
+                                <details>
+                                  <summary className="cursor-pointer text-sm font-bold text-accent-text">Change choices</summary>
+                                  <form action={updateParticipantChoices} className="mt-2 space-y-2">
+                                    <input type="hidden" name="id" value={activity.id} />
+                                    <input type="hidden" name="user_id" value={p.id} />
+                                    {groups.map((g) => (
+                                      <label key={g.id} className="block text-sm">
+                                        <span className="label">{g.label}</span>
+                                        <select name={`opt_${g.id}`} className="input" defaultValue={g.choices.find((c) => c.label === p.choices.find((x) => x.group === g.label)?.choice)?.id ?? ""} required={g.required}>
+                                          {!g.required && <option value="">None</option>}
+                                          {g.choices.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+                                        </select>
+                                      </label>
+                                    ))}
+                                    <button className="btn btn-secondary btn-sm" type="submit">Save choices</button>
+                                  </form>
+                                </details>
+                              )}
+                              <form action={removeParticipant}>
+                                <input type="hidden" name="id" value={activity.id} />
+                                <input type="hidden" name="user_id" value={p.id} />
+                                <ConfirmButton message={`Unsubscribe ${displayName(p)} from ${activity.name}?`} className="btn btn-secondary btn-sm">Unsubscribe</ConfirmButton>
+                              </form>
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
