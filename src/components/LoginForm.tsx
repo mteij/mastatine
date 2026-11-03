@@ -1,51 +1,54 @@
 "use client";
 
-import { useId, useState, useSyncExternalStore } from "react";
+import { useEffect, useId, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 
-const RETURNING_KEY = "mastatine:returning";
-
-function subscribeToStorage(onChange: () => void) {
-  window.addEventListener("storage", onChange);
-  return () => window.removeEventListener("storage", onChange);
-}
-
-function readReturning(): boolean {
-  try {
-    return localStorage.getItem(RETURNING_KEY) === "1";
-  } catch {
-    return false; // storage blocked: treat everyone as new
-  }
-}
-
 type Status = "idle" | "sending" | "sent";
+
+/**
+ * After the link is opened, everyone passes the welcome page, which asks the newsletter question once.
+ * New accounts choose a display name first, then continue to the welcome page.
+ */
+function destinations(next: string) {
+  const welcome = `/welcome?next=${encodeURIComponent(next)}`;
+  return { existing: welcome, created: `/account/name?next=${encodeURIComponent(welcome)}` };
+}
 
 export default function LoginForm({ next }: { next: string }) {
   const id = useId();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
-  const [newsletter, setNewsletter] = useState(true);
-  const returning = useSyncExternalStore(subscribeToStorage, readReturning, () => false);
+
+  // The link often opens in a new tab: once it signs the visitor in, move this tab along too.
+  useEffect(() => {
+    if (status !== "sent") return;
+    const timer = window.setInterval(async () => {
+      const { data } = await authClient.getSession();
+      if (data) window.location.assign(destinations(next).existing);
+    }, 3000);
+    const stop = window.setTimeout(() => window.clearInterval(timer), 10 * 60 * 1000);
+    return () => {
+      window.clearInterval(timer);
+      window.clearTimeout(stop);
+    };
+  }, [status, next]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
     setStatus("sending");
+    const target = destinations(next);
     const { error: authError } = await authClient.signIn.magicLink({
       email: email.trim().toLowerCase(),
-      callbackURL: next,
-      newUserCallbackURL: next,
-      metadata: { newsletter: returning ? false : newsletter },
+      callbackURL: target.existing,
+      newUserCallbackURL: target.created,
     });
     if (authError) {
       setStatus("idle");
       setError(authError.status === 429 ? "Too many attempts. Please wait a minute and try again." : "We could not send a link right now. Please try again.");
       return;
     }
-    try {
-      localStorage.setItem(RETURNING_KEY, "1");
-    } catch {}
     setStatus("sent");
   }
 
@@ -70,14 +73,6 @@ export default function LoginForm({ next }: { next: string }) {
         <label htmlFor={`${id}-email`} className="label">Email address</label>
         <input id={`${id}-email`} type="email" required autoComplete="email" inputMode="email" autoCapitalize="none" spellCheck={false} maxLength={254} value={email} onChange={(e) => setEmail(e.target.value)} className="input" placeholder="you@example.com" />
       </div>
-      {!returning && (
-        <label className="flex items-center gap-3 text-sm">
-          <input type="checkbox" checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} />
-          <span>
-            Also send me the newsletter <span className="text-muted">(about 4 a year, only for new accounts)</span>
-          </span>
-        </label>
-      )}
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       <button type="submit" disabled={status === "sending" || !email} className="btn btn-primary w-full py-3">
         {status === "sending" ? "Sending link…" : "Email me a sign-in link"}

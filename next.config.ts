@@ -26,7 +26,7 @@ const SECURITY_HEADERS = [
   ...(isProd
     ? [
         { key: "Content-Security-Policy", value: CONTENT_SECURITY_POLICY },
-        { key: "Strict-Transport-Security", value: "max-age=31536000" },
+        { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
       ]
     : []),
 ];
@@ -52,8 +52,6 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
     qualities: [60, 75],
     localPatterns: [{ pathname: "/uploads/**" }, { pathname: "/klok.png" }],
-    // Only needed until legacy Supabase image URLs are migrated by scripts/migrate-from-supabase.mjs.
-    remotePatterns: [{ protocol: "https", hostname: "*.supabase.co", pathname: "/storage/v1/object/public/towers/**" }],
     minimumCacheTTL: 31536000,
   },
 };

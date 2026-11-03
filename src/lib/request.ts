@@ -1,12 +1,15 @@
 import { siteUrl } from "@/lib/env";
 
 /**
- * Client IP as set by the reverse proxy. The proxy must overwrite X-Forwarded-For (not append to it);
- * otherwise a client could pick its own address and dodge rate limits.
+ * Client IP from X-Forwarded-For. Each trusted proxy appends the address it received the request from, so only
+ * the entries it added can be believed: the client's own (spoofable) entries sit to the left. We therefore count
+ * from the right, skipping TRUSTED_PROXY_HOPS - 1 further proxies (default 1: a single reverse proxy in front of the app).
+ * This stays correct whether the proxy overwrites or appends to the header.
  */
 export function clientIp(req: Request): string {
-  const forwarded = req.headers.get("x-forwarded-for");
-  return forwarded?.split(",")[0]?.trim() || "unknown";
+  const entries = (req.headers.get("x-forwarded-for") ?? "").split(",").map((e) => e.trim()).filter(Boolean);
+  const hops = Math.max(1, Number(process.env.TRUSTED_PROXY_HOPS) || 1);
+  return entries[Math.max(0, entries.length - hops)] ?? "unknown";
 }
 
 /**

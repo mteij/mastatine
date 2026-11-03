@@ -6,7 +6,7 @@ import { PAGE_SIZE, listTowers, parseQuery, type TowerPage } from "@/lib/towers"
 import HeroCarousel from "@/classic/HeroCarousel";
 import TowerGrid from "@/classic/TowerGrid";
 import SubmitModal from "@/classic/SubmitModal";
-import { NEWS, formatDate } from "@/content/site";
+import { formatDate, getLatestNews, newsParagraphs } from "@/lib/news";
 import MinecraftBar from "@/components/MinecraftBar";
 import UpcomingActivities from "@/components/UpcomingActivities";
 
@@ -51,10 +51,10 @@ export default async function HomePage(
   props: { searchParams?: Promise<{ [key: string]: string | string[] | undefined }> }
 ) {
   const q = parseQuery((await props.searchParams)?.s);
-  const latest = NEWS[0];
-  const [firstPage, mastsOfMonth] = await Promise.all([
+  const [firstPage, mastsOfMonth, latest] = await Promise.all([
     getFirstPage(q),
     getMastsOfMonth(),
+    getLatestNews(),
   ]);
 
   return (
@@ -93,7 +93,7 @@ export default async function HomePage(
       <section id="lp-posts">
         <div className="lp-posts-inside">
           <TowerGrid initialPage={firstPage} initialQuery={q}>
-            <article
+            {latest && <article
               className="post hentry news-card"
               itemScope
               itemType="http://schema.org/BlogPosting"
@@ -133,12 +133,12 @@ export default async function HomePage(
                   marginBottom: "0.5rem",
                 }}
               >
-                {latest.body.map((paragraph, i) => (
+                {newsParagraphs(latest.body).map((paragraph, i) => (
                   <p key={i}>{paragraph}</p>
                 ))}
               </div>
               <SubmitModal />
-            </article>
+            </article>}
           </TowerGrid>
         </div>
       </section>

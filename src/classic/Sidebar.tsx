@@ -17,7 +17,6 @@ interface NavItem {
 function buildNav(shopUrl: string | null): NavItem[] {
   return [
   { label: "Home", href: "/" },
-  { label: "News", href: "/news" },
   {
     label: "Association",
     href: "#",
@@ -32,7 +31,6 @@ function buildNav(shopUrl: string | null): NavItem[] {
   { label: "Activities", href: "/mastapps/activities" },
   { label: "MastApps", href: "/mastapps" },
   ...(shopUrl ? [{ label: "Merch shop", href: shopUrl, external: true }] : []),
-  { label: "Contact", href: "/contact" },
   ];
 }
 
@@ -172,7 +170,7 @@ function NavList({ items, onNavigate }: { items: NavItem[]; onNavigate: () => vo
   );
 }
 
-export default function Sidebar({ shopUrl, agenda }: { shopUrl: string | null; /** Upcoming activities, rendered on the server; desktop only. */ agenda?: React.ReactNode }) {
+export default function Sidebar({ shopUrl, agenda }: { shopUrl: string | null; /** Upcoming activities, rendered on the server. */ agenda?: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
 
@@ -284,6 +282,11 @@ export default function Sidebar({ shopUrl, agenda }: { shopUrl: string | null; /
             </span>
             <div className="branding-spacer" />
 
+            {/* ── ACCOUNT: up here so it is visible without scrolling past the agenda ── */}
+            <div className="loop-account">
+              <SidebarAccount />
+            </div>
+
             {/* ── PRIMARY NAV ── */}
             <nav id="access" role="navigation" aria-label="Primary menu">
               <h3 className="widget-title menu-title">
@@ -294,32 +297,8 @@ export default function Sidebar({ shopUrl, agenda }: { shopUrl: string | null; /
               </div>
             </nav>
 
-            {agenda && <div className="hidden lg:block">{agenda}</div>}
+            {agenda && <div onClick={(e) => { if ((e.target as HTMLElement).closest("a")) setMobileOpen(false); }}>{agenda}</div>}
 
-            {/* ── spacer ── */}
-            <div style={{ flex: 1 }} />
-
-            {/* ── ACCOUNT ── */}
-            <div className="loop-account">
-              <SidebarAccount />
-            </div>
-
-            {/* ── FOOTER ── */}
-            <footer id="footer" role="contentinfo">
-              <div id="footer-inside">
-                <nav id="sfooter" aria-label="Legal" style={{ display: "flex", justifyContent: "center", gap: "1em", flexWrap: "wrap", fontSize: ".9em", margin: "0 0 .8em" }}>
-                  <a href="/privacy">Privacy</a>
-                  <a href="/terms">Site rules</a>
-                  <a href="/contact">Contact</a>
-                  <a href="/about#disclaimer">Disclaimer</a>
-                </nav>
-
-                {/* empty by default; CSS hides it when empty */}
-                <div id="site-copyright" />
-
-                
-              </div>
-            </footer>
           </div>
         </header>
       </aside>

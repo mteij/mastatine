@@ -20,8 +20,8 @@ export default async function LoginPage(props: { searchParams: Promise<{ next?: 
   return (
     <div className="container-prose flex justify-center pb-10 pt-20 sm:py-24">
       <div className="w-full max-w-md">
-        <h1 className="mt-3 text-3xl font-extrabold sm:text-4xl">Welcome back</h1>
-        <p className="mt-3 text-muted">We email you a single-use link. No password to remember, or to leak.</p>
+        <h1 className="mt-3 text-4xl font-extrabold sm:text-5xl">Sign in or create an account</h1>
+        <p className="mt-3 text-muted">Enter your email and we send you a single-use link. New here? The same link creates your account. No password to remember, or to leak.</p>
         {error && (
           <p role="alert" className="mt-6 rounded-xl bg-danger/10 px-4 py-3 text-sm text-danger">
             {ERRORS[error] ?? "Something went wrong signing you in. Please request a new link."}

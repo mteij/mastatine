@@ -20,8 +20,9 @@ export default function AboutPage() {
         <h2>What is Mastatine?</h2>
         <p>
           The name is a pun: a <em>mast</em> plus an <em>-atine</em> ending, in the style of the chemical elements. That is where the
-          resemblance to any real organisation ends. We have no programme, no curriculum and no members’ register. We have a
-          gallery of masts, a leaderboard and a Mast of the Month.
+          resemblance to any real organisation ends. We have no programme and no curriculum. We have a gallery of masts, a
+          leaderboard, a Mast of the Month, a free (and entirely optional) membership, activities, a newsletter and a Minecraft
+          server. We were released during our 4th lustrum, and our first activity takes place on 12 November.
         </p>
 
         <section id="disclaimer" className="card not-prose scroll-mt-28 !border-accent/40 p-6 sm:p-8" aria-labelledby="disclaimer-title">
@@ -59,6 +60,10 @@ export default function AboutPage() {
           </li>
           <li>
             <strong>Mast of the Month.</strong> The mast with the best score over the current month is featured on the home page.
+          </li>
+          <li>
+            <strong>Become a member.</strong> Create a free account with your email, no password, and ask for membership. An admin
+            approves each request. Some activities are for members only. The newsletter is open to anyone: just confirm your email address.
           </li>
         </ul>
 

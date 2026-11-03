@@ -10,11 +10,6 @@ const UserIcon = () => (
     <path d="M4 21a8 8 0 0 1 16 0" />
   </svg>
 );
-const ShieldIcon = () => (
-  <svg {...icon}>
-    <path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z" />
-  </svg>
-);
 
 /** Sign-in state is read on the client so every page can stay statically rendered. */
 export default function SidebarAccount() {
@@ -24,7 +19,7 @@ export default function SidebarAccount() {
 
   if (!session) {
     return (
-      <Link href="/login" aria-label="Sign in">
+      <Link href="/login" aria-label="Sign in" className="keep-label">
         <UserIcon />
         <span>Sign in</span>
       </Link>
@@ -32,17 +27,9 @@ export default function SidebarAccount() {
   }
 
   return (
-    <>
-      <Link href="/account" aria-label="Your account">
-        <UserIcon />
-        <span>Your account</span>
-      </Link>
-      {session.user.role === "admin" && (
-        <Link href="/admin" aria-label="Admin">
-          <ShieldIcon />
-          <span>Admin</span>
-        </Link>
-      )}
-    </>
+    <Link href="/account" aria-label="Account">
+      <UserIcon />
+      <span>Account</span>
+    </Link>
   );
 }

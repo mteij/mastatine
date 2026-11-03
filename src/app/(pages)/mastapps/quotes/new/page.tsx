@@ -10,7 +10,7 @@ export default async function NewQuotePage() {
   const gate = await membersOnlyGate("New quote", "/mastapps/quotes/new");
   if (gate) return gate;
   return (
-    <AppFrame title="New quote" tagline="Something worth remembering, or worth regretting.">
+    <AppFrame title="New quote" hideTitle>
       <QuoteForm today={new Date().toISOString().slice(0, 10)} />
     </AppFrame>
   );

@@ -44,12 +44,6 @@ export default function AccountPanel({ initialName, email }: { initialName: stri
     router.refresh();
   }
 
-  async function signOut() {
-    await authClient.signOut();
-    router.push("/");
-    router.refresh();
-  }
-
   async function deleteAccount() {
     setError("");
     const { error: deleteError } = await authClient.deleteUser();
@@ -67,7 +61,8 @@ export default function AccountPanel({ initialName, email }: { initialName: stri
 
   return (
     <div className="space-y-4">
-      <form onSubmit={saveName} className="card p-4">
+      <div className="card divide-y divide-line">
+      <form onSubmit={saveName} className="p-4">
         <label htmlFor={`${id}-name`} className="label">Display name</label>
         <div className="flex gap-2">
           <input id={`${id}-name`} className="input min-w-0 flex-1" value={name} maxLength={NAME_MAX} onChange={(e) => { setName(e.target.value); setSaved(false); }} />
@@ -76,7 +71,7 @@ export default function AccountPanel({ initialName, email }: { initialName: stri
         {saved && <p role="status" className="mt-2 text-sm text-success">Saved</p>}
       </form>
 
-      <form onSubmit={changeEmail} className="card p-4">
+      <form onSubmit={changeEmail} className="p-4">
         <label htmlFor={`${id}-email`} className="label">Email address</label>
         <p className="mb-2 break-all text-sm text-muted">Now: {email}</p>
         <div className="flex gap-2">
@@ -98,12 +93,12 @@ export default function AccountPanel({ initialName, email }: { initialName: stri
           </p>
         )}
       </form>
+      </div>
 
       {error && <p role="alert" className="rounded-xl bg-danger/10 px-4 py-3 text-sm text-danger">{error}</p>}
 
-      <div className="card flex flex-wrap gap-2 p-4">
-        <button type="button" className="btn btn-secondary btn-sm" onClick={signOut}>Sign out</button>
-        <a href="/api/account/export" download className="btn btn-secondary btn-sm">Download my data</a>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1">
+        <a href="/api/account/export" download className="text-sm font-semibold text-accent-text underline underline-offset-2">Download my data</a>
       </div>
 
       <details className="card border-danger/30 p-4">

@@ -4,7 +4,7 @@ import { absoluteUrl, activityConfirmationEmail, activityReminderEmail, type Act
 import { sendMail } from "@/lib/mailer";
 import { formatEuro, type SignupPick } from "@/lib/signup-options";
 
-interface SubscriptionMail {
+export interface SubscriptionMail {
   activity_id: string;
   user_id: string;
   email: string;
@@ -17,7 +17,7 @@ interface SubscriptionMail {
   choices: SignupPick[];
 }
 
-function toDetails(row: SubscriptionMail): ActivityMailDetails {
+export function toDetails(row: SubscriptionMail): ActivityMailDetails {
   return {
     activityName: row.activity_name,
     committeeName: row.committee_name,
@@ -31,7 +31,7 @@ function toDetails(row: SubscriptionMail): ActivityMailDetails {
   };
 }
 
-const mailColumns = () => sql`
+export const mailColumns = () => sql`
   s.activity_id, s.user_id, u.email, a.name AS activity_name, c.name AS committee_name,
   a.starts_at, a.location, a.allow_unsubscribe, s.price_cents, s.choices
 `;

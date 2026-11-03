@@ -18,7 +18,7 @@ export default async function DisplayNamePage(props: { searchParams: Promise<{ n
   return (
     <div className="container-prose flex justify-center pb-10 pt-20 sm:py-24">
       <div className="w-full max-w-md">
-        <h1 className="text-3xl font-extrabold sm:text-4xl">Choose a display name</h1>
+        <h1 className="text-4xl font-extrabold sm:text-5xl">Choose a display name</h1>
         <p className="mt-3 text-muted">
           This is how other members see you, for example next to your quotes and in the list of who is going to an activity.
           Your email address stays private.

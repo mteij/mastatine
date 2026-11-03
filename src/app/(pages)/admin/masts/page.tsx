@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import sql from "@/lib/db";
 import ConfirmButton from "@/components/admin/ConfirmButton";
-import SortHeader, { parseSort } from "@/components/admin/SortHeader";
+import { SortLink, parseSort } from "@/components/admin/SortHeader";
 import { deleteMast } from "../actions";
 import { requireAdmin } from "@/lib/session";
 
@@ -48,39 +48,47 @@ export default async function AdminMasts(props: { searchParams: Promise<{ q?: st
 
   return (
     <>
-      <form className="mb-6 flex gap-3" role="search">
+      <form className="mb-3 flex gap-2" role="search">
         <input type="hidden" name="sort" value={sort.column} />
         <input type="hidden" name="dir" value={sort.dir} />
         <label className="sr-only" htmlFor="admin-mast-search">Search masts</label>
-        <input id="admin-mast-search" name="q" defaultValue={query} placeholder="Search title or submitter" className="input max-w-sm" />
+        <input id="admin-mast-search" name="q" defaultValue={query} placeholder="Search title or submitter" className="input min-w-0 flex-1 sm:max-w-sm" />
         <button className="btn btn-secondary" type="submit">Search</button>
       </form>
 
+      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+        <span>Sort</span>
+        <SortLink label="Mast" column="title" {...sortProps} />
+        <SortLink label="Submitted by" column="submitter" {...sortProps} />
+        <SortLink label="Votes" column="votes" defaultDir="desc" {...sortProps} />
+        <SortLink label="Added" column="added" defaultDir="desc" {...sortProps} />
+      </div>
+
       <div className="table-wrap">
-        <table className="table">
+        <table className="table table-stack">
           <thead>
             <tr>
-              <SortHeader label="Mast" column="title" {...sortProps} />
-              <SortHeader label="Submitted by" column="submitter" {...sortProps} />
-              <SortHeader label="Votes" column="votes" defaultDir="desc" className="text-right" {...sortProps} />
-              <SortHeader label="Added" column="added" defaultDir="desc" {...sortProps} />
+              <th>Mast</th>
+              <th>Submitted by</th>
+              <th className="text-right">Votes</th>
+              <th>Added</th>
               <th><span className="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>
             {masts.map((mast) => (
               <tr key={mast.id}>
-                <td>
+                <td data-primary>
                   <div className="flex items-center gap-3">
                     <Image src={mast.image_url} alt="" width={96} height={72} quality={60} className="h-10 w-14 rounded-md object-cover" />
                     <span className="font-medium">{mast.title}</span>
                   </div>
                 </td>
-                <td>{mast.submitter_name}</td>
-                <td className="text-right tabular-nums">{mast.vote_count}</td>
-                <td className="whitespace-nowrap text-muted">{new Date(mast.created_at).toLocaleDateString("en-GB")}</td>
+                <td data-label="Submitted by">{mast.submitter_name}</td>
+                <td data-label="Votes" className="text-right tabular-nums">{mast.vote_count}</td>
+                <td data-label="Added" className="whitespace-nowrap text-muted">{new Date(mast.created_at).toLocaleDateString("en-GB")}</td>
                 <td>
-                  <div className="flex justify-end gap-2">
+                  <div className="flex w-full justify-end gap-2">
                     <Link href={`/admin/masts/${mast.id}`} className="btn btn-secondary btn-sm">Edit</Link>
                     <form action={deleteMast}>
                       <input type="hidden" name="id" value={mast.id} />

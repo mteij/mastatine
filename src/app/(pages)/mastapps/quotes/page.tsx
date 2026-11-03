@@ -26,7 +26,7 @@ export default async function QuotesPage(props: { searchParams: Promise<{ sort?:
   const isAdmin = session?.user.role === "admin";
 
   return (
-    <AppFrame title="Quotes" tagline="Things members said, graded from 1 to 10. Members only.">
+    <AppFrame title="Quotes" hideTitle>
       <nav aria-label="Sort quotes" className="tabs">
         <span className="tabs-label">Sort by</span>
         {SORTS.map((s) => (

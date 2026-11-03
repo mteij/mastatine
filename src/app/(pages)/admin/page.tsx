@@ -71,9 +71,9 @@ export default async function AdminOverview() {
   const peak = Math.max(1, ...weekly.map((w) => w.n));
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       {stats.member_requests > 0 && (
-        <Link href="/admin/users?filter=requests" className="card flex flex-wrap items-center justify-between gap-3 border-accent p-5 hover:bg-accent-soft">
+        <Link href="/admin/users?filter=requests" className="card flex flex-wrap items-center justify-between gap-3 border-accent p-4 hover:bg-accent-soft">
           <span className="font-extrabold">
             {stats.member_requests} membership {stats.member_requests === 1 ? "request is" : "requests are"} waiting for you
           </span>
@@ -81,21 +81,21 @@ export default async function AdminOverview() {
         </Link>
       )}
 
-      <ul className="grid gap-5 @xl:grid-cols-2 @3xl:grid-cols-3">
+      <ul className="grid grid-cols-2 gap-3 @3xl:grid-cols-3">
         {cards.map((card) => (
           <li key={card.label}>
-            <Link href={card.href} className="card block h-full p-6 hover:border-accent">
+            <Link href={card.href} className="card block h-full p-4 hover:border-accent">
               <p className="text-sm text-muted">{card.label}</p>
-              <p className="mt-1 font-display text-4xl font-bold tabular-nums">{card.value.toLocaleString("en-US")}</p>
+              <p className="mt-1 text-3xl font-bold tabular-nums">{card.value.toLocaleString("en-US")}</p>
               {card.note && <p className="mt-1 text-sm text-muted">{card.note}</p>}
             </Link>
           </li>
         ))}
       </ul>
 
-      <div className="grid gap-5 @3xl:grid-cols-2">
-        <section className="card p-6">
-          <h2 className="text-lg font-extrabold">New users per week</h2>
+      <div className="grid gap-3 @3xl:grid-cols-2">
+        <section className="card p-4">
+          <h2 className="text-base font-extrabold">New users, last {WEEKS} weeks</h2>
           <ol className="mt-4 flex h-40 items-end gap-2" aria-label="New users per week, oldest first">
             {weekly.map((w) => (
               <li key={w.week.toISOString()} className="flex h-full flex-1 flex-col justify-end text-center" title={`Week of ${w.week.toLocaleDateString("en-GB")}: ${w.n}`}>
@@ -104,11 +104,10 @@ export default async function AdminOverview() {
               </li>
             ))}
           </ol>
-          <p className="mt-2 text-xs text-muted">Last {WEEKS} weeks</p>
-        </section>
+                  </section>
 
-        <section className="card p-6">
-          <h2 className="text-lg font-extrabold">Committees</h2>
+        <section className="card p-4">
+          <h2 className="text-base font-extrabold">Committees</h2>
           <ul className="mt-3 divide-y divide-line">
             {committees.map((c) => (
               <li key={c.id} className="flex items-center justify-between py-2">
@@ -120,8 +119,8 @@ export default async function AdminOverview() {
           </ul>
         </section>
 
-        <section className="card p-6">
-          <h2 className="text-lg font-extrabold">Coming up</h2>
+        <section className="card p-4">
+          <h2 className="text-base font-extrabold">Coming up</h2>
           <ul className="mt-3 divide-y divide-line">
             {upcoming.map((a) => (
               <li key={a.id} className="py-2">
@@ -135,8 +134,8 @@ export default async function AdminOverview() {
           </ul>
         </section>
 
-        <section className="card p-6">
-          <h2 className="text-lg font-extrabold">Newest users</h2>
+        <section className="card p-4">
+          <h2 className="text-base font-extrabold">Newest users</h2>
           <ul className="mt-3 divide-y divide-line">
             {newest.map((u) => (
               <li key={u.id} className="flex items-baseline justify-between gap-3 py-2">
@@ -147,8 +146,8 @@ export default async function AdminOverview() {
           </ul>
         </section>
 
-        <section className="card p-6 @3xl:col-span-2">
-          <h2 className="text-lg font-extrabold">Top masts</h2>
+        <section className="card p-4 @3xl:col-span-2">
+          <h2 className="text-base font-extrabold">Top masts</h2>
           <ol className="mt-3 divide-y divide-line">
             {topMasts.map((m, i) => (
               <li key={m.id} className="flex items-center justify-between py-2">

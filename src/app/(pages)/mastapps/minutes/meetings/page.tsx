@@ -22,7 +22,7 @@ export default async function MeetingsPage(props: { searchParams: Promise<Record
   const filtered = hasMeetingFilters(filters);
 
   return (
-    <AppFrame title="Meetings" tagline="Every meeting of your committees.">
+    <AppFrame title="Meetings" hideTitle>
       <Link href="/mastapps/minutes/meetings/new" className="btn btn-primary mb-4">New meeting</Link>
 
       <form action={PAGE} role="search" className="admin-compact card mb-4 p-3">

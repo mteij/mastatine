@@ -43,23 +43,23 @@ export default async function AdminNewsletter() {
   const count = (status: string) => counts.find((c) => c.status === status)?.n ?? 0;
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-8">
       <section aria-labelledby="issues-title">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 id="issues-title" className="text-xl font-bold">Issues</h2>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 id="issues-title" className="text-base font-extrabold">Issues</h2>
           <Link href="/admin/newsletter/new" className="btn btn-primary">New issue</Link>
         </div>
         <div className="table-wrap">
-          <table className="table">
+          <table className="table table-stack">
             <thead><tr><th>Subject</th><th>To</th><th>Status</th><th className="text-right">Delivered</th><th>Created</th></tr></thead>
             <tbody>
               {issues.map((issue) => (
                 <tr key={issue.id}>
-                  <td><Link href={`/admin/newsletter/${issue.id}`} className="font-medium hover:text-accent-text">{issue.subject}</Link></td>
-                  <td className="whitespace-nowrap text-sm text-muted">{AUDIENCE_LABEL[parseAudience(issue.audience)]}</td>
-                  <td><span className={issue.status === "draft" ? "text-muted" : "badge"}>{issue.status}</span></td>
-                  <td className="text-right tabular-nums">{issue.sent}</td>
-                  <td className="whitespace-nowrap text-muted">{new Date(issue.created_at).toLocaleDateString("en-GB")}</td>
+                  <td data-primary><Link href={`/admin/newsletter/${issue.id}`} className="font-medium hover:text-accent-text">{issue.subject}</Link></td>
+                  <td data-label="To" className="whitespace-nowrap text-sm text-muted">{AUDIENCE_LABEL[parseAudience(issue.audience)]}</td>
+                  <td data-label="Status"><span className={issue.status === "draft" ? "text-muted" : "badge"}>{issue.status}</span></td>
+                  <td data-label="Delivered" className="text-right tabular-nums">{issue.sent}</td>
+                  <td data-label="Created" className="whitespace-nowrap text-muted">{new Date(issue.created_at).toLocaleDateString("en-GB")}</td>
                 </tr>
               ))}
               {issues.length === 0 && <tr><td colSpan={5} className="py-10 text-center text-muted">No issues yet.</td></tr>}
@@ -69,20 +69,19 @@ export default async function AdminNewsletter() {
       </section>
 
       <section aria-labelledby="subs-title">
-        <h2 id="subs-title" className="text-xl font-bold">Subscribers</h2>
+        <h2 id="subs-title" className="text-base font-extrabold">Subscribers</h2>
         <p className="mt-1 text-sm text-muted">
-          {count("confirmed")} confirmed · {count("pending")} awaiting confirmation · {count("unsubscribed")} unsubscribed. Only confirmed
-          subscribers receive issues.
+          {count("confirmed")} confirmed · {count("pending")} pending · {count("unsubscribed")} unsubscribed
         </p>
-        <div className="table-wrap mt-5">
-          <table className="table">
+        <div className="table-wrap mt-3">
+          <table className="table table-stack">
             <thead><tr><th>Email</th><th>Status</th><th>Added</th><th><span className="sr-only">Actions</span></th></tr></thead>
             <tbody>
               {subscribers.map((s) => (
                 <tr key={s.id}>
-                  <td>{s.email}</td>
-                  <td><span className={STATUS_STYLE[s.status]}>{s.status}</span></td>
-                  <td className="whitespace-nowrap text-muted">{new Date(s.created_at).toLocaleDateString("en-GB")}</td>
+                  <td data-primary>{s.email}</td>
+                  <td data-label="Status"><span className={STATUS_STYLE[s.status]}>{s.status}</span></td>
+                  <td data-label="Added" className="whitespace-nowrap text-muted">{new Date(s.created_at).toLocaleDateString("en-GB")}</td>
                   <td className="text-right">
                     <form action={removeSubscriber}>
                       <input type="hidden" name="id" value={s.id} />

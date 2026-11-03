@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import sql from "@/lib/db";
 import { getSession } from "@/lib/session";
+import { accountVoterId } from "@/lib/voter-account";
 
 export const dynamic = "force-dynamic";
 
@@ -12,22 +13,24 @@ export async function GET() {
   const { user } = session;
   const email = user.email.toLowerCase();
 
-  const [account, sessions, newsletter, quotes, quoteVotes] = await Promise.all([
+  const [account, sessions, newsletter, quotes, quoteVotes, mastVotes] = await Promise.all([
     sql`SELECT id, name, email, "emailVerified", role, "createdAt", "updatedAt" FROM "user" WHERE id = ${user.id}`,
     sql`SELECT "createdAt", "expiresAt", "ipAddress", "userAgent" FROM session WHERE "userId" = ${user.id} ORDER BY "createdAt" DESC`,
     sql`SELECT email, status, created_at, confirmed_at, unsubscribed_at FROM newsletter_subscribers WHERE lower(email) = ${email}`,
     sql`SELECT body, author, said_on, created_at FROM quotes WHERE created_by = ${user.id} ORDER BY created_at DESC`,
     sql`SELECT quote_id, score, created_at FROM quote_votes WHERE user_id = ${user.id} ORDER BY created_at DESC`,
+    sql`SELECT tower_id, direction, created_at FROM votes WHERE voter_id = ${accountVoterId(user.id)} ORDER BY created_at DESC`,
   ]);
 
   const payload = {
     exportedAt: new Date().toISOString(),
-    note: "Masts you submitted and mast votes are not linked to your account, so they cannot appear here. Contact us if you want a mast removed.",
+    note: "Masts you submitted are not linked to your account, so they cannot appear here. Mast votes cast while signed in are included; votes cast while signed out are not. Contact us if you want a mast removed.",
     account: account[0] ?? null,
     sessions,
     newsletterSubscription: newsletter[0] ?? null,
     quotesYouAdded: quotes,
     quoteRatings: quoteVotes,
+    mastVotes,
   };
 
   return new NextResponse(JSON.stringify(payload, null, 2), {

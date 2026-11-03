@@ -16,7 +16,7 @@ export async function membersOnlyGate(title: string, next: string) {
   if (membership.isMember && !needsName) return null;
 
   return (
-    <AppFrame title={title}>
+    <AppFrame title={title} hideTitle>
       <section className="card max-w-xl p-6">
         {needsName ? (
           <>

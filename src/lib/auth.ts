@@ -5,9 +5,11 @@ import { Pool } from "pg";
 import { requireEnv, siteUrl } from "@/lib/env";
 import sql from "@/lib/db";
 import { sendMail } from "@/lib/mailer";
-import { changeEmailVerificationEmail, emailChangeNoticeEmail, magicLinkEmail } from "@/lib/email-templates";
+import { changeEmailConfirmationEmail, changeEmailVerificationEmail, magicLinkEmail } from "@/lib/email-templates";
+import { validateDisplayName } from "@/lib/profile";
 import { allowMagicLinkFor } from "@/lib/magic-link-limit";
-import { applySignupChoice, deleteSubscriberByEmail, rememberSignupChoice } from "@/lib/newsletter";
+import { deleteSubscriberByEmail } from "@/lib/newsletter";
+import { deleteAccountVotes } from "@/lib/voter-account";
 
 const MAGIC_LINK_TTL_SECONDS = 10 * 60;
 const CHANGE_EMAIL_TTL_SECONDS = 60 * 60;
@@ -41,25 +43,30 @@ function createAuth() {
     emailVerification: {
       expiresIn: CHANGE_EMAIL_TTL_SECONDS,
       // Only used by the email change: sign-in links already prove an address, so accounts start verified.
-      // Better Auth hands us the new address; the old one is still what the database holds at this point.
+      // This is the second step: the current address has already approved the change (see sendChangeEmailConfirmation).
       sendVerificationEmail: async ({ user, url }) => {
-        const [current] = await sql<{ email: string }[]>`SELECT email FROM "user" WHERE id = ${user.id}`;
         await sendMail({ to: user.email, ...changeEmailVerificationEmail(url, CHANGE_EMAIL_TTL_SECONDS / 60) });
-        if (current && current.email.toLowerCase() !== user.email.toLowerCase()) {
-          await sendMail({ to: current.email, ...emailChangeNoticeEmail(user.email) });
-        }
       },
     },
     user: {
-      changeEmail: { enabled: true },
+      // The current address must approve first, so a stolen session cannot move the account to the thief's inbox.
+      changeEmail: {
+        enabled: true,
+        sendChangeEmailConfirmation: async ({ user, newEmail, url }) => {
+          await sendMail({ to: user.email, ...changeEmailConfirmationEmail(newEmail, url, CHANGE_EMAIL_TTL_SECONDS / 60) });
+        },
+      },
       deleteUser: {
         enabled: true, // requires a fresh session, so a stolen old cookie cannot erase an account
-        afterDelete: async (user) => deleteSubscriberByEmail(user.email),
+        afterDelete: async (user) => {
+          await deleteSubscriberByEmail(user.email);
+          await deleteAccountVotes(user.id);
+        },
       },
     },
     advanced: {
       useSecureCookies: process.env.NODE_ENV === "production",
-      // Requires the reverse proxy to overwrite (not append to) X-Forwarded-For.
+      // The route handler replaces this header with the address resolved by clientIp() (see api/auth/[...all]/route.ts).
       ipAddress: { ipAddressHeaders: ["x-forwarded-for"] },
     },
     rateLimit: {
@@ -86,15 +93,24 @@ function createAuth() {
         },
       },
       user: {
+        update: {
+          // /api/auth/update-user is public: keep the display-name rules and refuse profile pictures we never show.
+          before: async (data) => {
+            const rest: Record<string, unknown> = { ...data };
+            delete rest.image;
+            if (typeof rest.name === "string") {
+              const checked = validateDisplayName(rest.name);
+              if ("error" in checked) return false;
+              rest.name = checked.name;
+            }
+            return { data: rest };
+          },
+        },
         create: {
           // Users are only created once an emailed magic link is opened, so the address is verified.
           before: async (user) => ({
             data: { ...user, role: adminEmails().has(user.email.toLowerCase()) ? "admin" : "user" },
           }),
-          // New members get the newsletter unless they unticked the box on the sign-in form.
-          after: async (user) => {
-            await applySignupChoice(user.email).catch((error) => console.error("Newsletter sign-up failed:", (error as Error).message));
-          },
         },
       },
     },
@@ -102,10 +118,9 @@ function createAuth() {
       magicLink({
         expiresIn: MAGIC_LINK_TTL_SECONDS,
         storeToken: "hashed",
-        sendMagicLink: async ({ email, url, metadata }) => {
+        sendMagicLink: async ({ email, url }) => {
           // Silently skip when one address is being hammered; the caller always sees "check your email".
           if (!allowMagicLinkFor(email)) return;
-          await rememberSignupChoice(email, metadata?.newsletter !== false);
           await sendMail({ to: email, ...magicLinkEmail(url, MAGIC_LINK_TTL_SECONDS / 60) });
         },
       }),

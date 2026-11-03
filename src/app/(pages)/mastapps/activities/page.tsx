@@ -58,9 +58,22 @@ export default async function ActivitiesPage() {
   const activities = await getActivities(session?.user.id ?? null, isMember);
 
   return (
-    <AppFrame title="Activities" actions={<CalendarSubscribe className="cal-btn--inline" />} tagline={session ? "Everything the committees organise. Join in!" : "Everything the committees organise. Sign in to join."}>
+    <AppFrame
+      title="Activities"
+      hideTitle
+      actions={
+        <>
+          {!session && (
+            <p className="text-sm text-muted">
+              <Link href="/login?next=%2Fmastapps%2Factivities" className="font-bold text-accent-text underline underline-offset-2">Sign in</Link> to join activities.
+            </p>
+          )}
+          <span className="ml-auto"><CalendarSubscribe className="cal-btn--inline" /></span>
+        </>
+      }
+    >
       {activities.length === 0 ? (
-        <p className="py-10 text-center text-muted">No activities yet.</p>
+        <p className="card p-8 text-center text-muted">No activities planned yet. Check back soon.</p>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3">
           {activities.map((a) => {
@@ -110,7 +123,7 @@ export default async function ActivitiesPage() {
                         width={800}
                         height={1000}
                         sizes="(max-width: 1280px) 50vw, 400px"
-                        className="h-auto w-full"
+                        className="h-auto max-h-[28rem] w-full object-cover object-top"
                       />
                     )}
                   </div>

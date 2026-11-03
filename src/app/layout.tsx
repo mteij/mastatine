@@ -6,7 +6,7 @@ import SidebarAgenda from "@/classic/SidebarAgenda";
 import Colophon from "@/classic/Colophon";
 import AppShell from "@/classic/AppShell";
 import AnnouncementBar from "@/components/AnnouncementBar";
-import { NEWS } from "@/content/site";
+import { getAnnouncement } from "@/lib/announcement";
 import { siteUrl } from "@/lib/env";
 import { getShopUrl } from "@/lib/shop";
 
@@ -39,8 +39,8 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const latestNews = NEWS[0];
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const announcement = await getAnnouncement();
   return (
     <html lang="en" className={lato.className} suppressHydrationWarning>
       <body className="verbosa-landing-page verbosa-magazine-two verbosa-magazine-layout verbosa-no-sidebar-back">
@@ -50,7 +50,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         >
           Skip to content
         </a>
-        <AppShell shopUrl={getShopUrl()} sidebar={<Sidebar shopUrl={getShopUrl()} agenda={<SidebarAgenda />} />} colophon={<Colophon />} announcement={latestNews && <AnnouncementBar slug={latestNews.slug} title={latestNews.title} summary={latestNews.summary} />}>
+        <AppShell shopUrl={getShopUrl()} sidebar={<Sidebar shopUrl={getShopUrl()} agenda={<SidebarAgenda />} />} colophon={<Colophon />} announcement={announcement && <AnnouncementBar {...announcement} />}>
           {children}
         </AppShell>
       </body>

@@ -32,7 +32,7 @@ export default async function AdminCommittees() {
 
   return (
     <div className="space-y-4">
-      <form action={createCommittee} className="card flex flex-wrap items-end gap-3 p-3">
+      <form action={createCommittee} className="card grid gap-3 p-3 sm:flex sm:flex-wrap sm:items-end">
         <div>
           <label className="label" htmlFor="committee-name">New committee</label>
           <input id="committee-name" name="name" className="input" required maxLength={80} />
@@ -42,7 +42,6 @@ export default async function AdminCommittees() {
           <input id="committee-description" name="description" className="input" maxLength={200} />
         </div>
         <button className="btn btn-primary btn-sm" type="submit">Add committee</button>
-        <p className="basis-full text-xs text-muted">Committee members also count as members: they get quotes and members-only activities without a membership request.</p>
       </form>
 
       <ul className="grid gap-3 @3xl:grid-cols-2">

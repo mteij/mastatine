@@ -11,7 +11,12 @@ import { getMembership } from "@/lib/membership";
 import { hasDisplayName } from "@/lib/profile";
 import { getSession } from "@/lib/session";
 import { formatAdjustment, formatEuro, parseSignupGroups, priceLabel, tallyByGroup } from "@/lib/signup-options";
-import { subscribe, unsubscribe } from "../actions";
+import ConfirmButton from "@/components/admin/ConfirmButton";
+import { CheckIcon } from "@/components/ui/icons";
+import { getWaitlistInfo } from "@/lib/waitlist";
+import { joinWaitlist, leaveWaitlist, unsubscribe } from "../actions";
+import MessageParticipantsForm from "../MessageParticipantsForm";
+import SubscribeForm from "../SubscribeForm";
 
 export const metadata: Metadata = { title: "Activity" };
 export const dynamic = "force-dynamic";
@@ -40,6 +45,7 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
   const participants = user ? await getParticipants(activity.id) : [];
   const tally = tallyByGroup(participants.map((p) => p.choices));
   const columns = tally.map((t) => t.group);
+  const waitlist = await getWaitlistInfo(activity.id, user?.id ?? null);
   const canUnsubscribe = activity.allow_unsubscribe && activity.starts_at > new Date();
 
   const spotsLeft = activity.subscription_limit === null ? null : Math.max(0, activity.subscription_limit - activity.participants);
@@ -93,14 +99,17 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
               </p>
             )}
             {activity.subscribed ? (
-              canUnsubscribe ? (
-                <form action={unsubscribe}>
-                  <input type="hidden" name="id" value={activity.id} />
-                  <button className="btn btn-secondary w-full" type="submit">You are going. Unsubscribe</button>
-                </form>
-              ) : (
-                <button className="btn btn-secondary w-full" type="button" disabled>You are going, and not able to unsubscribe</button>
-              )
+              <div role="status" className="space-y-3 rounded-xl bg-success/10 p-4">
+                <p className="flex items-center gap-2 font-extrabold text-success"><CheckIcon /> You are going</p>
+                {canUnsubscribe ? (
+                  <form action={unsubscribe}>
+                    <input type="hidden" name="id" value={activity.id} />
+                    <ConfirmButton message={`Unsubscribe from ${activity.name}?`} className="btn btn-secondary btn-sm">Unsubscribe</ConfirmButton>
+                  </form>
+                ) : (
+                  <p className="text-sm text-muted">You cannot unsubscribe from this activity. Contact the organisers if your plans change.</p>
+                )}
+              </div>
             ) : state === "open" && !user ? (
               <>
               {groups.length > 0 && (
@@ -125,27 +134,31 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
                 Choose a display name to join
               </Link>
             ) : state === "open" ? (
-              <form action={subscribe} className="space-y-4">
-                <input type="hidden" name="id" value={activity.id} />
-                {groups.map((group) => (
-                  <fieldset key={group.id} className="card space-y-2 p-4">
-                    <legend className="label px-1">{group.label}{group.required ? "" : " (optional)"}</legend>
-                    {!group.required && (
-                      <label className="flex items-center gap-2"><input type="radio" name={`opt_${group.id}`} value="" defaultChecked /> None</label>
-                    )}
-                    {group.choices.map((choice) => (
-                      <label key={choice.id} className="flex items-center gap-2">
-                        <input type="radio" name={`opt_${group.id}`} value={choice.id} required={group.required} />
-                        <span>{choice.label}</span>
-                        {choice.price_cents !== 0 && <span className="text-sm text-muted">{formatAdjustment(choice.price_cents)}</span>}
-                      </label>
-                    ))}
-                  </fieldset>
-                ))}
-                <button className="btn btn-primary w-full py-3 text-base" type="submit">Join this activity</button>
-              </form>
+              <SubscribeForm id={activity.id} groups={groups} />
+            ) : state === "full" && user && !needsName ? (
+              <div className="space-y-3 rounded-xl bg-soft p-4">
+                <p className="font-extrabold">This activity is full</p>
+                {waitlist.onList ? (
+                  <>
+                    <p className="text-sm">You are on the waitlist{waitlist.position ? ` (place ${waitlist.position})` : ""}. We email you when a spot opens.</p>
+                    <form action={leaveWaitlist}>
+                      <input type="hidden" name="id" value={activity.id} />
+                      <button className="btn btn-secondary btn-sm" type="submit">Leave the waitlist</button>
+                    </form>
+                  </>
+                ) : (
+                  <form action={joinWaitlist} className="space-y-2">
+                    <input type="hidden" name="id" value={activity.id} />
+                    <p className="text-sm text-muted">Join the waitlist and we email you if someone drops out{waitlist.total > 0 ? ` (${waitlist.total} waiting)` : ""}.</p>
+                    <button className="btn btn-primary w-full" type="submit">Join the waitlist</button>
+                  </form>
+                )}
+              </div>
             ) : (
               <button className="btn btn-secondary w-full" type="button" disabled>{NOT_SUBSCRIBABLE[state]}</button>
+            )}
+            {waitlist.onList && state === "open" && !activity.subscribed && (
+              <p role="status" className="rounded-xl bg-accent/10 px-4 py-3 text-sm font-bold">A spot is open and you are on the waitlist. Join now before someone else does.</p>
             )}
             <p className="text-xs text-muted">
               By subscribing you are expected at the activity. If you are unable to join, please contact the organising committee or the board.
@@ -193,7 +206,7 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
                 <p className="mt-3 text-muted">Nobody yet.</p>
               ) : canManage && columns.length > 0 ? (
                 <div className="table-wrap mt-4">
-                  <table className="table">
+                  <table className="table table-stack">
                     <thead>
                       <tr>
                         <th>Name</th>
@@ -204,9 +217,9 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
                     <tbody>
                       {participants.map((p) => (
                         <tr key={p.id}>
-                          <td className="font-medium">{displayName(p)}</td>
-                          {columns.map((group) => <td key={group}>{p.choices.find((c) => c.group === group)?.choice ?? "–"}</td>)}
-                          <td className="text-right tabular-nums">{p.price_cents !== null ? formatEuro(p.price_cents) : "–"}</td>
+                          <td data-primary className="font-medium">{displayName(p)}</td>
+                          {columns.map((group) => <td key={group} data-label={group}>{p.choices.find((c) => c.group === group)?.choice ?? "–"}</td>)}
+                          <td data-label="Price" className="text-right tabular-nums">{p.price_cents !== null ? formatEuro(p.price_cents) : "–"}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -219,6 +232,9 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
               )}
             </details>
           )}
+
+          {canManage && participants.length > 0 && <MessageParticipantsForm id={activity.id} going={participants.length} />}
+          {canManage && waitlist.total > 0 && <p className="text-sm text-muted">{waitlist.total} on the waitlist.</p>}
 
           <div className="flex flex-wrap gap-3">
             <Link href="/mastapps/activities" className="btn btn-secondary">All activities</Link>

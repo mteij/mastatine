@@ -41,7 +41,7 @@ export default async function MinutesDashboard(props: { searchParams: Promise<{ 
   const recent = meetings.filter((m) => day(m) < today).slice(0, 6);
 
   return (
-    <AppFrame title="Minutes" tagline="Agendas, minutes and action points for your committees.">
+    <AppFrame title="Minutes" hideTitle>
       <div className="grid gap-8 lg:grid-cols-[1fr_24rem]">
         <div>
           <Link href="/mastapps/minutes/meetings/new" className="btn btn-primary mb-6">New meeting</Link>
@@ -49,7 +49,7 @@ export default async function MinutesDashboard(props: { searchParams: Promise<{ 
           <Section title="Upcoming" meetings={upcoming} />
           <Section title="Recent" meetings={recent} />
         </div>
-        <aside>
+        <aside className="order-first lg:order-none">
           <h2 className="mb-3 text-xl font-extrabold text-accent-text">Action points</h2>
           <nav aria-label="Whose action points" className="tabs mb-4">
             <Link href="/mastapps/minutes" aria-current={committeeView ? undefined : "true"} className="tab">Mine</Link>

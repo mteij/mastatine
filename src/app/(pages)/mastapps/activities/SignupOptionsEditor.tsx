@@ -58,7 +58,7 @@ export default function SignupOptionsEditor({ initial }: { initial: SignupGroup[
       <input type="hidden" name="signup_options" value={serialise(groups)} />
 
       {groups.map((group) => (
-        <div key={group.id} className="space-y-3 rounded-xl border border-line bg-soft p-4">
+        <div key={group.id} className="space-y-3 rounded-xl border border-line bg-soft p-3 sm:p-4">
           <div className="flex flex-wrap items-center gap-3">
             <input
               aria-label="Name of this choice, such as Drinks"
@@ -68,7 +68,7 @@ export default function SignupOptionsEditor({ initial }: { initial: SignupGroup[
               value={group.label}
               onChange={(e) => updateGroup(group.id, { label: e.target.value })}
             />
-            <label className="inline-flex items-center gap-2 text-sm">
+            <label className="choice-row text-sm">
               <input type="checkbox" checked={group.required} onChange={(e) => updateGroup(group.id, { required: e.target.checked })} />
               Required
             </label>
@@ -79,20 +79,20 @@ export default function SignupOptionsEditor({ initial }: { initial: SignupGroup[
 
           <ul className="space-y-2">
             {group.choices.map((choice) => (
-              <li key={choice.id} className="flex flex-wrap items-center gap-2">
+              <li key={choice.id} className="grid grid-cols-[1fr_5.5rem_auto] items-center gap-2">
                 <input
                   aria-label="Option name"
-                  className="input min-w-0 flex-1"
+                  className="input min-w-0"
                   maxLength={60}
                   placeholder="Option, such as Vegetarian"
                   value={choice.label}
                   onChange={(e) => updateChoice(group.id, choice.id, { label: e.target.value })}
                 />
-                <label className="inline-flex items-center gap-1 text-sm">
+                <label className="flex items-center gap-1 text-sm">
                   <span aria-hidden>€</span>
                   <input
                     aria-label={`Price change for ${choice.label || "this option"} in euros`}
-                    className="input w-24"
+                    className="input min-w-0"
                     inputMode="decimal"
                     pattern="-?[0-9]+([.,][0-9]{1,2})?"
                     placeholder="+ 0,00"
@@ -106,7 +106,8 @@ export default function SignupOptionsEditor({ initial }: { initial: SignupGroup[
                   disabled={group.choices.length <= 1}
                   onClick={() => updateGroup(group.id, { choices: group.choices.filter((c) => c.id !== choice.id) })}
                 >
-                  Remove
+                  <span aria-hidden>×</span>
+                  <span className="sr-only">Remove option</span>
                 </button>
               </li>
             ))}

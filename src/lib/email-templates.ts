@@ -147,14 +147,15 @@ export function changeEmailVerificationEmail(url: string, minutes: number): Emai
   });
 }
 
-/** Sent to the old address when a change is asked for, so a stolen session cannot move an account silently. */
-export function emailChangeNoticeEmail(newEmail: string): EmailContent {
-  return compose(`Email change requested on your ${SITE_NAME} account`, {
+/** Sent to the current address: the change only goes ahead once it is approved here, so a stolen session cannot move an account. */
+export function changeEmailConfirmationEmail(newEmail: string, url: string, minutes: number): EmailContent {
+  return compose(`Approve the email change on your ${SITE_NAME} account`, {
     preheader: "Someone asked to move your account to another address.",
-    heading: "Email change requested",
-    intro: "A request was made to change the email address of your account. Nothing changes until the new address is confirmed.",
+    heading: "Approve email change",
+    intro: `A request was made to change the email address of your account. Nothing changes unless you approve it here. The link works for ${minutes} minutes.`,
     details: [{ label: "New address", value: newEmail }],
-    notes: ["If this was you, there is nothing to do. If it was not, sign out everywhere and contact us."],
+    action: { url, label: "Approve change" },
+    notes: ["If this was not you, ignore this email and your address stays as it is. Consider signing out everywhere and contact us."],
   });
 }
 
@@ -227,6 +228,86 @@ export const activityConfirmationEmail = (d: ActivityMailDetails): EmailContent 
 
 /** Sent about a day before the activity to everyone who is subscribed. */
 export const activityReminderEmail = (d: ActivityMailDetails): EmailContent => activityMail("reminder", d);
+
+/** What changed about an activity: the label and the old and new value, already formatted. */
+export interface ActivityChange {
+  label: string;
+  from: string;
+  to: string;
+}
+
+/** Sent to the subscribers when a committee changes the time, place or price of an activity. */
+export function activityChangedEmail(d: ActivityMailDetails, changes: ActivityChange[], note: string): EmailContent {
+  return compose(`Changed: ${d.activityName}`, {
+    preheader: `${d.activityName} has changed. Please check the new details.`,
+    heading: "An activity you joined has changed",
+    intro: `${d.committeeName} changed ${d.activityName}. Here is what is different.`,
+    ...(note ? { body: { text: note, html: textToHtml(note) } } : {}),
+    details: [
+      ...changes.map((c) => ({ label: c.label, value: `${c.from} → ${c.to}` })),
+      { label: "When", value: d.startsAt },
+      ...(d.location ? [{ label: "Where", value: d.location }] : []),
+    ],
+    action: { url: d.url, label: "View the activity" },
+    links: [{ url: d.calendarUrl, label: "Update your calendar" }],
+    notes: [
+      d.canUnsubscribe
+        ? "No longer possible for you? Please unsubscribe on the activity page, so someone else can take your place."
+        : "If this no longer works for you, please contact the organising committee.",
+    ],
+  });
+}
+
+/** Sent to the subscribers when a committee removes an activity. */
+export function activityCancelledEmail(activityName: string, committeeName: string, startsAt: string): EmailContent {
+  return compose(`Cancelled: ${activityName}`, {
+    preheader: `${activityName} (${startsAt}) will not take place.`,
+    heading: "Activity cancelled",
+    intro: `${committeeName} cancelled ${activityName}, so you are no longer signed up. Sorry about that.`,
+    details: [
+      { label: "Activity", value: activityName },
+      { label: "Was on", value: startsAt },
+    ],
+    action: { url: absoluteUrl("/mastapps/activities"), label: "See other activities" },
+  });
+}
+
+export interface ActivityMessageDetails {
+  activityName: string;
+  committeeName: string;
+  senderName: string;
+  subject: string;
+  body: string;
+  url: string;
+}
+
+/** A message from the organisers to everyone who is going. */
+export function activityMessageEmail(d: ActivityMessageDetails): EmailContent {
+  return compose(`${d.activityName}: ${d.subject}`, {
+    preheader: d.body.slice(0, 90),
+    heading: d.subject,
+    intro: `A message from ${d.senderName} of ${d.committeeName}, because you are going to ${d.activityName}.`,
+    body: { text: d.body, html: textToHtml(d.body) },
+    action: { url: d.url, label: "View the activity" },
+    notes: ["You get this because you are subscribed to the activity. Replies to this email are not read by the organisers; use the contact details on the activity page."],
+  });
+}
+
+/** Sent to the first people on a waitlist when a spot opens. */
+export function waitlistSpotEmail(d: ActivityMailDetails, holdHours: number): EmailContent {
+  return compose(`A spot opened: ${d.activityName}`, {
+    preheader: `You are on the waitlist for ${d.activityName}, and a spot is free.`,
+    heading: "A spot opened up!",
+    intro: `You are on the waitlist for ${d.activityName}, and there is room now. Spots go to whoever joins first, so do not wait long.`,
+    details: [
+      { label: "Activity", value: d.activityName },
+      { label: "When", value: d.startsAt },
+      ...(d.location ? [{ label: "Where", value: d.location }] : []),
+    ],
+    action: { url: d.url, label: "Claim your spot" },
+    notes: [`We keep you on the waitlist for ${holdHours} hours. If you do not join by then, you drop off the list and the next person is told.`],
+  });
+}
 
 export interface ActivityInviteDetails {
   committeeName: string;

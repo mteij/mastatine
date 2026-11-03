@@ -4,7 +4,9 @@ import { requestSubscription } from "@/lib/newsletter";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { clientIp, isSameOrigin } from "@/lib/request";
 
-const limiter = createRateLimiter(5, 60 * 60 * 1000);
+const limiter = createRateLimiter(3, 60 * 60 * 1000);
+// Every accepted request sends an email from our address: cap the total so the endpoint cannot be used to mail-bomb or burn our sender reputation.
+const globalLimiter = createRateLimiter(100, 60 * 60 * 1000);
 
 const bodySchema = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
@@ -16,7 +18,7 @@ const NEUTRAL_MESSAGE = "Almost done: if that address is valid, we have sent a c
 
 export async function POST(req: Request) {
   if (!isSameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  if (!limiter.allow(clientIp(req))) {
+  if (!limiter.allow(clientIp(req)) || !globalLimiter.allow("all")) {
     return NextResponse.json({ error: "Too many attempts. Please try again later." }, { status: 429 });
   }
 

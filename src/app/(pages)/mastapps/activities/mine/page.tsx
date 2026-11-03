@@ -15,27 +15,31 @@ export default async function MyActivitiesPage() {
   const activities = await getManagedActivities(user);
 
   return (
-    <AppFrame title="Your activities" tagline="Activities organised by your committees.">
+    <AppFrame
+      title="Your activities"
+      hideTitle
+      actions={activities.length > 0 && <Link href="/mastapps/activities/stats" className="btn btn-secondary btn-sm">Statistics</Link>}
+    >
       {activities.length === 0 ? (
-        <p className="py-10 text-center text-muted">Nothing here yet. <Link href="/mastapps/activities/new" className="underline">Create an activity</Link>.</p>
+        <p className="card p-8 text-center text-muted">Nothing here yet. <Link href="/mastapps/activities/new" className="font-bold text-accent-text underline">Create an activity</Link>.</p>
       ) : (
         <div className="table-wrap">
-          <table className="table">
+          <table className="table table-stack">
             <thead>
               <tr><th>Activity</th><th>Committee</th><th>Start</th><th>Participants</th><th><span className="sr-only">Actions</span></th></tr>
             </thead>
             <tbody>
               {activities.map((a) => (
                 <tr key={a.id}>
-                  <td>
+                  <td data-primary>
                     <Link href={`/mastapps/activities/${a.id}`} className="font-medium">{a.name}</Link>
                     {!a.is_visible && <span className="badge ml-2">hidden</span>}
                   </td>
-                  <td>{a.committee_name}</td>
-                  <td className="whitespace-nowrap text-muted">{formatDateTime(a.starts_at)}</td>
-                  <td>{formatParticipants(a)}</td>
+                  <td data-label="Committee">{a.committee_name}</td>
+                  <td data-label="Start" className="whitespace-nowrap text-muted">{formatDateTime(a.starts_at)}</td>
+                  <td data-label="Participants">{formatParticipants(a)}</td>
                   <td>
-                    <div className="flex flex-wrap justify-end gap-2">
+                    <div className="flex w-full flex-wrap justify-end gap-2">
                       <Link href={`/mastapps/activities/${a.id}/edit`} className="btn btn-secondary btn-sm">Edit</Link>
                       <form action={deleteActivity}>
                         <input type="hidden" name="id" value={a.id} />

@@ -3,7 +3,7 @@ import remarkBreaks from "remark-breaks";
 
 // Mirrors the server's upload naming; kept here so this file stays free of Node-only imports (it also runs in the editor preview).
 const UPLOADED_IMAGE = /^\/uploads\/[a-z0-9-]+\.(jpg|png|webp|gif)$/;
-const SAFE_LINK = /^(https?:|mailto:|\/(?!\/))/i;
+const SAFE_LINK = /^(https?:|mailto:|\/(?![/\\]))/i;
 
 /** Only our own uploads may be shown as images, and links must be http(s), mailto or on-site. Anything else renders as nothing. */
 function safeUrl(url: string, key: string): string {

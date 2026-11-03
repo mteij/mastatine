@@ -42,8 +42,10 @@ export default function PrivacyPage() {
         <ul>
           <li>
             <strong>Mast votes.</strong> A random identifier generated in your browser (local storage, key{" "}
-            <code>mastatine_voter_id</code>) and the masts you voted on. It is not linked to your name or email. It stays in your browser
-            until you clear your site data.
+            <code>mastatine_voter_id</code>) and the masts you voted on. Signed out, it is not linked to your name or email and stays in
+            your browser until you clear your site data. When you are signed in, your votes are saved to your account instead (and votes
+            you cast earlier in that browser are moved onto it), so they follow you to other devices. They are deleted with your account and
+            included in your data export.
           </li>
           <li>
             <strong>Submitted masts.</strong> The name you typed, the mast’s title, description and height, and the photo. These are
@@ -96,7 +98,7 @@ export default function PrivacyPage() {
         <ul>
           <li>Votes, ratings, submitted masts and quotes: to run the gallery (legitimate interest).</li>
           <li>Accounts: to let you sign in (necessary to provide the service you asked for).</li>
-          <li>Newsletter: only with your consent, either confirmed by a link we email you or given with the box on the sign-in form (shown ticked, and you can untick it) once your sign-in link proves the address is yours. Withdraw it any time with the unsubscribe link in every email.</li>
+          <li>Newsletter: only with your consent, either confirmed by a link we email you, or given by answering yes to the one-time question shown after your first sign-in (or with the switch on your account page), once your sign-in link proves the address is yours. Withdraw it any time with the unsubscribe link in every email.</li>
           <li>Technical logs and rate limiting: to keep the site secure and stop abuse (legitimate interest).</li>
         </ul>
 

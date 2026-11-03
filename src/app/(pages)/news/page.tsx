@@ -1,20 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PageHeader from "@/components/ui/PageHeader";
-import { NEWS, formatDate } from "@/content/site";
+import { formatDate, getNews } from "@/lib/news";
 
 export const metadata: Metadata = {
   title: "News",
   description: "News and announcements from S.A. Mastatine.",
 };
 
-export default function NewsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function NewsPage() {
+  const news = await getNews();
   return (
     <>
       <PageHeader title="Announcements" intro="What the board has been up to, reported with appropriate gravity." />
       <div className="container-prose">
         <ul className="divide-y-2 divide-[#b8bcc4] border-y-2 border-[#b8bcc4]">
-          {NEWS.map((post) => (
+          {news.map((post) => (
             <li key={post.slug}>
               <Link href={`/news/${post.slug}`} className="group block py-7">
                 <time dateTime={post.date} className="text-sm text-muted">
@@ -26,6 +29,7 @@ export default function NewsPage() {
             </li>
           ))}
         </ul>
+        {news.length === 0 && <p className="py-10 text-center text-muted">No news yet.</p>}
       </div>
     </>
   );

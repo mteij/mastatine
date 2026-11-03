@@ -11,7 +11,9 @@ export interface MastApp {
   external?: boolean;
   icon: ReactNode;
   /** Pages of this app, shown in its full-screen sidebar. */
-  nav?: { label: string; href: string; icon: ReactNode }[];
+  nav?: { label: string; href: string; icon: ReactNode; /** Only shown to signed-in visitors. */ needsLogin?: boolean }[];
+  /** Who can use it, when not everyone: shown as a badge on the hub tile. */
+  access?: string;
 }
 
 const svg = { viewBox: "0 0 24 24", width: 22, height: 22, fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true } as const;
@@ -52,9 +54,24 @@ export const Icons = {
       <path d="M3 11 12 4l9 7M5 10v10h14V10" />
     </svg>
   ),
+  admin: (
+    <svg {...svg}>
+      <path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z" />
+    </svg>
+  ),
 };
 
-export function getApps(shopUrl: string | null): MastApp[] {
+/** Admin is an app like the others, but only admins see it. It brings its own tabs (ADMIN_NAV), so it has no nav here. */
+export const ADMIN_APP: MastApp = {
+  slug: "admin",
+  name: "Admin",
+  description: "Users, masts, committees, news and the newsletter.",
+  href: "/admin",
+  icon: Icons.admin,
+  access: "Admins",
+};
+
+export function getApps(shopUrl: string | null, isAdmin = false): MastApp[] {
   return [
     {
       slug: "activities",
@@ -64,8 +81,8 @@ export function getApps(shopUrl: string | null): MastApp[] {
       icon: Icons.activities,
       nav: [
         { label: "Activities", href: "/mastapps/activities", icon: <ListIcon /> },
-        { label: "New activity", href: "/mastapps/activities/new", icon: <PlusIcon /> },
-        { label: "Your activities", href: "/mastapps/activities/mine", icon: <CheckIcon /> },
+        { label: "New activity", href: "/mastapps/activities/new", icon: <PlusIcon />, needsLogin: true },
+        { label: "Your activities", href: "/mastapps/activities/mine", icon: <CheckIcon />, needsLogin: true },
       ],
     },
     {
@@ -74,6 +91,7 @@ export function getApps(shopUrl: string | null): MastApp[] {
       description: "Agendas, minutes and action points for committees.",
       href: "/mastapps/minutes",
       icon: Icons.minutes,
+      access: "Committees",
       nav: [
         { label: "Dashboard", href: "/mastapps/minutes", icon: Icons.dashboard },
         { label: "Meetings", href: "/mastapps/minutes/meetings", icon: <ListIcon /> },
@@ -85,14 +103,16 @@ export function getApps(shopUrl: string | null): MastApp[] {
       description: "Things members said, graded from 1 to 10.",
       href: "/mastapps/quotes",
       icon: Icons.quotes,
+      access: "Members",
       nav: [
         { label: "All quotes", href: "/mastapps/quotes", icon: <ListIcon /> },
         { label: "Statistics", href: "/mastapps/quotes/statistics", icon: <ChartIcon /> },
-        { label: "New quote", href: "/mastapps/quotes/new", icon: <PlusIcon /> },
+        { label: "New quote", href: "/mastapps/quotes/new", icon: <PlusIcon />, needsLogin: true },
       ],
     },
     ...(shopUrl
       ? [{ slug: "merch", name: "Merch", description: "Wear the tallest opinions in the room.", href: shopUrl, external: true, icon: Icons.merch }]
       : []),
+    ...(isAdmin ? [ADMIN_APP] : []),
   ];
 }

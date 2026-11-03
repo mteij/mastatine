@@ -34,10 +34,13 @@ export async function register() {
 
   // "Tomorrow" reminders for activities. Safe to repeat or overlap: each subscription is claimed before its email is sent.
   const { sendDueReminders } = await import("@/lib/activity-emails");
+  const { processWaitlists } = await import("@/lib/waitlist");
   const remind = async () => {
     try {
       const result = await sendDueReminders();
       if (result.sent > 0 || result.failed > 0) console.info("[reminders]", result);
+      const told = await processWaitlists();
+      if (told > 0) console.info("[waitlist] told", told);
     } catch (error) {
       console.error("[reminders] failed", error);
     }

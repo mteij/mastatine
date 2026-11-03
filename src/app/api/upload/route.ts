@@ -8,10 +8,14 @@ import { clientIp, isSameOrigin } from "@/lib/request";
 
 const MAX_SIZE = 20 * 1024 * 1024; // generous ceiling; the client downsizes before sending
 const uploadLimiter = createRateLimiter(10, 60 * 60 * 1000);
+const dailyUploadLimiter = createRateLimiter(20, 24 * 60 * 60 * 1000);
+// Caps total disk growth from anonymous uploads even when they come from many addresses.
+const globalUploadLimiter = createRateLimiter(300, 24 * 60 * 60 * 1000);
 
 export async function POST(req: NextRequest) {
   if (!isSameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  if (!uploadLimiter.allow(clientIp(req))) {
+  const ip = clientIp(req);
+  if (!uploadLimiter.allow(ip) || !dailyUploadLimiter.allow(ip) || !globalUploadLimiter.allow("all")) {
     return NextResponse.json({ error: "Too many uploads. Please try again later." }, { status: 429 });
   }
 

@@ -1,23 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { NEWS, findNews, formatDate } from "@/content/site";
+import { findNews, formatDate, newsParagraphs } from "@/lib/news";
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
-export function generateStaticParams() {
-  return NEWS.map((post) => ({ slug: post.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const post = findNews((await params).slug);
+  const post = await findNews((await params).slug);
   return post ? { title: post.title, description: post.summary } : {};
 }
 
 export default async function NewsPostPage({ params }: Props) {
-  const post = findNews((await params).slug);
+  const post = await findNews((await params).slug);
   if (!post) notFound();
 
   return (
@@ -30,7 +28,7 @@ export default async function NewsPostPage({ params }: Props) {
       </time>
       <h1 className="mt-2 text-4xl font-extrabold sm:text-5xl">{post.title}</h1>
       <div className="prose-lite mt-8">
-        {post.body.map((paragraph, i) => (
+        {newsParagraphs(post.body).map((paragraph, i) => (
           <p key={i}>{paragraph}</p>
         ))}
       </div>

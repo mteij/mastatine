@@ -33,7 +33,7 @@ export default async function NewMeetingPage() {
   );
 
   return (
-    <AppFrame title="New meeting" tagline="Set the time and start with a standard agenda.">
+    <AppFrame title="New meeting" hideTitle>
       {committees.length === 0 ? (
         <p className="card p-6">Only committee members can add meetings. Ask an admin to add you to your committee.</p>
       ) : (

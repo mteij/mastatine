@@ -66,30 +66,32 @@ export async function requestSubscription(rawEmail: string): Promise<void> {
   await sendMail({ to: email, ...confirmSubscriptionEmail(url) });
 }
 
-/** Remembers the newsletter choice from the sign-in form until the account exists. Opting in is the default. */
-export async function rememberSignupChoice(rawEmail: string, newsletter: boolean): Promise<void> {
-  await sql`
-    INSERT INTO signup_preferences (email, newsletter) VALUES (${normaliseEmail(rawEmail)}, ${newsletter})
-    ON CONFLICT ((lower(email))) DO UPDATE SET newsletter = EXCLUDED.newsletter, created_at = NOW()
-  `;
+export type NewsletterStatus = "confirmed" | "pending" | "unsubscribed" | "none";
+
+export async function getNewsletterStatus(rawEmail: string): Promise<NewsletterStatus> {
+  const [row] = await sql<{ status: NewsletterStatus }[]>`SELECT status FROM newsletter_subscribers WHERE lower(email) = ${normaliseEmail(rawEmail)}`;
+  return row?.status ?? "none";
 }
 
 /**
- * Runs when a new account is created. The sign-in link already proved the address, so unless the person unticked the box
- * on the form they are subscribed straight away (no second confirmation email). Every newsletter carries an unsubscribe link.
+ * A signed-in person's own choice. Their sign-in link already proved the address, so subscribing needs no second confirmation
+ * email (every newsletter still carries an unsubscribe link). Saying no is stored as a suppression record, so a later
+ * "everyone" or "members" issue does not mail someone who declined.
  */
-export async function applySignupChoice(rawEmail: string): Promise<void> {
+export async function setNewsletterChoice(rawEmail: string, subscribed: boolean): Promise<void> {
   const email = normaliseEmail(rawEmail);
-  const [choice] = await sql<{ newsletter: boolean }[]>`DELETE FROM signup_preferences WHERE lower(email) = ${email} RETURNING newsletter`;
-  if (choice && !choice.newsletter) {
-    // Remember the refusal, so a later "everyone" or "members" issue does not mail someone who said no.
-    await sql`INSERT INTO newsletter_subscribers (email, status, unsubscribed_at) VALUES (${email}, 'unsubscribed', NOW()) ON CONFLICT ((lower(email))) DO NOTHING`;
+  if (subscribed) {
+    await sql`
+      INSERT INTO newsletter_subscribers (email, status, confirmed_at) VALUES (${email}, 'confirmed', NOW())
+      ON CONFLICT ((lower(email))) DO UPDATE SET
+        status = 'confirmed', confirmed_at = NOW(), unsubscribed_at = NULL, confirm_token_hash = NULL, confirm_expires_at = NULL
+    `;
     return;
   }
   await sql`
-    INSERT INTO newsletter_subscribers (email, status, confirmed_at) VALUES (${email}, 'confirmed', NOW())
+    INSERT INTO newsletter_subscribers (email, status, unsubscribed_at) VALUES (${email}, 'unsubscribed', NOW())
     ON CONFLICT ((lower(email))) DO UPDATE SET
-      status = 'confirmed', confirmed_at = NOW(), unsubscribed_at = NULL, confirm_token_hash = NULL, confirm_expires_at = NULL
+      status = 'unsubscribed', unsubscribed_at = NOW(), confirm_token_hash = NULL, confirm_expires_at = NULL
   `;
 }
 

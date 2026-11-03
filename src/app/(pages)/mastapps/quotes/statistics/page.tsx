@@ -18,7 +18,7 @@ export default async function QuoteStatisticsPage() {
   ];
 
   return (
-    <AppFrame title="Quote statistics" tagline="Who says the most, and who says it best.">
+    <AppFrame title="Quote statistics" hideTitle>
 
       <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {tiles.map((t) => (
@@ -47,14 +47,14 @@ export default async function QuoteStatisticsPage() {
       <section aria-labelledby="authors-title" className="mt-10">
         <h2 id="authors-title" className="text-xl font-bold">Most quoted</h2>
         <div className="table-wrap mt-4">
-          <table className="table">
+          <table className="table table-stack">
             <thead><tr><th>Person</th><th className="text-right">Quotes</th><th className="text-right">Average grade</th></tr></thead>
             <tbody>
               {authors.map((a) => (
                 <tr key={a.author}>
-                  <td className="font-medium">{a.author}</td>
-                  <td className="text-right tabular-nums">{a.quotes}</td>
-                  <td className="text-right tabular-nums">{a.average === null ? "–" : a.average.toFixed(1)}</td>
+                  <td data-primary className="font-medium">{a.author}</td>
+                  <td data-label="Quotes" className="text-right tabular-nums">{a.quotes}</td>
+                  <td data-label="Average grade" className="text-right tabular-nums">{a.average === null ? "–" : a.average.toFixed(1)}</td>
                 </tr>
               ))}
               {authors.length === 0 && <tr><td colSpan={3} className="py-8 text-center text-muted">No quotes yet.</td></tr>}
