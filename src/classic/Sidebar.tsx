@@ -219,7 +219,7 @@ export default function Sidebar({ shopUrl, agenda }: { shopUrl: string | null; /
     <>
       {/* Mobile hamburger */}
       {!mobileOpen && <button
-        className="lg:hidden fixed top-3 left-3 z-50 flex h-11 w-11 items-center justify-center bg-white shadow rounded text-xl leading-none"
+        className="lg:hidden fixed top-3 left-3 z-50 flex h-11 w-11 items-center justify-center bg-white text-xl leading-none"
         onClick={() => setMobileOpen(true)}
         aria-label="Open menu"
         id="nav-toggle"
@@ -243,6 +243,8 @@ export default function Sidebar({ shopUrl, agenda }: { shopUrl: string | null; /
       <aside
         ref={sidebarRef}
         id="sidebar"
+        // Any link in the drawer (account, logo, menu, agenda) closes it; group toggles have no href.
+        onClick={(e) => { if ((e.target as HTMLElement).closest("a[href]")) setMobileOpen(false); }}
         className={[
           "flex flex-col",
           mobileOpen
@@ -297,7 +299,7 @@ export default function Sidebar({ shopUrl, agenda }: { shopUrl: string | null; /
               </div>
             </nav>
 
-            {agenda && <div onClick={(e) => { if ((e.target as HTMLElement).closest("a")) setMobileOpen(false); }}>{agenda}</div>}
+            {agenda}
 
           </div>
         </header>

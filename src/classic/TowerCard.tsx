@@ -72,7 +72,7 @@ export default function TowerCard({ tower, voteDirection, onSelect, onVote }: To
                 <path d="M7 3 2.5 10h9z" fill="currentColor" />
               </svg>
             </button>
-            <output aria-live="polite">{tower.vote_count}</output>
+            <output aria-live="polite" title={`${tower.total_votes} ${tower.total_votes === 1 ? "vote" : "votes"} cast`}>{tower.vote_count}</output>
             <button
               type="button"
               className="down"
@@ -86,6 +86,7 @@ export default function TowerCard({ tower, voteDirection, onSelect, onVote }: To
               </svg>
             </button>
           </div>
+          <span className="mast-card__meta">{tower.total_votes} {tower.total_votes === 1 ? "vote" : "votes"}</span>
           <button type="button" className="mast-card__more" onClick={() => onSelect(tower)}>
             Details
           </button>

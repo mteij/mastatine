@@ -14,6 +14,7 @@ interface Row {
   submitter_name: string;
   image_url: string;
   vote_count: number;
+  total_votes: number;
   height: number | null;
   created_at: Date;
 }
@@ -38,7 +39,8 @@ export default async function AdminMasts(props: { searchParams: Promise<{ q?: st
   const where = query ? sql`WHERE title ILIKE ${pattern} OR submitter_name ILIKE ${pattern}` : sql``;
 
   const rows = await sql<Row[]>`
-    SELECT id, title, submitter_name, image_url, vote_count, height, created_at
+    SELECT id, title, submitter_name, image_url, vote_count, height, created_at,
+      (SELECT COUNT(*)::int FROM votes WHERE votes.tower_id = towers.id) AS total_votes
     FROM towers ${where} ORDER BY ${sortExpression} ${direction}, created_at DESC LIMIT ${PAGE_SIZE + 1} OFFSET ${(pageNumber - 1) * PAGE_SIZE}
   `;
   const hasMore = rows.length > PAGE_SIZE;
@@ -60,7 +62,7 @@ export default async function AdminMasts(props: { searchParams: Promise<{ q?: st
         <span>Sort</span>
         <SortLink label="Mast" column="title" {...sortProps} />
         <SortLink label="Submitted by" column="submitter" {...sortProps} />
-        <SortLink label="Votes" column="votes" defaultDir="desc" {...sortProps} />
+        <SortLink label="Score" column="votes" defaultDir="desc" {...sortProps} />
         <SortLink label="Added" column="added" defaultDir="desc" {...sortProps} />
       </div>
 
@@ -70,7 +72,8 @@ export default async function AdminMasts(props: { searchParams: Promise<{ q?: st
             <tr>
               <th>Mast</th>
               <th>Submitted by</th>
-              <th className="text-right">Votes</th>
+              <th className="text-right">Score</th>
+              <th className="text-right">Total votes</th>
               <th>Added</th>
               <th><span className="sr-only">Actions</span></th>
             </tr>
@@ -85,7 +88,8 @@ export default async function AdminMasts(props: { searchParams: Promise<{ q?: st
                   </div>
                 </td>
                 <td data-label="Submitted by">{mast.submitter_name}</td>
-                <td data-label="Votes" className="text-right tabular-nums">{mast.vote_count}</td>
+                <td data-label="Score" className="text-right tabular-nums">{mast.vote_count}</td>
+                <td data-label="Total votes" className="text-right tabular-nums">{mast.total_votes}</td>
                 <td data-label="Added" className="whitespace-nowrap text-muted">{new Date(mast.created_at).toLocaleDateString("en-GB")}</td>
                 <td>
                   <div className="flex w-full justify-end gap-2">
@@ -99,7 +103,7 @@ export default async function AdminMasts(props: { searchParams: Promise<{ q?: st
               </tr>
             ))}
             {masts.length === 0 && (
-              <tr><td colSpan={5} className="py-10 text-center text-muted">No masts found.</td></tr>
+              <tr><td colSpan={6} className="py-10 text-center text-muted">No masts found.</td></tr>
             )}
           </tbody>
         </table>

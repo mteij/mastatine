@@ -73,6 +73,9 @@ export default function TowerDetailModal({ tower, voteDirection, onClose, onVote
                 <p className="tm-submitter">
                   Submitted by <strong>{tower.submitter_name}</strong>
                 </p>
+                <p className="tm-submitter">
+                  {tower.total_votes} {tower.total_votes === 1 ? "vote" : "votes"} cast
+                </p>
               </div>
 
               <div className="tm-votes">

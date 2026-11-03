@@ -12,6 +12,7 @@ export default function HeroCarousel({ masts, overlay, highlight }: { masts: Mas
   const mast = masts[0] ?? null;
   const [showModal, setShowModal] = useState(false);
   const [voteDelta, setVoteDelta] = useState(0);
+  const [totalDelta, setTotalDelta] = useState(0);
   const [voteDirection, setVoteDirection] = useState<VoteDirection | null>(null);
 
   const towerForModal = mast
@@ -21,6 +22,7 @@ export default function HeroCarousel({ masts, overlay, highlight }: { masts: Mas
         image_url: mast.image_url,
         submitter_name: mast.submitter_name,
         vote_count: mast.vote_count,
+        total_votes: mast.total_votes,
         description: mast.description,
         height: mast.height,
         created_at: mast.created_at,
@@ -136,13 +138,14 @@ export default function HeroCarousel({ masts, overlay, highlight }: { masts: Mas
 
       {showModal && towerForModal && (
         <TowerDetailModal
-          tower={{ ...towerForModal, vote_count: towerForModal.vote_count + voteDelta }}
+          tower={{ ...towerForModal, vote_count: towerForModal.vote_count + voteDelta, total_votes: towerForModal.total_votes + totalDelta }}
           voteDirection={voteDirection}
           onClose={() => setShowModal(false)}
           onVote={async (direction) => {
             const result = await submitVote(towerForModal.id, direction);
             if (!result) return;
             setVoteDelta((d) => d + result.delta);
+            setTotalDelta((d) => d + result.totalDelta);
             setVoteDirection(result.direction);
           }}
         />

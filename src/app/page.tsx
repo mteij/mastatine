@@ -25,6 +25,7 @@ async function getMastsOfMonth(): Promise<MastSlide[]> {
     return await sql<MastSlide[]>`
       SELECT
         t.id, t.title, t.image_url, t.submitter_name, t.vote_count,
+        (SELECT COUNT(*)::int FROM votes WHERE votes.tower_id = t.id) AS total_votes,
         t.description, t.height, t.created_at,
         COALESCE(
           SUM(CASE WHEN v.direction = 'up' THEN 1 WHEN v.direction = 'down' THEN -1 ELSE 0 END),

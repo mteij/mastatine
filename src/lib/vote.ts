@@ -5,6 +5,8 @@ export type VoteDirection = "up" | "down";
 export interface VoteResult {
   /** Change to apply to the tower's vote_count. */
   delta: number;
+  /** Change to apply to the tower's total_votes (+1 new vote, -1 withdrawn, 0 changed). */
+  totalDelta: number;
   /** The voter's direction afterwards (null when the vote was withdrawn). */
   direction: VoteDirection | null;
 }
@@ -20,7 +22,7 @@ export async function submitVote(towerId: string, direction: VoteDirection): Pro
 
   const { action } = (await res.json()) as { action: "voted" | "unvoted" | "changed" };
   const sign = direction === "up" ? 1 : -1;
-  if (action === "unvoted") return { delta: -sign, direction: null };
-  if (action === "changed") return { delta: 2 * sign, direction };
-  return { delta: sign, direction };
+  if (action === "unvoted") return { delta: -sign, totalDelta: -1, direction: null };
+  if (action === "changed") return { delta: 2 * sign, totalDelta: 0, direction };
+  return { delta: sign, totalDelta: 1, direction };
 }

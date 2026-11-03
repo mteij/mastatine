@@ -6,7 +6,14 @@ import { clientIp } from "@/lib/request";
 function withTrustedIp(req: Request): Request {
   const headers = new Headers(req.headers);
   headers.set("x-forwarded-for", clientIp(req));
-  return new Request(req, { headers });
+  // Not `new Request(req, ...)`: Next's request object is not a plain Request and the copy constructor throws on it.
+  const hasBody = req.method !== "GET" && req.method !== "HEAD";
+  return new Request(req.url, {
+    method: req.method,
+    headers,
+    body: hasBody ? req.body : null,
+    ...(hasBody && { duplex: "half" }),
+  } as RequestInit);
 }
 
 export function GET(req: Request) {

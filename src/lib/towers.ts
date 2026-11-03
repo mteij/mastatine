@@ -42,7 +42,8 @@ export async function listTowers({ sort, q, offset, limit }: ListOptions): Promi
         : sql`vote_count DESC, created_at DESC, id`;
 
   const rows = await sql<Tower[]>`
-    SELECT * FROM towers ${where} ORDER BY ${order} LIMIT ${limit + 1} OFFSET ${offset}
+    SELECT towers.*, (SELECT COUNT(*)::int FROM votes WHERE votes.tower_id = towers.id) AS total_votes
+    FROM towers ${where} ORDER BY ${order} LIMIT ${limit + 1} OFFSET ${offset}
   `;
   return { towers: rows.slice(0, limit), hasMore: rows.length > limit };
 }

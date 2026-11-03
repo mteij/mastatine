@@ -152,7 +152,7 @@ export default function TowerGrid({ initialPage, initialQuery, children }: Tower
   const handleVote = useCallback(async (towerId: string, direction: VoteDirection) => {
     const result = await submitVote(towerId, direction);
     if (!result) return;
-    setTowers((prev) => prev.map((t) => (t.id === towerId ? { ...t, vote_count: t.vote_count + result.delta } : t)));
+    setTowers((prev) => prev.map((t) => (t.id === towerId ? { ...t, vote_count: t.vote_count + result.delta, total_votes: t.total_votes + result.totalDelta } : t)));
     setVoteMap((prev) => {
       const next = new Map(prev);
       if (result.direction === null) next.delete(towerId);

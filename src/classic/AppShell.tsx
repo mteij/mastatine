@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import FullScreenApp from "./FullScreenApp";
 import NewsletterBand from "./NewsletterBand";
-import { isFullScreenAppPath } from "@/lib/paths";
+import { isFullScreenAppPath, isInformationPath } from "@/lib/paths";
 
 interface AppShellProps {
   shopUrl: string | null;
@@ -36,7 +36,7 @@ export default function AppShell({ shopUrl, sidebar, colophon, announcement, chi
           <div style={{ clear: "both" }} />
         </div>
       </div>
-      <NewsletterBand />
+      {isInformationPath(pathname) && <NewsletterBand />}
       {colophon}
     </div>
   );
