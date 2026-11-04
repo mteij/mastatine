@@ -24,12 +24,16 @@ export interface MeetingItem {
   notes: string;
 }
 
+export interface Assignee {
+  id: string;
+  name: string;
+}
+
 export interface ActionPoint {
   id: string;
   meeting_id: string;
   committee_name: string;
-  assignee_id: string | null;
-  assignee_name: string | null;
+  assignees: Assignee[];
   body: string;
   deadline: string | null; // YYYY-MM-DD
   is_done: boolean;
@@ -42,7 +46,7 @@ export interface ActionPoint {
 export interface ItemAction {
   id: string;
   body: string;
-  assignee_name: string | null;
+  assignees: Assignee[];
   deadline: string | null;
   is_done: boolean;
 }
@@ -174,20 +178,26 @@ export function getLiveItems(meetingId: string, userId: string) {
       CASE WHEN i.locked_by IS NOT NULL AND i.locked_by <> ${userId} AND i.locked_at > NOW() - make_interval(secs => ${LOCK_SECONDS})
         THEN COALESCE(NULLIF(u.name, ''), 'a colleague') END AS locked_by_name,
       COALESCE((
-        SELECT json_agg(json_build_object('id', a.id, 'body', a.body, 'assignee_name', au.name, 'deadline', a.deadline::text, 'is_done', a.is_done) ORDER BY a.created_at)
-        FROM action_points a LEFT JOIN "user" au ON au.id = a.assignee_id WHERE a.item_id = i.id
+        SELECT json_agg(json_build_object('id', a.id, 'body', a.body, 'assignees', ${assigneesJson()}, 'deadline', a.deadline::text, 'is_done', a.is_done) ORDER BY a.created_at)
+        FROM action_points a WHERE a.item_id = i.id
       ), '[]') AS actions
     FROM meeting_items i LEFT JOIN "user" u ON u.id = i.locked_by
     WHERE i.meeting_id = ${meetingId} ORDER BY i.position
   `;
 }
 
+/** The people an action point is assigned to, as a JSON array of {id, name}; `a` is the action_points alias. */
+const assigneesJson = () => sql`COALESCE((
+  SELECT json_agg(json_build_object('id', au.id, 'name', au.name) ORDER BY au.name)
+  FROM action_point_assignees aa JOIN "user" au ON au.id = aa.user_id WHERE aa.action_point_id = a.id
+), '[]'::json)`;
+
 const actionColumns = () => sql`
-  a.id, a.meeting_id, c.name AS committee_name, a.assignee_id, u.name AS assignee_name,
+  a.id, a.meeting_id, c.name AS committee_name, ${assigneesJson()} AS assignees,
   a.body, a.deadline::text AS deadline, a.is_done, a.item_id, i.title AS item_title
 `;
 const actionJoins = () => sql`
-  JOIN committees c ON c.id = a.committee_id LEFT JOIN "user" u ON u.id = a.assignee_id LEFT JOIN meeting_items i ON i.id = a.item_id
+  JOIN committees c ON c.id = a.committee_id LEFT JOIN meeting_items i ON i.id = a.item_id
 `;
 
 export function getMeetingActions(meetingId: string) {
@@ -218,7 +228,7 @@ const stillListed = () => sql`(
 export function getMyActions(userId: string) {
   return sql<ActionPoint[]>`
     SELECT ${actionColumns()} FROM action_points a ${actionJoins()}
-    WHERE a.assignee_id = ${userId} AND ${stillListed()}
+    WHERE EXISTS (SELECT 1 FROM action_point_assignees aa WHERE aa.action_point_id = a.id AND aa.user_id = ${userId}) AND ${stillListed()}
     ORDER BY a.is_done, c.name, a.deadline NULLS LAST, a.created_at
   `;
 }

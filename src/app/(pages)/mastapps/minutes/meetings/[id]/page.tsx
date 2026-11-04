@@ -7,6 +7,7 @@ import { formatDateTime } from "@/lib/datetime";
 import { formatDeadline, getItems, getMeetingActions, itemLabels } from "@/lib/meetings";
 import { addAction } from "../../actions";
 import ActionList from "../../ActionList";
+import AssigneePicker, { assigneeNames } from "../../AssigneePicker";
 import LiveRefresh from "../../LiveRefresh";
 import MeetingStatusBar from "../../MeetingStatusBar";
 import { loadMeeting } from "./access";
@@ -46,7 +47,7 @@ export default async function MeetingPage(props: { params: Promise<{ id: string 
                 {item.notes && <Markdown className="mt-1">{item.notes}</Markdown>}
                 {actions.filter((a) => a.item_id === item.id).map((a) => (
                   <p key={a.id} className={`mt-2 rounded-lg bg-soft px-3 py-2 text-sm ${a.is_done ? "line-through opacity-60" : ""}`}>
-                    <strong>Action point · {a.assignee_name ?? "unassigned"}:</strong> {a.body} <span className="text-muted">({formatDeadline(a.deadline)})</span>
+                    <strong>Action point · {assigneeNames(a.assignees)}:</strong> {a.body} <span className="text-muted">({formatDeadline(a.deadline)})</span>
                   </p>
                 ))}
               </li>
@@ -67,10 +68,7 @@ export default async function MeetingPage(props: { params: Promise<{ id: string 
               {items.map((item, i) => <option key={item.id} value={item.id}>{labels[i]} {item.title}</option>)}
             </select>
             <textarea name="body" aria-label="Action point" className="input" required maxLength={500} placeholder="What needs to happen?" />
-            <select name="assignee_id" aria-label="Assigned to" className="input" defaultValue="">
-              <option value="">Unassigned</option>
-              {people.map((p) => <option key={p.id} value={p.id}>{displayName(p)}</option>)}
-            </select>
+            <AssigneePicker people={people.map((p) => ({ id: p.id, label: displayName(p) }))} />
             <div>
               <label className="label" htmlFor="deadline">Deadline (empty: next meeting)</label>
               <input id="deadline" name="deadline" type="date" className="input" />

@@ -5,6 +5,7 @@ import AppFrame from "@/components/ui/AppFrame";
 import { displayName, getCommitteePeople } from "@/lib/committees";
 import { getAction, getItems, itemLabels } from "@/lib/meetings";
 import { requireUser } from "@/lib/session";
+import AssigneePicker from "../../../AssigneePicker";
 import { updateAction } from "../../../actions";
 
 export const metadata: Metadata = { title: "Edit action point", robots: { index: false } };
@@ -29,13 +30,7 @@ export default async function EditActionPage(props: { params: Promise<{ id: stri
           <label className="label" htmlFor="body">Action point</label>
           <textarea id="body" name="body" className="input" required maxLength={500} defaultValue={action.body} />
         </div>
-        <div>
-          <label className="label" htmlFor="assignee_id">Assigned to</label>
-          <select id="assignee_id" name="assignee_id" className="input" defaultValue={action.assignee_id ?? ""}>
-            <option value="">Unassigned</option>
-            {people.map((p) => <option key={p.id} value={p.id}>{displayName(p)}</option>)}
-          </select>
-        </div>
+        <AssigneePicker people={people.map((p) => ({ id: p.id, label: displayName(p) }))} selected={action.assignees.map((a) => a.id)} />
         <div>
           <label className="label" htmlFor="deadline">Deadline (empty: next meeting)</label>
           <input id="deadline" name="deadline" type="date" className="input" defaultValue={action.deadline ?? ""} />

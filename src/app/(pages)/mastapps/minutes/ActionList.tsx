@@ -2,6 +2,7 @@ import Link from "next/link";
 import ConfirmButton from "@/components/admin/ConfirmButton";
 import { formatDeadline, isOverdue } from "@/lib/minutes-format";
 import type { ActionPoint } from "@/lib/meetings";
+import { assigneeNames } from "./AssigneePicker";
 import { deleteAction, toggleAction } from "./actions";
 
 interface ActionListProps {
@@ -30,7 +31,7 @@ export default function ActionList({ actions, showAssignee, canDelete, canEdit }
             <Link href={`/mastapps/minutes/meetings/${a.meeting_id}`} className={`block text-ink hover:text-accent-text ${a.is_done ? "line-through opacity-60" : ""}`}>{a.body}</Link>
             <p className={`text-xs ${!a.is_done && isOverdue(a.deadline) ? "font-bold text-danger" : "text-muted"}`}>
               Deadline: {formatDeadline(a.deadline)}
-              {showAssignee && ` · ${a.assignee_name ?? "unassigned"}`}
+              {showAssignee && ` · ${assigneeNames(a.assignees)}`}
             </p>
             {a.item_title && <p className="text-xs text-muted">Raised under: {a.item_title}</p>}
           </div>

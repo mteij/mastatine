@@ -188,19 +188,33 @@ export async function saveItemNotes(itemId: string, notes: string): Promise<bool
 
 /* ───────────── action points ───────────── */
 
+/** Reads a submitted action-point form; every ticked person arrives as its own `assignee_id` field. */
+function parseActionForm(formData: FormData) {
+  const fields = Object.fromEntries(formData);
+  const assignee_ids = [...new Set(formData.getAll("assignee_id").map(String).filter(Boolean))];
+  return actionSchema.parse({ ...fields, assignee_ids });
+}
+
+/** Replaces the people an action point is assigned to. */
+async function setAssignees(actionId: string, userIds: string[]) {
+  await sql`DELETE FROM action_point_assignees WHERE action_point_id = ${actionId}`;
+  if (userIds.length === 0) return;
+  await sql`INSERT INTO action_point_assignees ${sql(userIds.map((user_id) => ({ action_point_id: actionId, user_id })))}`;
+}
+
 const actionSchema = z.object({
   id: uuid,
   body: z.string().trim().min(1).max(500),
-  assignee_id: z.string().max(64),
+  assignee_ids: z.array(z.string().min(1).max(64)).max(50).default([]),
   deadline: z.union([z.iso.date(), z.literal("")]),
   item_id: z.union([uuid, z.literal("")]).default(""),
 });
 
 /** Action points only go to members of the committee, and only to agenda items of the same meeting. */
 async function checkActionTargets(meetingId: string, committeeId: string, data: z.infer<typeof actionSchema>) {
-  if (data.assignee_id) {
-    const [member] = await sql`SELECT 1 FROM committee_members WHERE committee_id = ${committeeId} AND user_id = ${data.assignee_id}`;
-    if (!member) throw new Error("Action points can only go to committee members.");
+  if (data.assignee_ids.length > 0) {
+    const members = await sql`SELECT 1 FROM committee_members WHERE committee_id = ${committeeId} AND user_id IN ${sql(data.assignee_ids)}`;
+    if (members.length !== data.assignee_ids.length) throw new Error("Action points can only go to committee members.");
   }
   if (data.item_id) {
     const [item] = await sql`SELECT 1 FROM meeting_items WHERE id = ${data.item_id} AND meeting_id = ${meetingId}`;
@@ -209,40 +223,44 @@ async function checkActionTargets(meetingId: string, committeeId: string, data: 
 }
 
 export async function addAction(formData: FormData) {
-  const data = actionSchema.parse(Object.fromEntries(formData));
+  const data = parseActionForm(formData);
   const { committeeId } = await requireEditableMeeting(data.id);
   await checkActionTargets(data.id, committeeId, data);
-  await sql`
-    INSERT INTO action_points (meeting_id, committee_id, assignee_id, body, deadline, item_id)
-    VALUES (${data.id}, ${committeeId}, ${data.assignee_id || null}, ${data.body}, ${data.deadline || null}, ${data.item_id || null})
+  const [created] = await sql<{ id: string }[]>`
+    INSERT INTO action_points (meeting_id, committee_id, body, deadline, item_id)
+    VALUES (${data.id}, ${committeeId}, ${data.body}, ${data.deadline || null}, ${data.item_id || null})
+    RETURNING id
   `;
+  await setAssignees(created.id, data.assignee_ids);
   refresh(data.id);
 }
 
 /** Changes what an action point says, who has it, its deadline and the agenda item it belongs to. Committee members only. */
 export async function updateAction(formData: FormData) {
-  const data = actionSchema.parse(Object.fromEntries(formData));
+  const data = parseActionForm(formData);
   const row = await requireActionAccess(data.id);
   const session = await requireSignedIn();
   if (!(await isCommitteeMember(session.user, row.committee_id))) redirect(BASE);
   if (row.meeting_status === "locked") redirect(`${BASE}/meetings/${row.meeting_id}`);
   await checkActionTargets(row.meeting_id, row.committee_id, data);
   await sql`
-    UPDATE action_points SET body = ${data.body}, assignee_id = ${data.assignee_id || null}, deadline = ${data.deadline || null}, item_id = ${data.item_id || null}
+    UPDATE action_points SET body = ${data.body}, deadline = ${data.deadline || null}, item_id = ${data.item_id || null}
     WHERE id = ${data.id}
   `;
+  await setAssignees(data.id, data.assignee_ids);
   refresh(row.meeting_id);
   redirect(`${BASE}/meetings/${row.meeting_id}`);
 }
 
 async function requireActionAccess(actionId: string) {
   const session = await requireSignedIn();
-  const [row] = await sql<{ committee_id: string; meeting_id: string; assignee_id: string | null; meeting_status: MeetingStatus }[]>`
-    SELECT a.committee_id, a.meeting_id, a.assignee_id, m.minutes_status AS meeting_status
+  const [row] = await sql<{ committee_id: string; meeting_id: string; is_assignee: boolean; meeting_status: MeetingStatus }[]>`
+    SELECT a.committee_id, a.meeting_id, m.minutes_status AS meeting_status,
+      EXISTS (SELECT 1 FROM action_point_assignees aa WHERE aa.action_point_id = a.id AND aa.user_id = ${session.user.id}) AS is_assignee
     FROM action_points a JOIN meetings m ON m.id = a.meeting_id WHERE a.id = ${actionId}
   `;
   if (!row) redirect(BASE);
-  const allowed = row.assignee_id === session.user.id || (await isCommitteeMember(session.user, row.committee_id));
+  const allowed = row.is_assignee || (await isCommitteeMember(session.user, row.committee_id));
   if (!allowed) redirect(BASE);
   return row;
 }

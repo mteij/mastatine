@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AUTOSAVE_MS, HEARTBEAT_MS, POLL_MS, itemLabels } from "@/lib/minutes-live";
 import { formatDeadline, type MeetingStatus } from "@/lib/minutes-format";
 import type { LiveItem } from "@/lib/meetings";
+import AssigneePicker, { assigneeNames } from "./AssigneePicker";
 import { acquireItemLock, addAction, releaseItemLock, saveItemNotes, setMeetingStatus } from "./actions";
 import NotesField from "./NotesField";
 
@@ -192,7 +193,7 @@ export default function MinutesEditor({ meetingId, initialItems, initialStatus, 
               <ul className="mt-2 space-y-1">
                 {item.actions.map((a) => (
                   <li key={a.id} className={`rounded-md bg-soft px-2 py-1 text-xs ${a.is_done ? "line-through opacity-60" : ""}`}>
-                    <strong>Action point · {a.assignee_name ?? "unassigned"}:</strong> {a.body} <span className="text-muted">({formatDeadline(a.deadline)})</span>
+                    <strong>Action point · {assigneeNames(a.assignees)}:</strong> {a.body} <span className="text-muted">({formatDeadline(a.deadline)})</span>
                   </li>
                 ))}
               </ul>
@@ -203,11 +204,8 @@ export default function MinutesEditor({ meetingId, initialItems, initialStatus, 
                 <input type="hidden" name="id" value={meetingId} />
                 <input type="hidden" name="item_id" value={item.id} />
                 <input name="body" aria-label="Action point" className="input" required maxLength={500} placeholder="What needs to happen?" autoFocus />
+                <AssigneePicker people={people.map((p) => ({ id: p.id, label: p.name }))} />
                 <div className="flex flex-wrap gap-2">
-                  <select name="assignee_id" aria-label="Assigned to" className="input !w-auto min-w-0 flex-1" defaultValue="">
-                    <option value="">Unassigned</option>
-                    {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
                   <input name="deadline" type="date" aria-label="Deadline (empty: next meeting)" className="input !w-auto" />
                   <button type="submit" className="btn btn-primary btn-sm">Add</button>
                   <button type="button" className="btn btn-ghost btn-sm" onClick={() => setAddingFor(null)}>Cancel</button>

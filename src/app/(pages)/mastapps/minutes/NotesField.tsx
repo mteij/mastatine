@@ -57,6 +57,13 @@ function prefixLines(text: string, start: number, end: number, prefix: (index: n
   return { text: text.slice(0, from) + next + text.slice(to), start: from, end: from + next.length };
 }
 
+const PICTURE = /!\[([^\]]*)\]\((\/uploads\/[a-z0-9-]+\.(?:jpg|png|webp|gif))\)/g;
+
+/** The pictures embedded in a note, in order, so they can be previewed while editing. */
+function picturesIn(text: string): { src: string; alt: string }[] {
+  return [...text.matchAll(PICTURE)].map((m) => ({ alt: m[1], src: m[2] }));
+}
+
 /** Notes for one agenda item: a Markdown text area with a small toolbar, a preview, and picture upload. */
 export default function NotesField({ id, meetingId, value, readOnly, onChange, onFocus, onBlur }: NotesFieldProps) {
   const area = useRef<HTMLTextAreaElement>(null);
@@ -81,6 +88,8 @@ export default function NotesField({ id, meetingId, value, readOnly, onChange, o
   if (readOnly) {
     return value.trim() ? <Markdown className="text-sm">{value}</Markdown> : <p className="text-sm text-muted">No notes yet.</p>;
   }
+
+  const pictures = picturesIn(value);
 
   function apply(make: (text: string, start: number, end: number) => Edit) {
     const el = area.current;
@@ -207,6 +216,19 @@ export default function NotesField({ id, meetingId, value, readOnly, onChange, o
         onKeyDown={onKeyDown}
         onPaste={onPaste}
       />
+      {!preview && pictures.length > 0 && (
+        <ul aria-label="Pictures in these notes" className="mt-2 flex flex-wrap gap-2">
+          {pictures.map((p, i) => (
+            <li key={`${p.src}-${i}`}>
+              <a href={p.src} target="_blank" rel="noopener noreferrer" title={p.alt || "Open picture"}>
+                {/* Uploads are already resized WebP, so next/image would add nothing. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={p.src} alt={p.alt} loading="lazy" className="h-20 w-auto max-w-40 rounded-lg border border-line object-cover" />
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
       {error && <p role="alert" className="mt-1 text-xs font-bold text-danger">{error}</p>}
     </div>
   );
