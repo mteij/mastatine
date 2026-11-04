@@ -43,11 +43,11 @@ export default async function AdminNewsletter() {
   const count = (status: string) => counts.find((c) => c.status === status)?.n ?? 0;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       <section aria-labelledby="issues-title">
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-2 flex items-center justify-between">
           <h2 id="issues-title" className="text-base font-extrabold">Issues</h2>
-          <Link href="/admin/newsletter/new" className="btn btn-primary">New issue</Link>
+          <Link href="/admin/newsletter/new" className="btn btn-primary btn-sm">New issue</Link>
         </div>
         <div className="table-wrap">
           <table className="table table-stack">
@@ -62,7 +62,7 @@ export default async function AdminNewsletter() {
                   <td data-label="Created" className="whitespace-nowrap text-muted">{new Date(issue.created_at).toLocaleDateString("en-GB")}</td>
                 </tr>
               ))}
-              {issues.length === 0 && <tr><td colSpan={5} className="py-10 text-center text-muted">No issues yet.</td></tr>}
+              {issues.length === 0 && <tr><td colSpan={5} className="py-6 text-center text-muted">No issues yet.</td></tr>}
             </tbody>
           </table>
         </div>
@@ -73,7 +73,7 @@ export default async function AdminNewsletter() {
         <p className="mt-1 text-sm text-muted">
           {count("confirmed")} confirmed · {count("pending")} pending · {count("unsubscribed")} unsubscribed
         </p>
-        <div className="table-wrap mt-3">
+        <div className="table-wrap mt-2">
           <table className="table table-stack">
             <thead><tr><th>Email</th><th>Status</th><th>Added</th><th><span className="sr-only">Actions</span></th></tr></thead>
             <tbody>
@@ -90,7 +90,7 @@ export default async function AdminNewsletter() {
                   </td>
                 </tr>
               ))}
-              {subscribers.length === 0 && <tr><td colSpan={4} className="py-10 text-center text-muted">No subscribers yet.</td></tr>}
+              {subscribers.length === 0 && <tr><td colSpan={4} className="py-6 text-center text-muted">No subscribers yet.</td></tr>}
             </tbody>
           </table>
         </div>

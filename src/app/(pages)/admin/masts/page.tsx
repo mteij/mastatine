@@ -103,7 +103,7 @@ export default async function AdminMasts(props: { searchParams: Promise<{ q?: st
               </tr>
             ))}
             {masts.length === 0 && (
-              <tr><td colSpan={6} className="py-10 text-center text-muted">No masts found.</td></tr>
+              <tr><td colSpan={6} className="py-6 text-center text-muted">No masts found.</td></tr>
             )}
           </tbody>
         </table>

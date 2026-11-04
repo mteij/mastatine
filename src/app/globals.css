@@ -1390,10 +1390,31 @@ blockquote::before, blockquote::after { content: ""; content: none; }
   /* ── Admin: denser rows, smaller controls ── */
   .admin-compact .btn-sm { min-height: 1.875rem; padding: 0.2rem 0.7rem; font-size: 0.8125rem; }
   .admin-compact .input { min-height: 0; padding-block: 0.3rem; font-size: 0.875rem; }
+  .admin-compact .table { min-width: 0; }
   .admin-compact .table th { padding: 0.5rem 0.75rem; }
   .admin-compact .table td { padding: 0.4rem 0.75rem; }
   .admin-compact .badge { font-size: 0.75rem; padding-block: 0; }
   .admin-compact .card { padding: 1rem; }
+  .admin-compact .table td { font-size: 0.875rem; }
+  .admin-compact .table tbody tr:hover td { background: rgb(0 0 0 / 0.025); }
+
+  /* Admin tables whose rows open a popover: .table-wrap would clip it, so this wrapper does not scroll. */
+  .table-open { @apply rounded-[4px] border border-line bg-surface; }
+  .table-open .table { min-width: 0; }
+
+  /* A "Manage"-style button that opens a panel hanging below it (desktop) or inline (phones). */
+  .popover { position: relative; }
+  .popover > summary { list-style: none; cursor: pointer; }
+  .popover > summary::-webkit-details-marker { display: none; }
+  .popover__panel { margin-top: 0.5rem; padding: 0.75rem; border: 1px solid var(--line); border-radius: 0.75rem; background: #fff; text-align: left; }
+  @media (min-width: 640px) {
+    .popover__panel { position: absolute; top: 100%; right: 0; z-index: 20; width: 20rem; box-shadow: 0 8px 24px rgb(15 34 84 / 0.18); }
+  }
+}
+
+/* Phones: the .table-open frame goes away because every row becomes its own card. */
+@media (max-width: 639px) {
+  .table-open:has(.table-stack) { border: 0; background: transparent; }
 }
 
 /* ── Minecraft chip (floats over the hero image) and upcoming activities ── */

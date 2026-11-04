@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/session";
 import Link from "next/link";
 import type { MemberStatus } from "@/lib/membership";
 import MembershipEndForm from "@/components/admin/MembershipEndForm";
-import { parseSort, SortLink } from "@/components/admin/SortHeader";
+import SortHeader, { parseSort, SortLink } from "@/components/admin/SortHeader";
 import { addCommitteeMember, approveMember, banUser, declineMember, removeCommitteeMember, removeUser, revokeMember, setUserRole, unbanUser } from "../actions";
 
 const PAGE_SIZE = 100;
@@ -81,17 +81,16 @@ export default async function AdminUsers(props: { searchParams: Promise<{ q?: st
   return (
     <>
       {pendingCount > 0 && !requestsOnly && !query && (
-        <section aria-labelledby="requests-title" className="card mb-5 p-4">
-          <h2 id="requests-title" className="text-base font-extrabold">
+        <section aria-labelledby="requests-title" className="card mb-4 !p-3">
+          <h2 id="requests-title" className="text-sm font-extrabold">
             Membership requests <span className="ml-1 rounded-full bg-navy px-2 py-0.5 text-xs text-white">{pendingCount}</span>
           </h2>
-          <ul className="mt-2 divide-y divide-line">
+          <ul className="mt-1 divide-y divide-line">
             {pending.map((p) => (
-              <li key={p.id} className="space-y-2 py-3">
-                <div className="min-w-0">
-                  <p className="truncate font-bold">{p.name || "No name"}</p>
-                  <p className="truncate text-sm text-muted">{p.email}{p.requested_at && ` · ${date(p.requested_at)}`}</p>
-                </div>
+              <li key={p.id} className="flex flex-wrap items-center gap-x-4 gap-y-1.5 py-1.5">
+                <p className="min-w-0 flex-1 basis-56 truncate text-sm font-bold">
+                  {p.name || "No name"} <span className="font-normal text-muted">{p.email}{p.requested_at && ` · ${date(p.requested_at)}`}</span>
+                </p>
                 <div className="flex flex-wrap items-center gap-2">
                   <form action={approveMember}>
                     <input type="hidden" name="userId" value={p.id} />
@@ -105,23 +104,25 @@ export default async function AdminUsers(props: { searchParams: Promise<{ q?: st
         </section>
       )}
 
-      <nav aria-label="Filter users" className="tabs">
-        <Link href="/admin/users" aria-current={requestsOnly ? undefined : "true"} className="tab">All users</Link>
-        <Link href="/admin/users?filter=requests" aria-current={requestsOnly ? "true" : undefined} className="tab">
-          Requests{pendingCount > 0 && <span className="ml-1.5 rounded-full bg-navy px-2 py-0.5 text-xs text-white">{pendingCount}</span>}
-        </Link>
-      </nav>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <nav aria-label="Filter users" className="tabs !mb-0">
+          <Link href="/admin/users" aria-current={requestsOnly ? undefined : "true"} className="tab">All users</Link>
+          <Link href="/admin/users?filter=requests" aria-current={requestsOnly ? "true" : undefined} className="tab">
+            Requests{pendingCount > 0 && <span className="ml-1.5 rounded-full bg-navy px-2 py-0.5 text-xs text-white">{pendingCount}</span>}
+          </Link>
+        </nav>
+        <form className="flex min-w-0 flex-1 gap-2 sm:max-w-sm" role="search">
+          {requestsOnly && <input type="hidden" name="filter" value="requests" />}
+          <input type="hidden" name="sort" value={sort.column} />
+          <input type="hidden" name="dir" value={sort.dir} />
+          <label className="sr-only" htmlFor="user-search">Search users</label>
+          <input id="user-search" name="q" defaultValue={query} placeholder="Search name or email" className="input min-w-0 flex-1" />
+          <button className="btn btn-secondary btn-sm" type="submit">Search</button>
+        </form>
+      </div>
 
-      <form className="mb-3 flex gap-2" role="search">
-        {requestsOnly && <input type="hidden" name="filter" value="requests" />}
-        <input type="hidden" name="sort" value={sort.column} />
-        <input type="hidden" name="dir" value={sort.dir} />
-        <label className="sr-only" htmlFor="user-search">Search users</label>
-        <input id="user-search" name="q" defaultValue={query} placeholder="Search name or email" className="input min-w-0 flex-1 sm:max-w-sm" />
-        <button className="btn btn-secondary" type="submit">Search</button>
-      </form>
-
-      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+      {/* On phones the table headers are hidden, so sorting lives here. */}
+      <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted sm:hidden">
         <span>Sort</span>
         <SortLink label="Name" column="name" {...sortProps} />
         <SortLink label="Email" column="email" {...sortProps} />
@@ -130,112 +131,140 @@ export default async function AdminUsers(props: { searchParams: Promise<{ q?: st
         <SortLink label="Role" column="role" {...sortProps} />
       </div>
 
-      <ul className="space-y-2">
-        {users.map((u) => {
-          const isMe = u.id === me.id;
-          const open = committees.filter((c) => !u.committees.some((own) => own.id === c.id));
-          return (
-            <li key={u.id} className="card">
-              <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 p-3">
-                <div className="min-w-0">
-                  <p className="truncate font-bold">{u.name || "No name"}{isMe && <span className="badge ml-2">You</span>}</p>
-                  <p className="truncate text-sm text-muted">{u.email}</p>
-                  <p className="text-xs text-muted">Joined {date(u.createdAt)}{u.committees.length > 0 && ` · ${u.committees.map((c) => c.name).join(", ")}`}</p>
-                </div>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {u.member_status === "approved" && !u.lapsed && <span className="badge">Member</span>}
-                  {u.lapsed && <span className="badge !bg-soft !text-muted">Lapsed</span>}
-                  {u.member_status === "pending" && <span className="badge !bg-navy !text-white">Requested</span>}
-                  {u.member_status === "declined" && <span className="badge !bg-soft !text-muted">Declined</span>}
-                  {u.member_status === "revoked" && <span className="badge !bg-soft !text-muted">Removed</span>}
-                  {u.role === "admin" && <span className="badge !bg-navy !text-white">Admin</span>}
-                  {u.banned && <span className="badge !bg-danger/10 !text-danger">Banned</span>}
-                </div>
-              </div>
-
-              <details className="border-t border-line">
-                <summary className="cursor-pointer px-3 py-2 text-sm font-bold">Manage</summary>
-                <div className="space-y-4 px-3 pb-3">
-                  <section aria-label="Membership" className="space-y-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wide text-muted">Membership</h3>
-                    {u.member_decided_at && (
-                      <p className="text-sm text-muted">
-                        {DECISION_LABEL[u.member_status]}
-                        {u.decided_by_name ? ` by ${u.decided_by_name}` : ""} on {date(u.member_decided_at)}
-                        {u.member_decision_reason && <> &ldquo;{u.member_decision_reason}&rdquo;</>}
-                      </p>
-                    )}
-                    {u.lapsed && <p className="text-sm text-muted">No sign-in for 5 years.</p>}
-                    <div className="flex flex-col items-start gap-2">
-                      {(u.member_status !== "approved" || u.lapsed) && (
+      {/* Not .table-wrap: it clips overflow, and the row menu has to hang below its row. */}
+      <div className="table-open">
+        <table className="table table-stack">
+          <thead>
+            <tr>
+              <SortHeader label="Name" column="name" {...sortProps} />
+              <SortHeader label="Email" column="email" {...sortProps} />
+              <SortHeader label="Status" column="membership" {...sortProps} />
+              <th>Committees</th>
+              <SortHeader label="Joined" column="joined" defaultDir="desc" {...sortProps} />
+              <th className="text-right"><span className="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((u) => {
+              const isMe = u.id === me.id;
+              const open = committees.filter((c) => !u.committees.some((own) => own.id === c.id));
+              return (
+                <tr key={u.id}>
+                  <td data-primary className="font-medium">
+                    {u.name || "No name"}
+                    {isMe && <span className="badge ml-2">You</span>}
+                  </td>
+                  <td data-label="Email" className="text-muted sm:max-w-[16rem] sm:truncate" title={u.email}>{u.email}</td>
+                  <td data-label="Status">
+                    <div className="flex flex-wrap justify-end gap-1 sm:justify-start">
+                      {u.member_status === "approved" && !u.lapsed && <span className="badge">Member</span>}
+                      {u.lapsed && <span className="badge !bg-soft !text-muted">Lapsed</span>}
+                      {u.member_status === "pending" && <span className="badge !bg-navy !text-white">Requested</span>}
+                      {u.member_status === "declined" && <span className="badge !bg-soft !text-muted">Declined</span>}
+                      {u.member_status === "revoked" && <span className="badge !bg-soft !text-muted">Removed</span>}
+                      {u.role === "admin" && <span className="badge !bg-navy !text-white">Admin</span>}
+                      {u.banned && <span className="badge !bg-danger/10 !text-danger">Banned</span>}
+                    </div>
+                  </td>
+                  <td data-label="Committees" className="text-xs text-muted">{u.committees.length > 0 ? u.committees.map((c) => c.name).join(", ") : "–"}</td>
+                  <td data-label="Joined" className="whitespace-nowrap text-muted">{date(u.createdAt)}</td>
+                  <td>
+                    <div className="flex w-full flex-wrap items-start justify-end gap-1.5">
+                      {u.member_status === "pending" && (
                         <form action={approveMember}>
                           <input type="hidden" name="userId" value={u.id} />
                           <button className="btn btn-primary btn-sm" type="submit">Approve</button>
                         </form>
                       )}
-                      {u.member_status === "pending" && (
-                        <MembershipEndForm action={declineMember} userId={u.id} label="Decline" confirm={`Decline the request from ${u.email}?`} />
-                      )}
-                      {u.member_status === "approved" && !isMe && (
-                        <MembershipEndForm action={revokeMember} userId={u.id} label="Remove" confirm={`End ${u.email}'s membership?`} />
-                      )}
+                      <details className="popover max-sm:w-full">
+                        <summary className="btn btn-secondary btn-sm max-sm:w-full" aria-label={`Edit ${u.name || u.email}`} title="Edit"><span className="sm:hidden">Edit</span><span aria-hidden="true" className="max-sm:hidden text-base leading-none">⋯</span></summary>
+                        <div className="popover__panel space-y-3 text-sm">
+                          <section aria-label="Membership" className="space-y-1.5">
+                            <h3 className="text-xs font-bold uppercase tracking-wide text-muted">Membership</h3>
+                            {u.member_decided_at && (
+                              <p className="text-muted">
+                                {DECISION_LABEL[u.member_status]}
+                                {u.decided_by_name ? ` by ${u.decided_by_name}` : ""} on {date(u.member_decided_at)}
+                                {u.member_decision_reason && <> &ldquo;{u.member_decision_reason}&rdquo;</>}
+                              </p>
+                            )}
+                            {u.lapsed && <p className="text-muted">No sign-in for 5 years.</p>}
+                            <div className="flex flex-col items-start gap-2">
+                              {(u.member_status !== "approved" || u.lapsed) && u.member_status !== "pending" && (
+                                <form action={approveMember}>
+                                  <input type="hidden" name="userId" value={u.id} />
+                                  <button className="btn btn-primary btn-sm" type="submit">Approve</button>
+                                </form>
+                              )}
+                              {u.member_status === "pending" && (
+                                <MembershipEndForm action={declineMember} userId={u.id} label="Decline" confirm={`Decline the request from ${u.email}?`} />
+                              )}
+                              {u.member_status === "approved" && !isMe && (
+                                <MembershipEndForm action={revokeMember} userId={u.id} label="Remove" confirm={`End ${u.email}'s membership?`} />
+                              )}
+                            </div>
+                          </section>
+
+                          <section aria-label="Committees" className="space-y-1.5">
+                            <h3 className="text-xs font-bold uppercase tracking-wide text-muted">Committees</h3>
+                            {u.committees.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5">
+                                {u.committees.map((c) => (
+                                  <form key={c.id} action={removeCommitteeMember}>
+                                    <input type="hidden" name="committeeId" value={c.id} />
+                                    <input type="hidden" name="userId" value={u.id} />
+                                    <button type="submit" className="badge cursor-pointer" title={`Remove from ${c.name}`}>{c.name} ×</button>
+                                  </form>
+                                ))}
+                              </div>
+                            )}
+                            {open.length > 0 && (
+                              <form action={addCommitteeMember} className="flex gap-1.5">
+                                <input type="hidden" name="userId" value={u.id} />
+                                <select name="committeeId" aria-label={`Add ${u.email} to a committee`} className="input min-w-0 flex-1" required defaultValue="">
+                                  <option value="" disabled>Add to committee…</option>
+                                  {open.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                                <button className="btn btn-secondary btn-sm" type="submit">Add</button>
+                              </form>
+                            )}
+                          </section>
+
+                          {!isMe && (
+                            <section aria-label="Account" className="space-y-1.5">
+                              <h3 className="text-xs font-bold uppercase tracking-wide text-muted">Account</h3>
+                              <div className="flex flex-wrap gap-1.5">
+                                <form action={setUserRole}>
+                                  <input type="hidden" name="userId" value={u.id} />
+                                  <input type="hidden" name="role" value={u.role === "admin" ? "user" : "admin"} />
+                                  <button className="btn btn-secondary btn-sm" type="submit">{u.role === "admin" ? "Remove admin" : "Make admin"}</button>
+                                </form>
+                                <form action={u.banned ? unbanUser : banUser}>
+                                  <input type="hidden" name="userId" value={u.id} />
+                                  <ConfirmButton message={u.banned ? "Lift this ban?" : `Ban ${u.email}? They will be signed out and unable to sign in.`} className="btn btn-secondary btn-sm">
+                                    {u.banned ? "Unban" : "Ban"}
+                                  </ConfirmButton>
+                                </form>
+                                <form action={removeUser}>
+                                  <input type="hidden" name="userId" value={u.id} />
+                                  <ConfirmButton message={`Permanently delete ${u.email}?`} className="btn btn-danger btn-sm">Delete</ConfirmButton>
+                                </form>
+                              </div>
+                            </section>
+                          )}
+                        </div>
+                      </details>
                     </div>
-                  </section>
-
-                  <section aria-label="Committees" className="space-y-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wide text-muted">Committees</h3>
-                    {u.committees.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {u.committees.map((c) => (
-                          <form key={c.id} action={removeCommitteeMember}>
-                            <input type="hidden" name="committeeId" value={c.id} />
-                            <input type="hidden" name="userId" value={u.id} />
-                            <button type="submit" className="badge cursor-pointer" title={`Remove from ${c.name}`}>{c.name} ×</button>
-                          </form>
-                        ))}
-                      </div>
-                    )}
-                    {open.length > 0 && (
-                      <form action={addCommitteeMember} className="flex gap-2">
-                        <input type="hidden" name="userId" value={u.id} />
-                        <select name="committeeId" aria-label={`Add ${u.email} to a committee`} className="input min-w-0 flex-1" required defaultValue="">
-                          <option value="" disabled>Add to committee…</option>
-                          {open.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                        <button className="btn btn-secondary btn-sm" type="submit">Add</button>
-                      </form>
-                    )}
-                  </section>
-
-                  {!isMe && (
-                    <section aria-label="Account" className="space-y-2">
-                      <h3 className="text-xs font-bold uppercase tracking-wide text-muted">Account</h3>
-                      <div className="flex flex-wrap gap-2">
-                        <form action={setUserRole}>
-                          <input type="hidden" name="userId" value={u.id} />
-                          <input type="hidden" name="role" value={u.role === "admin" ? "user" : "admin"} />
-                          <button className="btn btn-secondary btn-sm" type="submit">{u.role === "admin" ? "Remove admin" : "Make admin"}</button>
-                        </form>
-                        <form action={u.banned ? unbanUser : banUser}>
-                          <input type="hidden" name="userId" value={u.id} />
-                          <ConfirmButton message={u.banned ? "Lift this ban?" : `Ban ${u.email}? They will be signed out and unable to sign in.`} className="btn btn-secondary btn-sm">
-                            {u.banned ? "Unban" : "Ban"}
-                          </ConfirmButton>
-                        </form>
-                        <form action={removeUser}>
-                          <input type="hidden" name="userId" value={u.id} />
-                          <ConfirmButton message={`Permanently delete ${u.email}?`} className="btn btn-danger btn-sm">Delete</ConfirmButton>
-                        </form>
-                      </div>
-                    </section>
-                  )}
-                </div>
-              </details>
-            </li>
-          );
-        })}
-        {users.length === 0 && <li className="card p-6 text-center text-muted">No users found.</li>}
-      </ul>
+                  </td>
+                </tr>
+              );
+            })}
+            {users.length === 0 && (
+              <tr><td colSpan={6} className="py-10 text-center text-muted">No users found.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </>
   );
 }

@@ -26,7 +26,7 @@ export default async function AdminNews(props: { searchParams: Promise<{ notice?
   const message = notice ? NOTICES[notice] : undefined;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       {message && (
         <p role="status" className={`rounded-xl px-4 py-3 text-sm ${message.tone === "ok" ? "bg-accent-soft text-accent-text" : "bg-danger/10 text-danger"}`}>
           {message.text}
@@ -35,7 +35,7 @@ export default async function AdminNews(props: { searchParams: Promise<{ notice?
 
       <section aria-labelledby="bar-title">
         <h2 id="bar-title" className="text-base font-extrabold">Announcement bar</h2>
-        <form action={saveAnnouncement} className="card mt-3 max-w-2xl space-y-4 p-4">
+        <form action={saveAnnouncement} className="card mt-2 max-w-2xl space-y-3 p-4">
           <fieldset className="space-y-1">
             <legend className="label">What it shows</legend>
             {MODES.map((mode) => (
@@ -57,14 +57,14 @@ export default async function AdminNews(props: { searchParams: Promise<{ notice?
             <label className="label" htmlFor="ann-link">Link (optional)</label>
             <input id="ann-link" name="link" className="input" maxLength={500} defaultValue={announcement.link} placeholder="/mastapps/activities or https://…" />
           </div>
-          <button type="submit" className="btn btn-primary">Save announcement bar</button>
+          <button type="submit" className="btn btn-primary btn-sm">Save announcement bar</button>
         </form>
       </section>
 
       <section aria-labelledby="posts-title">
-        <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="mb-2 flex items-center justify-between gap-3">
           <h2 id="posts-title" className="text-base font-extrabold">News posts</h2>
-          <Link href="/admin/news/new" className="btn btn-primary">New post</Link>
+          <Link href="/admin/news/new" className="btn btn-primary btn-sm">New post</Link>
         </div>
         <div className="table-wrap">
           <table className="table table-stack">
@@ -81,7 +81,7 @@ export default async function AdminNews(props: { searchParams: Promise<{ notice?
                   </td>
                 </tr>
               ))}
-              {posts.length === 0 && <tr><td colSpan={3} className="py-10 text-center text-muted">No news yet.</td></tr>}
+              {posts.length === 0 && <tr><td colSpan={3} className="py-6 text-center text-muted">No news yet.</td></tr>}
             </tbody>
           </table>
         </div>
