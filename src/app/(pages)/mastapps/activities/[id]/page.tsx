@@ -186,9 +186,9 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
             <details className="card p-4">
               <summary className="cursor-pointer font-bold">Who is going ({participants.length})</summary>
               {canManage && tally.length > 0 && (
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {tally.map((t) => (
-                    <section key={t.group} className="rounded-xl bg-soft p-3">
+                    <section key={t.group} className="rounded-xl border border-line bg-soft p-3">
                       <h3 className="text-sm font-bold text-muted">{t.group}</h3>
                       <ul className="mt-1.5 space-y-1 text-sm">
                         {t.choices.map((c) => (
@@ -212,7 +212,7 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
                         <th>Name</th>
                         {columns.map((group) => <th key={group}>{group}</th>)}
                         <th className="text-right">Price</th>
-                        <th>Manage</th>
+                        <th className="text-right">Manage</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -220,13 +220,13 @@ export default async function ActivityPage(props: { params: Promise<{ id: string
                         <tr key={p.id}>
                           <td data-primary className="font-medium">{displayName(p)}</td>
                           {columns.map((group) => <td key={group} data-label={group}>{p.choices.find((c) => c.group === group)?.choice ?? "–"}</td>)}
-                          <td data-label="Price" className="text-right tabular-nums">{p.price_cents !== null ? formatEuro(p.price_cents) : "–"}</td>
+                          <td data-label="Price" className="whitespace-nowrap text-right tabular-nums">{p.price_cents !== null ? formatEuro(p.price_cents) : "–"}</td>
                           <td data-label="Manage">
-                            <div className="space-y-2">
+                            <div className="flex flex-wrap items-start gap-2 md:justify-end">
                               {groups.length > 0 && (
-                                <details>
-                                  <summary className="cursor-pointer text-sm font-bold text-accent-text">Change choices</summary>
-                                  <form action={updateParticipantChoices} className="mt-2 space-y-2">
+                                <details className="group">
+                                  <summary className="btn btn-secondary btn-sm cursor-pointer list-none [&::-webkit-details-marker]:hidden">Change choices</summary>
+                                  <form action={updateParticipantChoices} className="mt-2 w-64 max-w-full space-y-2 rounded-xl bg-soft p-3 text-left">
                                     <input type="hidden" name="id" value={activity.id} />
                                     <input type="hidden" name="user_id" value={p.id} />
                                     {groups.map((g) => (
